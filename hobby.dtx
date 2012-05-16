@@ -119,20 +119,42 @@ version 2005/12/01 or later.
 % 
 % \end{tikzpicture}
 % 
+% \begin{tikzpicture}
+% \draw[scale=.1,postaction=show curve controls,line width=1mm,red] (0,0)
+% .. controls (5.18756,-26.8353) and (60.36073,-18.40036) .. (60,40)
+% .. controls (59.87714,59.889) and (57.33896,81.64203) .. (40,90)
+% .. controls (22.39987,98.48387) and (4.72404,84.46368) .. (10,70)
+% .. controls (13.38637,60.7165) and (26.35591,59.1351) .. (30,50)
+% .. controls (39.19409,26.95198) and (-4.10555,21.23804) .. (0,0); % 
+% \fill[green] (0,0) circle[radius=2pt]
+%  (6,4) circle[radius=2pt]
+%  (4,9) circle[radius=2pt]
+%  (1,7) circle[radius=2pt]
+%  (3,5) circle[radius=2pt];
+% \draw[postaction=show curve controls,thick] (0,0) to[closed,curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
+% 
+% \end{tikzpicture}
 % 
 % \section{Implementing Hobby's Algorithm}
 % 
 % We start with a list of \(n+1\) points, \(z_0, \dotsc, z_n\).
 % The base code assumes that these are already stored in two property lists: the \(x\)--coordinates in \Verb+\l_hobby_pointsx_prop+ and the \(y\)--coordinates in \Verb+\l_hobby_pointsy_prop+.
-% The number, \(n\), is stored as \Verb+\l_hobby_npoints_prop+.
 % As our arrays are \(0\)--indexed, the actual number of points is one more than this.
+% For a closed curve, we have \(z_n = z_0\)\footnote{Note that there is a difference between a closed curve and an open curve whose endpoints happen to overlap}.
+% For closed curves it will be convenient to add an additional point at \(z_1\): thus \(z_{n+1} = z_1\).
+% This makes \(z_n\) an internal point and makes the algorithms for closed paths and open paths agree longer than they would otherwise.
+% The number of apparent points is stored as \Verb+\l_hobby_npoints_int+.
+% Thus for an open path, \Verb+\l_hobby_npoints_int+ is \(n\), whilst for a closed path, it is \(n+1\)\footnote{In fact, we allow for the case where the user specifies a closed path but with \(z_n \ne z_0\).
+% In that case, we assume that the user meant to repeat \(z_0\).
+% This adds another point to the list.}.
+% Following Hobby, let us write \(n'\) for \(n\) if the path is open and \(n+1\) if closed.
 %
 % From this we compute the distances and angles between successive points, storing these again as property lists.
 % These are \Verb+\l_hobby_distances_prop+ and \Verb+\l_hobby_angles_prop+.
 % The term indexed by \(k\) is the distance (or angle) of the line between the \(k\)th point and the \(k+1\)th point.
 % For the internal nodes\footnote{Hobby calls the specified points \emph{knots}}, we store the difference in the angles in \Verb+\l_hobby_psi_prop+.
 % The \(k\)th value on this is the angle subtended at the \(k\)th node.
-% Thus (for an open path) this is indexed from \(1\) to \(n-1\).
+% This is thus indexed from \(1\) to \(n'-1\).
 % 
 % The bulk of the work consists in setting up a linear system to compute the angles of the control points.
 % At a node, say \(z_i\), we have various pieces of information:
@@ -186,11 +208,11 @@ version 2005/12/01 or later.
 % 0
 % \end{align*}
 %^^A
-% For an open path, this holds for \(i=1\) to \(i=n-1\).
+% For both open and closed paths this holds for \(i=1\) to \(i=n' - 1\).
 % 
 % We also have the condition that \(\theta_i + \phi_i = -\psi_i\) where \(\psi_i\) is the angle subtended at a node by the lines to the adjacent nodes.
-% This holds for the internal nodes.
-% Therefore for \(i=1\) to \(i=n-2\), the above simplifies to the following:
+% This holds for the internal nodes\footnote{Recall that by dint of repetition, all nodes are effectively internal for a closed path}.
+% Therefore for \(i=1\) to \(n'-1\) the above simplifies to the following:
 % %
 % \begin{align*}
 %   d_i \overline{\tau}_{i+1} \overline{\tau}_i^2 &\theta_{i-1} \\
@@ -205,9 +227,9 @@ version 2005/12/01 or later.
 % - d_{i-1} \tau_{i-1} \tau_i^2& \psi_{i+1}
 % \end{align*}
 % 
-% We have two more equations.
+% For an open path we have two more equations.
 % One involves \(\theta_0\).
-% The other is the above for \(i = n-1\) with additional information regarding \(\psi_n\).
+% The other is the above for \(i = n'-1 = n-1\) with additional information regarding \(\psi_n\).
 % It may be that one or either of \(\theta_0\) or \(\psi_n\) is specified in advance.
 % In that case, the first equation is simply setting \(\theta_0\) to that value and the last equation involves substituting the value for \(\psi_n\) into the above.
 % If not, they are given by formulae involving ``curl'' parameters \(\chi_0\) and \(\chi_n\) and result in the equations:
@@ -216,16 +238,16 @@ version 2005/12/01 or later.
 % \theta_0 &= \frac{\tau_0^3 + \chi_0 \overline{\tau}_1^3(3 \tau_0 - 1)}{\tau_0^3(3 \overline{\tau}_1 - 1) + \chi_0 \overline{\tau}_1^3} \phi_1 \\
 % \phi_n &= \frac{\overline{\tau}_n^3 + \chi_n \tau_{n-1}^3(3 \overline{\tau}_n - 1)}{\overline{\tau}_n^3(3 \tau_{n-1} - 1) + \chi_n \tau_{n-1}^3} \theta_{n-1}
 % \end{align*}
-% %
+%^^A
 % Using \(\phi_1 = - \psi_1 - \theta_1\), the first rearranges to:
-% %
+%^^A
 % \[
 % (\tau_0^3(3 \overline{\tau}_1 - 1) + \chi_0 \overline{\tau}_1^3) \theta_0 + (\tau_0^3 + \chi_0 \overline{\tau}_1^3(3 \tau_0 - 1)) \theta_1 = - (\tau_0^3 + \chi_0 \overline{\tau}_1^3(3 \tau_0 - 1)) \psi_1.
 % \]
-% %
+%^^A
 % The second should be substituted in to the general equation with \(i = n-1\).
 % This yields:
-% %  
+%^^A  
 % \begin{align*}
 %   d_{n-1} \overline{\tau}_{n} \overline{\tau}_{n-1}^2 &\theta_{n-2} \\
 % +
@@ -236,20 +258,25 @@ version 2005/12/01 or later.
 % =
 % - d_{n-1} \overline{\tau}_{n} \overline{\tau}_{n-1}^2 (3 \tau_{n-2} - 1) &\psi_{n-1}
 % \end{align*}
-% 
-% The result is a linear system with an \(n \times n\) tridiagonal coefficient matrix.
+%
+% For a closed path, we have one more equation.
+% This is the identification of \(\theta_0\) with \(\theta_{n'-1}\).
+%
+% The result is a linear system with \(n' \times n'\) coefficient matrix.
 % It is more natural to index the entries from \(0\).
+% For an open path it is a tridiagonal coefficient matrix.
+% For a closed path the equation \(\theta_0 = \theta_{n'-1}\) makes it no longer tridiagonal but it differs only by the \((0,n'-1)\)--{}entry.
 % Let us write \(A_i\) for the subdiagonal, \(B_i\) for the main diagonal, and \(C_i\) for the superdiagonal.
 % Let us write \(D_i\) for the target vector.
-% Then we have the following formulae:
-% %
+% Then for an open path we have the following formulae:
+%^^A
 % \begin{align*}
 % A_i &= d_i \overline{\tau}_{i+1} \overline{\tau}^2_i \\
 % B_0 &= \begin{cases}
 % 1 & \text{if}\; \theta_0\; \text{given} \\
 % \tau_0^3(3 \overline{\tau}_1 - 1) + \chi_0 \overline{\tau}^3_1 & \text{otherwise}
 % \end{cases} \\
-% B_i &= d_i \overline{\tau}_{i+1} \overline{\tau}_i^2 (3 \tau_{i-1} - 1) + d_{i-1} \tau_{i-1} \tau_i^2(3 \overline{\tau}_{i+1} - 1) \\
+% B_i &= d_i \overline{\tau}_{i+1} \overline{\tau}_i^2 (3 \tau_{i-1} -1) + d_{i-1} \tau_{i-1} \tau_i^2(3 \overline{\tau}_{i+1} - 1) \\
 % B_{n-1} &= \begin{cases} d_{n-1} \overline{\tau}_{n} \overline{\tau}_{n-1}^2 (3 \tau_{n-2} - 1) + d_{n-2} \tau_{n-2} \tau_{n-1}^2(3 \overline{\tau}_{n} - 1) & \text{if}\; \phi_n\; \text{given} \\
 %  d_{n-1} \overline{\tau}_{n} \overline{\tau}_{n-1}^2 (3 \tau_{n-2} - 1) + d_{n-2} \tau_{n-2} \tau_{n-1}^2(3 \overline{\tau}_{n} - 1)
 % \\
@@ -271,7 +298,36 @@ version 2005/12/01 or later.
 % - d_{n-1} \overline{\tau}_{n} \overline{\tau}_{n-1}^2 (3 \tau_{n-2} - 1) \psi_{n-1} & \text{otherwise}
 % \end{cases}
 % \end{align*}
-% 
+%
+% For a closed path, the formulae are the following:
+%^^A
+% \begin{align*}
+% A_i &= d_i \overline{\tau}_{i+1} \overline{\tau}_i^2 \\
+%^^A
+% B_0 &= 1 \\
+%^^A
+% B_i &= d_i \overline{\tau}_{i+1} \overline{\tau}_i^2 (3 \tau_{i-1} -1) + d_{i-1} \tau_{i-1} \tau_i^2(3 \overline{\tau}_{i+1} - 1) \\
+%^^A
+% C_0 &= 0 \\
+%^^A
+% C_i &= d_{i-1} \tau_{i-1} \tau_i^2 \\
+%^^A
+% D_0 &= 0 \\
+%^^A
+% D_i &= - d_i \overline{\tau}_{i+1} \overline{\tau}_i^2 (3 \tau_{i-1} - 1) \psi_i
+% - d_{i-1} \tau_{i-1} \tau_i^2 \psi_{i+1} \\
+% \end{align*}
+%^^A
+% This is not quite the real matrix as it does not include the \((0,n'-1)\)--{}term which is \(-1\).
+% However, it can be written in the form \(M + u v^\top\) with \(M\) tridiagonal and \(u = e_0\), \(v = - e_{n'-1}\).
+% Doing this means that we can use the Sherman--{}Morrison formula:
+%^^A
+% \[
+% (M + u v^\top)^{-1} = M^{-1} - \frac{M^{-1} u v^\top M^{-1}}{1 + v^\top M^{-1} u}.
+% \]
+%^^A
+% So to compute \((M + u v^\top)^{-1} D\) we need to compute \(M^{-1} D\) and \(M^{-1} u\).
+%
 % The next step in the implementation is to compute these coefficients and store them in appropriate property lists.
 % Having done that, we need to solve the resulting tridiagonal system.
 % This is done by looping through the arrays doing the following substitutions (starting at \(i = 1\)):
@@ -281,14 +337,16 @@ version 2005/12/01 or later.
 % C_i' &= B_{i-1}' C_i \\
 % D_i' &= B_{i-1}' D_i - A_i D_{i-1}'
 % \end{align*}
-% %
+%^^A
 % followed by back-substitution:
-% %
+%^^A
 % \begin{align*}
 % \theta_{n-1} &= D_{n-1}'/B_{n-1}' \\
 % \theta_i &= (D_i' - C_i' \theta_{i+1})/B_i'
 % \end{align*}
-% 
+%^^A
+% For a closed path, we run this both with the vector \(D\) and the vector \(u = e_0\).
+% Then we take the inner product of each with \(-e_{n'-1}^\top\) which selects (and negates) the \(n'-1\)th term, and substitute into the Sherman--{}Morrison formula to get the \(\theta_i\).
 % 
 % This leaves us with the values for \(\theta_i\).
 % We now substitute these into Hobby's formulae for the lengths:
@@ -366,6 +424,14 @@ version 2005/12/01 or later.
 %    \end{macrocode}
 %
 % Now we define our objects for use in processing the path.
+%
+% \begin{macro}{\l_hobby_closed_bool}
+% \Verb+\l_hobby_closed_bool+
+%    \begin{macrocode}
+\bool_new:N \l_hobby_closed_bool
+%    \end{macrocode}
+% \end{macro}
+%
 % \begin{macro}{\l_hobby_points_seq}
 % \Verb+\l_hobby_points_seq+
 %    \begin{macrocode}
@@ -630,6 +696,8 @@ version 2005/12/01 or later.
   out~angle .fp_set:N = \l_hobby_outang_fp,
   in~curl .fp_set:N = \l_hobby_incurl_fp,
   out~curl .fp_set:N = \l_hobby_outcurl_fp,
+  closed .bool_set:N = \l_hobby_closed_bool,
+  closed .default:n = true,
 }
 %    \end{macrocode}
 % \begin{macro}{\hobby_distangle:n}
@@ -646,17 +714,17 @@ version 2005/12/01 or later.
     {
       \int_seq:Nn \l_hobby_temp_int {0}
     }
-    \prop_get:NnN \l_hobby_pointsx_prop {#1} \l_tmpa_tl
+    \exp_args:NNo \prop_get:NnN \l_hobby_pointsx_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
     \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
-    \prop_get:NnN \l_hobby_pointsy_prop {#1} \l_tmpa_tl
+    \exp_args:NNo \prop_get:NnN \l_hobby_pointsy_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
     \fp_set:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
-    \exp_args:NNo \prop_get:NnN \l_hobby_pointsx_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+    \prop_get:NnN \l_hobby_pointsx_prop {#1} \l_tmpa_tl
     \fp_sub:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
-    \exp_args:NNo \prop_get:NnN \l_hobby_pointsy_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+    \prop_get:NnN \l_hobby_pointsy_prop {#1} \l_tmpa_tl
     \fp_sub:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
-    \fp_atantwo:NNN \l_hobby_tempc_fp \l_hobby_tempa_fp \l_hobby_tempb_fp
+    \fp_atantwo:NNN \l_hobby_tempc_fp \l_hobby_tempb_fp \l_hobby_tempa_fp
     \fp_veclen:NNN \l_hobby_tempd_fp \l_hobby_tempa_fp \l_hobby_tempb_fp
 
     \prop_put:Nnx \l_hobby_angles_prop {#1} {\fp_to_tl:N \l_hobby_tempc_fp}
@@ -709,14 +777,72 @@ version 2005/12/01 or later.
 % \item \Verb+\l_hobby_outcurl_fp+
 % \item \Verb+\l_hobby_inang_fp+
 % \item \Verb+\l_hobby_outang_fp+
+% \item \Verb+\l_hobby_closed_bool+
 % \end{enumerate}
 %
 %    \begin{macrocode}
 \cs_new:Nn \hobby_genpath:
 {
 %    \end{macrocode}
+% For much of the time, we can pretend that a closed path is the same as an open path.
+% To do this, we need to make the end node an internal node by repeating the \(z_1\) node as the \(z_{n+1}\)th node.
+% We also check that the last and first nodes are the same, otherwise we repeat the \(z_0\) node as well.
+%    \begin{macrocode}
+\bool_if:NTF \l_hobby_closed_bool {
+  \prop_get:NnN \l_hobby_pointsx_prop {0} \l_tmpa_tl
+  \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+  \exp_args:NNo \prop_get:NnN \l_hobby_pointsx_prop {\int_use:N \l_hobby_npoints_int} \l_tmpa_tl
+  \fp_sub:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+  \fp_compare:nNnTF {\l_hobby_tempa_fp} = {\c_zero_fp}
+  {
+    \prop_get:NnN \l_hobby_pointsy_prop {0} \l_tmpa_tl
+    \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+    \exp_args:NNo \prop_get:NnN \l_hobby_pointsy_prop {\int_use:N       \l_hobby_npoints_int} \l_tmpa_tl
+    \fp_sub:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+    \fp_compare:nNnTF {\l_hobby_tempa_fp} = {\c_zero_fp}
+  {}
+  {
+    \int_incr:N \l_hobby_npoints_int
+    \prop_get:NnN \l_hobby_points_prop {0} \l_tmpa_tl
+    \exp_args:NNo \prop_put:Nnx \l_hobby_points_prop {\int_use:N \l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \prop_get:NnN \l_hobby_pointsx_prop {0} \l_tmpa_tl
+    \exp_args:NNo \prop_put:Nnx \l_hobby_pointsx_prop {\int_use:N \l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \prop_get:NnN \l_hobby_pointsy_prop {0} \l_tmpa_tl
+    \exp_args:NNo \prop_put:Nnx \l_hobby_pointsy_prop {\int_use:N \l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \prop_get:NnN \l_hobby_tensionin_prop {0} \l_tmpa_tl
+    \exp_args:NNo \prop_put:Nnx \l_hobby_tensionin_prop {\int_use:N \l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \prop_get:NnN \l_hobby_tensionout_prop {0} \l_tmpa_tl
+    \exp_args:NNo \prop_put:Nnx \l_hobby_tensionout_prop {\int_use:N \l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+  }
+  }
+  {
+    \int_incr:N \l_hobby_npoints_int
+    \prop_get:NnN \l_hobby_points_prop {0} \l_tmpa_tl
+    \exp_args:NNo \prop_put:Nnx \l_hobby_points_prop {\int_use:N \l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \prop_get:NnN \l_hobby_pointsx_prop {0} \l_tmpa_tl
+    \exp_args:NNo \prop_put:Nnx \l_hobby_pointsx_prop {\int_use:N \l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \prop_get:NnN \l_hobby_pointsy_prop {0} \l_tmpa_tl
+    \exp_args:NNo \prop_put:Nnx \l_hobby_pointsy_prop {\int_use:N \l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \prop_get:NnN \l_hobby_tensionin_prop {0} \l_tmpa_tl
+    \exp_args:NNo \prop_put:Nnx \l_hobby_tensionin_prop {\int_use:N \l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \prop_get:NnN \l_hobby_tensionout_prop {0} \l_tmpa_tl
+    \exp_args:NNo \prop_put:Nnx \l_hobby_tensionout_prop {\int_use:N \l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+  }
+    \int_incr:N \l_hobby_npoints_int
+    \prop_get:NnN \l_hobby_points_prop {1} \l_tmpa_tl
+    \exp_args:NNo \prop_put:Nnx \l_hobby_points_prop {\int_use:N \l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \prop_get:NnN \l_hobby_pointsx_prop {1} \l_tmpa_tl
+    \exp_args:NNo \prop_put:Nnx \l_hobby_pointsx_prop {\int_use:N \l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \prop_get:NnN \l_hobby_pointsy_prop {1} \l_tmpa_tl
+    \exp_args:NNo \prop_put:Nnx \l_hobby_pointsy_prop {\int_use:N \l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \prop_get:NnN \l_hobby_tensionin_prop {1} \l_tmpa_tl
+    \exp_args:NNo \prop_put:Nnx \l_hobby_tensionin_prop {\int_use:N \l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \prop_get:NnN \l_hobby_tensionout_prop {1} \l_tmpa_tl
+    \exp_args:NNo \prop_put:Nnx \l_hobby_tensionout_prop {\int_use:N \l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+}{}
+%    \end{macrocode}
+% 
 % Our first step is to go through the list of points and compute the distances and angles between successive points.
-% For an open path, we iterate through the points from \(0\) to \(n-1\).
 % Thus \(d_i\) is the distance from \(z_i\) to \(z_{i+1}\) and the angle is the angle of the line from \(z_i\) to \(z_{i+1}\).
 
 %    \begin{macrocode}
@@ -825,7 +951,7 @@ version 2005/12/01 or later.
 %
 % Lastly (before the adjustments), the target vector.
 %    \begin{macrocode}
-  \prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int - 2} {
+  \prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int - 1} {
   \exp_args:NNx \prop_get:NnN \l_hobby_psi_prop {\int_eval:n {##1 + 1}} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
@@ -866,7 +992,20 @@ version 2005/12/01 or later.
 %    \end{macrocode}
 %
 % Next, there are some adjustments at the ends.
+% These differ depending on whether the path is open or closed.
 % First, we test to see if \(\theta_0\) has been specified.
+%    \begin{macrocode}
+\bool_if:NTF \l_hobby_closed_bool {
+%    \end{macrocode}
+% Closed path
+%    \begin{macrocode}
+\prop_put:NnN \l_hobby_trib_prop {0} {1}
+\prop_put:NnN \l_hobby_tric_prop {0} {0}
+\prop_put:NnN \l_hobby_trid_prop {0} {0}
+}
+{
+%    \end{macrocode}
+% Open path
 %    \begin{macrocode}
 \fp_if_undefined:NTF \l_hobby_inang_fp
 {
@@ -1049,6 +1188,10 @@ version 2005/12/01 or later.
   \fp_sub:Nn \l_hobby_tempa_fp {\l_hobby_tempb_fp}
 
   \exp_args:NNx \prop_put:Nnx \l_hobby_trid_prop {\int_eval:n {\l_hobby_npoints_int - 1}} {\fp_to_tl:N \l_hobby_tempa_fp}
+}
+%    \end{macrocode}
+% End of adjustments for open paths.
+%    \begin{macrocode}
 }
 %    \end{macrocode}
 %
@@ -1251,12 +1394,11 @@ version 2005/12/01 or later.
    \prop_put:Nnx \l_hobby_rho_prop {##1} {\fp_to_tl:N \l_hobby_tempd_fp}
 
   }
-\prop_show:N \l_hobby_angles_prop
-\prop_show:N \l_hobby_theta_prop
+
   \prop_map_inline:Nn \l_hobby_theta_prop {
     \prop_get:NnN \l_hobby_angles_prop {##1} \l_tmpa_tl
     \fp_set:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
-    \fp_add:Nn \l_hobby_tempc_fp {##2}
+    \fp_sub:Nn \l_hobby_tempc_fp {##2}
     \fp_sin:Nn \l_hobby_tempd_fp {\l_hobby_tempc_fp}
     \fp_cos:Nn \l_hobby_tempc_fp {\l_hobby_tempc_fp}
     \prop_get:NnN \l_hobby_rho_prop {##1} \l_tmpa_tl
@@ -1277,7 +1419,7 @@ version 2005/12/01 or later.
   \prop_map_inline:Nn \l_hobby_phi_prop {
     \exp_args:NNx \prop_get:NnN \l_hobby_angles_prop {\int_eval:n {##1 - 1}} \l_tmpa_tl
     \fp_set:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
-    \fp_sub:Nn \l_hobby_tempc_fp {##2}
+    \fp_add:Nn \l_hobby_tempc_fp {##2}
     \fp_sin:Nn \l_hobby_tempd_fp {\l_hobby_tempc_fp}
     \fp_cos:Nn \l_hobby_tempc_fp {\l_hobby_tempc_fp}
     \fp_neg:N \l_hobby_tempc_fp
@@ -1431,16 +1573,34 @@ version 2005/12/01 or later.
 %
 \usepgflibrary{hobby}
 
+\let\hobby@opts=\pgfutil@empty
+
 \tikzset{
   curve through/.style={
     to path={
       \pgfextra{
-        \curvethrough{(\tikztostart) .. #1 .. (\tikztotarget)}
+        \expandafter\curvethrough\expandafter[\hobby@opts]{(\tikztostart) .. #1 .. (\tikztotarget)}
       }
     }
   },
   tension in/.code = {},
   tension out/.code = {},
+  closed/.code = {%
+    \expandafter\def\expandafter\hobby@opts\expandafter{\hobby@opts closed=#1}%
+  },
+  closed/.default = true,
+  in angle/.code = {%
+    \expandafter\def\expandafter\hobby@opts\expandafter{\hobby@opts in       angle=#1,}%
+  },
+  out angle/.code = {%
+    \expandafter\def\expandafter\hobby@opts\expandafter{\hobby@opts out angle=#1,}%
+  },
+  in curl/.code = {%
+    \expandafter\def\expandafter\hobby@opts\expandafter{\hobby@opts in curl=#1,}%
+  },
+  out curl/.code = {%
+    \expandafter\def\expandafter\hobby@opts\expandafter{\hobby@opts out curl=#1,}%
+  },
 }
 %    \end{macrocode}
 % \begin{macro}{\curvethrough}
