@@ -46,7 +46,8 @@ version 2005/12/01 or later.
 \usepackage{csquotes}
 \usepackage{lmodern}
 \usepackage{tikz}
-\usetikzlibrary{hobby}
+\usepackage{amsmath}
+\usetikzlibrary{hobby,decorations.pathreplacing}
 \usepackage[margin=3cm]{geometry}
 \EnableCrossrefs
 \CodelineIndex
@@ -86,14 +87,246 @@ version 2005/12/01 or later.
 % or the equivalent ConTeXt commands.
 %
 % The TikZ library installs a \Verb+to path+ which draws a smooth curve through the given points.
+% \tikzset{
+%   show curve controls/.style={
+%    decoration={
+%      show path construction,
+%      curveto code={
+%      \draw [blue, dashed]
+%          (\tikzinputsegmentfirst)    -- (\tikzinputsegmentsupporta)
+%          node [at end, draw, solid, red, inner sep=2pt]{};
+%        \draw [blue, dashed]
+%          (\tikzinputsegmentsupportb) -- (\tikzinputsegmentlast)
+%          node [at start, draw, solid, red, inner sep=2pt]{};
+%      }
+%    },decorate
+%  },
+% }
+%
 % \begin{tikzpicture}
-%\fill[green] (0,0) circle[radius=2pt]
-% (6,4) circle[radius=2pt]
-% (4,9) circle[radius=2pt]
-% (1,7) circle[radius=2pt]
-% (3,5) circle[radius=2pt];
-%\draw[thick] (0,0) to[curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
+% \draw[scale=.1,postaction=show curve controls,line width=1mm,red] (0,0)
+% .. controls (26.76463,-1.84543) and (51.4094,14.58441) .. (60,40)
+% .. controls (67.09875,61.00188) and (59.76253,84.57518) .. (40,90)
+% .. controls (25.35715,94.01947) and (10.48064,84.5022) .. (10,70)
+% .. controls (9.62895,58.80421) and (18.80421,49.62895) .. (30,50);
+% 
+% \fill[green] (0,0) circle[radius=2pt]
+%  (6,4) circle[radius=2pt]
+%  (4,9) circle[radius=2pt]
+%  (1,7) circle[radius=2pt]
+%  (3,5) circle[radius=2pt];
+% \draw[postaction=show curve controls,thick] (0,0) to[curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
+% 
 % \end{tikzpicture}
+% 
+% 
+% \section{Implementing Hobby's Algorithm}
+% 
+% We start with a list of \(n+1\) points, \(z_0, \dotsc, z_n\).
+% The base code assumes that these are already stored in two property lists: the \(x\)--coordinates in \Verb+\l_hobby_pointsx_prop+ and the \(y\)--coordinates in \Verb+\l_hobby_pointsy_prop+.
+% The number, \(n\), is stored as \Verb+\l_hobby_npoints_prop+.
+% As our arrays are \(0\)--indexed, the actual number of points is one more than this.
+%
+% From this we compute the distances and angles between successive points, storing these again as property lists.
+% These are \Verb+\l_hobby_distances_prop+ and \Verb+\l_hobby_angles_prop+.
+% The term indexed by \(k\) is the distance (or angle) of the line between the \(k\)th point and the \(k+1\)th point.
+% For the internal nodes\footnote{Hobby calls the specified points \emph{knots}}, we store the difference in the angles in \Verb+\l_hobby_psi_prop+.
+% The \(k\)th value on this is the angle subtended at the \(k\)th node.
+% Thus (for an open path) this is indexed from \(1\) to \(n-1\).
+% 
+% The bulk of the work consists in setting up a linear system to compute the angles of the control points.
+% At a node, say \(z_i\), we have various pieces of information:
+%
+% \begin{enumerate}
+% \item The angle of the incoming curve, \(\phi_i\), relative to the straight line from \(z_{i-1}\) to \(z_i\)
+% \item The angle of the outgoing curve, \(\theta_i\), relative to the straight line from \(z_i\) to \(z_{i+1}\)
+% \item The tension of the incoming curve, \(\overline{\tau}_i\)
+% \item The tension of the outgoing curve, \(\tau_i\)
+% \item The speed of the incoming curve, \(\sigma_i\)
+% \item The speed of the outgoing curve, \(\rho_i\)
+% \end{enumerate}
+%
+% The tensions are known at the start.
+% The speeds are computed from the angles.
+% Thus the key thing to compute is the angles.
+% This is done by imposing a ``mock curvature'' condition.%
+% The formula for the mock curvature is:
+%^^A
+% \[
+%   \hat{k}(\theta,\phi,\tau,\overline{\tau}) = \tau^2 \left( \frac{2(\theta + \phi)}{\overline{\tau}} - 6\theta\right)
+% \]
+%^^A
+% and the condition that the mock curvatures have to satisfy is that at each \emph{internal} node, the curvatures must match:
+% %
+% \[
+%   \hat{k}(\phi_i,\theta_{i-1},\overline{\tau}_i,\tau_{i-1})/d_{i-1} = \hat{k}(\theta_i,\phi_{i+1},\tau_i,\overline{\tau}_{i+1})/d_i.
+% \]
+%^^A
+% Substituting in yields:
+%^^A
+% \[
+%   \frac{\overline{\tau}_i^2}{d_{i-1}} \left( \frac{2(\phi_i + \theta_{i-1})}{\tau_{i-1}} - 6\phi_i\right) = \frac{\tau_i^2}{d_i} \left( \frac{2(\theta_i + \phi_{i+1})}{\overline{\tau}_{i+1}} - 6\theta_i \right).
+% \]
+%^^A
+% Let us rearrange that to the following:
+%^^A
+% \begin{align*}
+%   d_i \overline{\tau}_{i+1} \overline{\tau}_i^2 &\theta_{i-1} \\
+%^^A
+% +
+% d_i \overline{\tau}_{i+1} \overline{\tau}_i^2 (1 - 3 \tau_{i-1}) &\phi_i \\
+%^^A
+% -
+%  d_{i-1} \tau_{i-1} \tau_i^2 (1 - 3 \overline{\tau}_{i+1}) &\theta_i \\
+%^^A
+% -
+%  d_{i-1} \tau_{i-1} \tau_i^2 &\phi_{i+1} \\
+%^^A
+% =
+% 0
+% \end{align*}
+%^^A
+% For an open path, this holds for \(i=1\) to \(i=n-1\).
+% 
+% We also have the condition that \(\theta_i + \phi_i = -\psi_i\) where \(\psi_i\) is the angle subtended at a node by the lines to the adjacent nodes.
+% This holds for the internal nodes.
+% Therefore for \(i=1\) to \(i=n-2\), the above simplifies to the following:
+% %
+% \begin{align*}
+%   d_i \overline{\tau}_{i+1} \overline{\tau}_i^2 &\theta_{i-1} \\
+% +
+% (d_i \overline{\tau}_{i+1} \overline{\tau}_i^2 (3 \tau_{i-1} - 1)
+% +
+%  d_{i-1} \tau_{i-1} \tau_i^2 (3 \overline{\tau}_{i+1} - 1)) &\theta_i \\
+% +
+%  d_{i-1} \tau_{i-1} \tau_i^2 & \theta_{i+1} \\
+% =
+% - d_i \overline{\tau}_{i+1} \overline{\tau}_i^2 (3 \tau_{i-1} - 1) &\psi_i \\
+% - d_{i-1} \tau_{i-1} \tau_i^2& \psi_{i+1}
+% \end{align*}
+% 
+% We have two more equations.
+% One involves \(\theta_0\).
+% The other is the above for \(i = n-1\) with additional information regarding \(\psi_n\).
+% It may be that one or either of \(\theta_0\) or \(\psi_n\) is specified in advance.
+% In that case, the first equation is simply setting \(\theta_0\) to that value and the last equation involves substituting the value for \(\psi_n\) into the above.
+% If not, they are given by formulae involving ``curl'' parameters \(\chi_0\) and \(\chi_n\) and result in the equations:
+% %
+% \begin{align*}
+% \theta_0 &= \frac{\tau_0^3 + \chi_0 \overline{\tau}_1^3(3 \tau_0 - 1)}{\tau_0^3(3 \overline{\tau}_1 - 1) + \chi_0 \overline{\tau}_1^3} \phi_1 \\
+% \phi_n &= \frac{\overline{\tau}_n^3 + \chi_n \tau_{n-1}^3(3 \overline{\tau}_n - 1)}{\overline{\tau}_n^3(3 \tau_{n-1} - 1) + \chi_n \tau_{n-1}^3} \theta_{n-1}
+% \end{align*}
+% %
+% Using \(\phi_1 = - \psi_1 - \theta_1\), the first rearranges to:
+% %
+% \[
+% (\tau_0^3(3 \overline{\tau}_1 - 1) + \chi_0 \overline{\tau}_1^3) \theta_0 + (\tau_0^3 + \chi_0 \overline{\tau}_1^3(3 \tau_0 - 1)) \theta_1 = - (\tau_0^3 + \chi_0 \overline{\tau}_1^3(3 \tau_0 - 1)) \psi_1.
+% \]
+% %
+% The second should be substituted in to the general equation with \(i = n-1\).
+% This yields:
+% %  
+% \begin{align*}
+%   d_{n-1} \overline{\tau}_{n} \overline{\tau}_{n-1}^2 &\theta_{n-2} \\
+% +
+% (d_{n-1} \overline{\tau}_{n} \overline{\tau}_{n-1}^2 (3 \tau_{n-2} - 1)
+% +
+%  d_{n-2} \tau_{n-2} \tau_{n-1}^2 (3 \overline{\tau}_{n} - 1) \\
+% - d_{n-2} \tau_{n-2} \tau_{n-1}^2  \frac{\overline{\tau}_n^3 + \chi_n \tau_{n-1}^3(3 \overline{\tau}_n - 1)}{\overline{\tau}_n^3(3 \tau_{n-1} - 1) + \chi_n \tau_{n-1}^3}) & \theta_{n-1} \\
+% =
+% - d_{n-1} \overline{\tau}_{n} \overline{\tau}_{n-1}^2 (3 \tau_{n-2} - 1) &\psi_{n-1}
+% \end{align*}
+% 
+% The result is a linear system with an \(n \times n\) tridiagonal coefficient matrix.
+% It is more natural to index the entries from \(0\).
+% Let us write \(A_i\) for the subdiagonal, \(B_i\) for the main diagonal, and \(C_i\) for the superdiagonal.
+% Let us write \(D_i\) for the target vector.
+% Then we have the following formulae:
+% %
+% \begin{align*}
+% A_i &= d_i \overline{\tau}_{i+1} \overline{\tau}^2_i \\
+% B_0 &= \begin{cases}
+% 1 & \text{if}\; \theta_0\; \text{given} \\
+% \tau_0^3(3 \overline{\tau}_1 - 1) + \chi_0 \overline{\tau}^3_1 & \text{otherwise}
+% \end{cases} \\
+% B_i &= d_i \overline{\tau}_{i+1} \overline{\tau}_i^2 (3 \tau_{i-1} - 1) + d_{i-1} \tau_{i-1} \tau_i^2(3 \overline{\tau}_{i+1} - 1) \\
+% B_{n-1} &= \begin{cases} d_{n-1} \overline{\tau}_{n} \overline{\tau}_{n-1}^2 (3 \tau_{n-2} - 1) + d_{n-2} \tau_{n-2} \tau_{n-1}^2(3 \overline{\tau}_{n} - 1) & \text{if}\; \phi_n\; \text{given} \\
+%  d_{n-1} \overline{\tau}_{n} \overline{\tau}_{n-1}^2 (3 \tau_{n-2} - 1) + d_{n-2} \tau_{n-2} \tau_{n-1}^2(3 \overline{\tau}_{n} - 1)
+% \\
+% - d_{n-2} \tau_{n-2} \tau_{n-1}^2  \frac{\overline{\tau}_n^3 + \chi_n \tau_{n-1}^3(3 \overline{\tau}_n - 1)}{\overline{\tau}_n^3(3 \tau_{n-1} - 1) + \chi_n \tau_{n-1}^3}) & \text{otherwise}
+% \end{cases} \\
+% C_0 &= \begin{cases}
+% 0 & \text{if}\; \theta_0\; \text{given} \\
+% \tau_0^3 + \chi_0 \overline{\tau}_1^3(3\tau_0 - 1) & \text{otherwise}
+% \end{cases} \\
+% C_i &= d_{i-1} \tau_{i-1} \tau_i^2 \\
+% D_0 &= \begin{cases}
+% \overline{\theta}_0 & \text{if}\; \theta_0\; \text{given} \\
+%  - (\tau_0^3 + \chi_0 \overline{\tau}_1^3(3 \tau_0 - 1)) \psi_1 & \text{otherwise}
+% \end{cases} \\
+% D_i &= - d_i \overline{\tau}_{i+1} \overline{\tau}_i^2 (3 \tau_{i-1} - 1) \psi_i
+% - d_{i-1} \tau_{i-1} \tau_i^2 \psi_{i+1} \\
+% D_{n-1} &= \begin{cases}
+% - d_{n-1} \overline{\tau}_{n} \overline{\tau}_{n-1}^2 (3 \tau_{n-2} - 1) \psi_{n-1} - d_{n-2} \tau_{n-2} \tau_{n-1}^2 \overline{\phi}_n & \text{if}\; \phi_n\; \text{given} \\
+% - d_{n-1} \overline{\tau}_{n} \overline{\tau}_{n-1}^2 (3 \tau_{n-2} - 1) \psi_{n-1} & \text{otherwise}
+% \end{cases}
+% \end{align*}
+% 
+% The next step in the implementation is to compute these coefficients and store them in appropriate property lists.
+% Having done that, we need to solve the resulting tridiagonal system.
+% This is done by looping through the arrays doing the following substitutions (starting at \(i = 1\)):
+% %
+% \begin{align*}
+% B_i' &= B_{i-1}' B_i - A_i C_{i-1}' \\
+% C_i' &= B_{i-1}' C_i \\
+% D_i' &= B_{i-1}' D_i - A_i D_{i-1}'
+% \end{align*}
+% %
+% followed by back-substitution:
+% %
+% \begin{align*}
+% \theta_{n-1} &= D_{n-1}'/B_{n-1}' \\
+% \theta_i &= (D_i' - C_i' \theta_{i+1})/B_i'
+% \end{align*}
+% 
+% 
+% This leaves us with the values for \(\theta_i\).
+% We now substitute these into Hobby's formulae for the lengths:
+% %
+% \begin{align*}
+% \rho_i &= \frac{2 + \alpha_i}{1 + (1 - c) \cos \theta_i + c \cos \phi_{i+1}} \\
+% \sigma_{i+1} &= \frac{2 - \alpha_i}{1 + (1 - c) \cos \phi_{i+1} + c \cos \theta_i} \\
+% \alpha_i &= a (\sin \theta_i - b \sin \phi_{i+1})(\sin \phi_{i+1} - b \sin \theta_i)(\cos \theta_i - \cos \phi_{i+1})
+% \end{align*}
+% %
+% where \(a = \sqrt{2}\), \(b = 1/16\), and \(c = (3 - \sqrt{5})/2\).
+% 
+% Now \(\theta_i\) is the angle relative to the line from \(z_i\) to \(z_{i+1}\), so to get the true angle we need to add back that angle.
+% Fortunately, we stored those angles at the start.
+% So the control points are:
+% %
+% \begin{gather*}
+%   (\rho_i \cos (\theta_i + \omega_i), \rho_i \sin (\theta_i + \omega_i)) + z_i \\
+% (-\sigma_i \cos(\theta_i + \omega_i), -\sigma_i \sin(\theta_i + \omega_i)) + z_{i+1}
+% \end{gather*}
+% 
+% 
+% \begin{tikzpicture}
+% \fill[green] (0,0) circle[radius=2pt]
+%  (6,4) circle[radius=2pt]
+%  (4,9) circle[radius=2pt]
+%  (1,7) circle[radius=2pt]
+%  (3,5) circle[radius=2pt];
+% \draw[postaction=show curve controls,thick] (0,0) to[curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
+% 
+% \draw[scale=.1,postaction=show curve controls,thick,blue] (0,0)
+% .. controls (26.76463,-1.84543) and (51.4094,14.58441) .. (60,40)
+% .. controls (67.09875,61.00188) and (59.76253,84.57518) .. (40,90)
+% .. controls (25.35715,94.01947) and (10.48064,84.5022) .. (10,70)
+% .. controls (9.62895,58.80421) and (18.80421,49.62895) .. (30,50);
+% 
+% \end{tikzpicture}
+% 
 %
 % \StopEventually{\PrintChanges}
 % \section{Implementation}
@@ -113,13 +346,6 @@ version 2005/12/01 or later.
 % We declare all our variables.
 % These are the globals.
 %
-% \begin{macro}{\g_hobby_cp_fp}
-% Scale factor to convert points to cm to keep the numbers smaller (perhaps not really necessary).
-%    \begin{macrocode}
-\fp_new:N \g_hobby_cm_fp
-\fp_set_from_dim:Nn \g_hobby_cm_fp {1cm}
-%    \end{macrocode}
-% \end{macro}
 % The function for computing the lengths of the control points depends on three parameters.
 %    \begin{macrocode}
 \fp_new:N \g_hobby_parama_fp
@@ -501,9 +727,7 @@ version 2005/12/01 or later.
 % So for each internal point we compute the differences in the angles.
 %    \begin{macrocode}
   \prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int - 1} {
-    \int_set:Nn \l_hobby_temp_int {##1}
-    \int_decr:N \l_hobby_temp_int
-    \exp_args:NNo \prop_get:NnN \l_hobby_angles_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+    \exp_args:NNx \prop_get:NnN \l_hobby_angles_prop {\int_eval:n {##1 - 1}} \l_tmpa_tl
     \fp_set:Nn \l_hobby_tempa_fp {\tl_use:N \l_tmpa_tl}
     \prop_get:NnN \l_hobby_angles_prop {##1} \l_tmpa_tl
     \fp_sub:Nn \l_hobby_tempa_fp {\tl_use:N \l_tmpa_tl}
@@ -535,9 +759,7 @@ version 2005/12/01 or later.
     \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
     \prop_get:NnN \l_hobby_distances_prop {##1} \l_tmpa_tl
     \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
-    \int_set:Nn \l_hobby_temp_int {##1}
-    \int_incr:N \l_hobby_temp_int
-    \exp_args:NNo \prop_get:NnN \l_hobby_tensionin_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+    \exp_args:NNx \prop_get:NnN \l_hobby_tensionin_prop {\int_eval:n {##1 + 1}} \l_tmpa_tl
     \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
     \prop_put:Nnx \l_hobby_tria_prop {##1} {\fp_to_tl:N \l_hobby_tempa_fp}
   }
@@ -548,9 +770,7 @@ version 2005/12/01 or later.
 %    \begin{macrocode}
   \prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int - 1} {
 
-  \int_set:Nn \l_hobby_temp_int {##1}
-  \int_incr:N \l_hobby_temp_int
-  \exp_args:NNo \prop_get:NnN \l_hobby_tensionin_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+  \exp_args:NNx \prop_get:NnN \l_hobby_tensionin_prop {\int_eval:n {##1 + 1}} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempa_fp {3}
   \fp_sub:Nn \l_hobby_tempa_fp {1}
@@ -559,17 +779,13 @@ version 2005/12/01 or later.
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
-  \int_set:Nn \l_hobby_temp_int {##1}
-  \int_decr:N \l_hobby_temp_int
-  \exp_args:NNo \prop_get:NnN \l_hobby_tensionout_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+  \exp_args:NNx \prop_get:NnN \l_hobby_tensionout_prop {\int_eval:n {##1 - 1}} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
-  \exp_args:NNo \prop_get:NnN \l_hobby_distances_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+  \exp_args:NNx \prop_get:NnN \l_hobby_distances_prop {\int_eval:n {##1 - 1}} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
-  \int_set:Nn \l_hobby_temp_int {##1}
-  \int_decr:N \l_hobby_temp_int
-  \exp_args:NNo \prop_get:NnN \l_hobby_tensionout_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+  \exp_args:NNx \prop_get:NnN \l_hobby_tensionout_prop {\int_eval:n {##1 - 1}} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {3}
   \fp_sub:Nn \l_hobby_tempb_fp {1}
@@ -578,9 +794,7 @@ version 2005/12/01 or later.
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
-  \int_set:Nn \l_hobby_temp_int {##1}
-  \int_incr:N \l_hobby_temp_int
-  \exp_args:NNo \prop_get:NnN \l_hobby_tensionin_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+  \exp_args:NNx \prop_get:NnN \l_hobby_tensionin_prop {\int_eval:n {##1 + 1}} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
   \prop_get:NnN \l_hobby_distances_prop {##1} \l_tmpa_tl
@@ -599,12 +813,10 @@ version 2005/12/01 or later.
   \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
-  \int_set:Nn \l_hobby_temp_int {##1}
-  \int_decr:N \l_hobby_temp_int
-  \exp_args:NNo \prop_get:NnN \l_hobby_tensionin_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+  \exp_args:NNx \prop_get:NnN \l_hobby_tensionin_prop {\int_eval:n {##1 - 1}} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
-  \exp_args:NNo \prop_get:NnN \l_hobby_distances_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+  \exp_args:NNx \prop_get:NnN \l_hobby_distances_prop {\int_eval:n {##1 - 1}} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
   \prop_put:Nnx \l_hobby_tric_prop {##1} {\fp_to_tl:N \l_hobby_tempa_fp}
@@ -614,26 +826,22 @@ version 2005/12/01 or later.
 % Lastly (before the adjustments), the target vector.
 %    \begin{macrocode}
   \prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int - 2} {
-  \int_set:Nn \l_hobby_temp_int {##1}
-  \int_incr:N \l_hobby_temp_int
-  \exp_args:NNo \prop_get:NnN \l_hobby_psi_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+  \exp_args:NNx \prop_get:NnN \l_hobby_psi_prop {\int_eval:n {##1 + 1}} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
   \prop_get:NnN \l_hobby_tensionout_prop {##1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
-  \int_set:Nn \l_hobby_temp_int {##1}
-  \int_decr:N \l_hobby_temp_int
-  \exp_args:NNo \prop_get:NnN \l_hobby_tensionout_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+  \exp_args:NNx \prop_get:NnN \l_hobby_tensionout_prop {\int_eval:n {##1 - 1}} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
-  \exp_args:NNo \prop_get:NnN \l_hobby_distances_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+  \exp_args:NNx \prop_get:NnN \l_hobby_distances_prop {\int_eval:n {##1 - 1}} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
   \fp_neg:N \l_hobby_tempa_fp
 
-  \exp_args:NNo \prop_get:NnN \l_hobby_tensionout_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+  \exp_args:NNx \prop_get:NnN \l_hobby_tensionout_prop {\int_eval:n {##1 - 1}} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {3}
   \fp_sub:Nn \l_hobby_tempb_fp {1}
@@ -645,9 +853,7 @@ version 2005/12/01 or later.
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
-  \int_set:Nn \l_hobby_temp_int {##1}
-  \int_incr:N \l_hobby_temp_int
-  \prop_get:NnN \l_hobby_tensionin_prop {##1} \l_tmpa_tl
+  \exp_args:NNx \prop_get:NnN \l_hobby_tensionin_prop {\int_eval:n {##1 + 1}} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
   \prop_get:NnN \l_hobby_distances_prop {##1} \l_tmpa_tl
@@ -725,7 +931,7 @@ version 2005/12/01 or later.
 \fp_if_undefined:NTF \l_hobby_outang_fp
 {
   \exp_args:NNx \prop_get:NnN \l_hobby_tensionout_prop {\int_eval:n {\l_hobby_npoints_int - 1}} \l_tmpa_tl
-  \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+  \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
   \exp_args:NNx \prop_get:NnN \l_hobby_tensionout_prop {\int_eval:n {\l_hobby_npoints_int - 2}} \l_tmpa_tl
@@ -779,6 +985,7 @@ version 2005/12/01 or later.
   \fp_neg:N \l_hobby_tempa_fp
 
   \exp_args:NNx \prop_get:NnN \l_hobby_trib_prop {\int_eval:n {\l_hobby_npoints_int - 1}} \l_tmpa_tl
+
   \fp_add:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
   \exp_args:NNx \prop_put:Nnx \l_hobby_trib_prop {\int_eval:n {\l_hobby_npoints_int - 1}} {\fp_to_tl:N \l_hobby_tempa_fp}
@@ -792,7 +999,7 @@ version 2005/12/01 or later.
   \exp_args:NNx \prop_get:NnN \l_hobby_psi_prop {\int_eval:n {\l_hobby_npoints_int - 1}} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
-  \exp_args:NNo \prop_get:NnN \l_hobby_tensionin_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+  \exp_args:NNx \prop_get:NnN \l_hobby_tensionin_prop {\int_eval:n {\l_hobby_npoints_int - 1}} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
@@ -809,48 +1016,39 @@ version 2005/12/01 or later.
 {
   \fp_set_eq:NN \l_hobby_tempa_fp \l_hobby_outang_fp
 
-  \int_set_eq:NN \l_hobby_temp_int \l_hobby_npoints_int
-  \int_decr:N \l_hobby_temp_int
-  \exp_args:NNo \prop_get:NnN \l_hobby_tensionout_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+  \exp_args:NNx \prop_get:NnN \l_hobby_tensionout_prop {\int_eval:n {\l_hobby_npoints_int - 1}} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
-  \int_set_eq:NN \l_hobby_temp_int \l_hobby_npoints_int
-  \int_decr:N \l_hobby_temp_int
-  \int_decr:N \l_hobby_temp_int
-  \exp_args:NNo \prop_get:NnN \l_hobby_tensionout_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+  \exp_args:NNx \prop_get:NnN \l_hobby_tensionout_prop {\int_eval:n {\l_hobby_npoints_in - 2}} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
-  \exp_args:NNo \prop_get:NnN \l_hobby_distances_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+  \exp_args:NNx \prop_get:NnN \l_hobby_distances_prop {\int_eval:n {\l_hobby_npoints_int - 2}} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
   \fp_neg:N \l_hobby_tempa_fp
 
-  \exp_args:NNo \prop_get:NnN \l_hobby_tensionout_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+  \exp_args:NNx \prop_get:NnN \l_hobby_tensionout_prop {\int_eval:n {\l_hobby_npoints_int - 2}} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {3}
   \fp_sub:Nn \l_hobby_tempb_fp {1}
 
-  \int_set_eq:NN \l_hobby_temp_int \l_hobby_npoints_int
-  \int_decr:N \l_hobby_temp_int
-  \exp_args:NNo \prop_get:NnN \l_hobby_psi_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+  \exp_args:NNx \prop_get:NnN \l_hobby_psi_prop {\int_eval:n {\l_hobby_npoints_int - 1}} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
-  \exp_args:NNo \prop_get:NnN \l_hobby_tensionin_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+  \exp_args:NNx \prop_get:NnN \l_hobby_tensionin_prop {\int_eval:n {\l_hobby_npoints_int - 1}} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
-  \int_set_eq:Nn \l_hobby_temp_int \l_hobby_npoints_int
-  \exp_args:NNo \prop_get:NnN \l_hobby_tensionin_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+  \exp_args:NNo \prop_get:NnN \l_hobby_tensionin_prop {\int_use:N \l_hobby_npoints_int} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
-  \int_decr:N \l_hobby_temp_int
-  \exp_args:NNo \prop_get:NnN \l_hobby_distances_prop {\int_use:n \l_hobby_temp_int} \l_tmpa_tl
+  \exp_args:NNx \prop_get:NnN \l_hobby_distances_prop {\int_eval:n {\l_hobby_npoints_int - 1}} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
   \fp_sub:Nn \l_hobby_tempa_fp {\l_hobby_tempb_fp}
 
-  \exp_args:NNo \prop_put:Nnx \l_hobby_trid_prop {\int_use:N \l_hobby_temp_int} {\fp_to_tl:N \l_hobby_tempa_fp}
+  \exp_args:NNx \prop_put:Nnx \l_hobby_trid_prop {\int_eval:n {\l_hobby_npoints_int - 1}} {\fp_to_tl:N \l_hobby_tempa_fp}
 }
 %    \end{macrocode}
 %
@@ -868,7 +1066,7 @@ version 2005/12/01 or later.
   \prop_get:NnN \l_hobby_tria_prop {##1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
-  \fp_add:Nn \l_hobby_tempb_fp {\l_hobby_tempa_fp}
+  \fp_sub:Nn \l_hobby_tempb_fp {\l_hobby_tempa_fp}
 
   \prop_put:Nnx \l_hobby_trib_prop {##1} {\fp_to_tl:N \l_hobby_tempb_fp}
 
@@ -893,7 +1091,7 @@ version 2005/12/01 or later.
   \prop_get:NnN \l_hobby_tria_prop {##1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
-  \fp_add:Nn \l_hobby_tempb_fp {\l_hobby_tempa_fp}
+  \fp_sub:Nn \l_hobby_tempb_fp {\l_hobby_tempa_fp}
 
   \prop_put:Nnx \l_hobby_trid_prop {##1} {\fp_to_tl:N \l_hobby_tempb_fp}
 }
@@ -920,7 +1118,7 @@ version 2005/12/01 or later.
 }
 %    \end{macrocode}
 %
-% Now that we have computed the \(\theta_i\)s, we can quickly compute the \(\psi_i\)s.
+% Now that we have computed the \(\theta_i\)s, we can quickly compute the \(\phi_i\)s.
 %
 %    \begin{macrocode}
 \prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int - 1} {
@@ -975,6 +1173,9 @@ version 2005/12/01 or later.
   \fp_add:Nn \l_hobby_tempb_fp {\l_hobby_tempc_fp}
 
   \fp_div:Nn \l_hobby_tempa_fp {\l_hobby_tempb_fp}
+
+\exp_args:NNx \prop_get:NnN \l_hobby_theta_prop {\int_eval:n {\l_hobby_npoints_int -1}} \l_tmpa_tl
+\fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
 \exp_args:NNx \prop_put:Nnx \l_hobby_phi_prop {\int_use:N \l_hobby_npoints_int} {\fp_to_tl:N \l_hobby_tempa_fp}
 %    \end{macrocode}
@@ -1031,7 +1232,6 @@ version 2005/12/01 or later.
 
     \fp_div:Nn \l_hobby_tempd_fp {\l_hobby_tempc_fp}
 
-    \int_incr:N \l_hobby_temp_int
   \exp_args:NNx \prop_put:Nnx \l_hobby_sigma_prop {\int_eval:n{##1 + 1}} {\fp_to_tl:N \l_hobby_tempd_fp}
 
     \fp_set_eq:NN \l_hobby_tempc_fp \l_hobby_tempa_fp
@@ -1051,7 +1251,8 @@ version 2005/12/01 or later.
    \prop_put:Nnx \l_hobby_rho_prop {##1} {\fp_to_tl:N \l_hobby_tempd_fp}
 
   }
-
+\prop_show:N \l_hobby_angles_prop
+\prop_show:N \l_hobby_theta_prop
   \prop_map_inline:Nn \l_hobby_theta_prop {
     \prop_get:NnN \l_hobby_angles_prop {##1} \l_tmpa_tl
     \fp_set:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
@@ -1203,23 +1404,18 @@ version 2005/12/01 or later.
 \pgfkeys{
   /pgf/hobby/.is family,
   /pgf/hobby/.cd,
-  tension/.style={
-    tension out=#1,
-    tension in=#1
-  },
-  tension out/.initial=1,
-  tension in/.initial=1,
-  tension out/.default=1,
-  tension in/.default=1,
-  tension/.belongs to family=/pgf/hobby,
-  tension out/.belongs to family=/pgf/hobby,
-  tension in/.belongs to family=/pgf/hobby,
-  curl at start/.initial=1,
-  curl at end/.initial=1,
-  angle at start/.initial={},
-  angle at end/.initial={},
-  /pgf/key filters/active families/.install key filter,
+  x/.code={\pgf@x=#1cm},
+  y/.code={\pgf@y=#1cm},
 }
+
+\def\hobby@curveto#1#2#3{
+  \pgfpathcurveto{\hobby@topgf{#1}}{\hobby@topgf{#2}}{\hobby@topgf{#3}}%
+}
+
+\def\hobby@topgf#1{%
+    \pgfqkeys{/pgf/hobby}{#1}
+}
+
 %    \end{macrocode}
 % \iffalse
 %</pgflibrary>
@@ -1242,15 +1438,15 @@ version 2005/12/01 or later.
         \curvethrough{(\tikztostart) .. #1 .. (\tikztotarget)}
       }
     }
-  }
+  },
+  tension in/.code = {},
+  tension out/.code = {},
 }
 %    \end{macrocode}
 % \begin{macro}{\curvethrough}
 %    \begin{macrocode}
-\def\showonearg#1{\message{One arg: #1}}
-\def\showthreeargs#1#2#3{\message{three args: #1 and #2 and #3}}
 \newcommand\curvethrough[2][]{%
-  \hobbyinit\showonearg\showthreeargs
+  \hobbyinit\pgfutil@gobble\hobby@curveto
   \hobbysetparams{#1}%
   \hobby@processpts{#2}%
 }
