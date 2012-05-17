@@ -121,6 +121,21 @@ version 2005/12/01 or later.
 % 
 % \begin{tikzpicture}
 % \draw[scale=.1,postaction=show curve controls,line width=1mm,red] (0,0)
+% .. controls (26.76463,-1.84543) and (51.4094,14.58441) .. (60,40)
+% .. controls (67.09875,61.00188) and (59.76253,84.57518) .. (40,90)
+% .. controls (25.35715,94.01947) and (10.48064,84.5022) .. (10,70)
+% .. controls (9.62895,58.80421) and (18.80421,49.62895) .. (30,50);
+% 
+% \fill[green] (0,0) circle[radius=2pt]
+%  (6,4) circle[radius=2pt]
+%  (4,9) circle[radius=2pt]
+%  (1,7) circle[radius=2pt]
+%  (3,5) circle[radius=2pt];
+% \draw (-3,0) -- (0,0) .. (6,4) .. (4,9) .. (1,7) .. (3,5) -- ++(2,0);
+% \end{tikzpicture}
+% 
+% \begin{tikzpicture}
+% \draw[scale=.1,postaction=show curve controls,line width=1mm,red] (0,0)
 % .. controls (5.18756,-26.8353) and (60.36073,-18.40036) .. (60,40)
 % .. controls (59.87714,59.889) and (57.33896,81.64203) .. (40,90)
 % .. controls (22.39987,98.48387) and (4.72404,84.46368) .. (10,70)
@@ -258,14 +273,10 @@ version 2005/12/01 or later.
 % =
 % - d_{n-1} \overline{\tau}_{n} \overline{\tau}_{n-1}^2 (3 \tau_{n-2} - 1) &\psi_{n-1}
 % \end{align*}
-%
-% For a closed path, we have one more equation.
-% This is the identification of \(\theta_0\) with \(\theta_{n'-1}\).
-%
-% The result is a linear system with \(n' \times n'\) coefficient matrix.
+%^^A
+% This gives \(n'\) equations in \(n'\) unknowns (\(\theta_0\) to \(\theta_{n-1}\)).
+% The coefficient matrix is tridiagonal.
 % It is more natural to index the entries from \(0\).
-% For an open path it is a tridiagonal coefficient matrix.
-% For a closed path the equation \(\theta_0 = \theta_{n'-1}\) makes it no longer tridiagonal but it differs only by the \((0,n'-1)\)--{}entry.
 % Let us write \(A_i\) for the subdiagonal, \(B_i\) for the main diagonal, and \(C_i\) for the superdiagonal.
 % Let us write \(D_i\) for the target vector.
 % Then for an open path we have the following formulae:
@@ -299,7 +310,16 @@ version 2005/12/01 or later.
 % \end{cases}
 % \end{align*}
 %
-% For a closed path, the formulae are the following:
+% For a closed path, we have \(n\) equations in \(n+2\) unknowns (\(\theta_0\) to \(\theta_{n+1}\)).
+% However, we have not included all the information.
+% Since we have repeated points, we need to identify \(\theta_0\) with \(\theta_n\) and \(\theta_1\) with \(\theta_{n+1}\).
+% To get a system with \(n'\) equations in \(n'\) unknowns, we add the equation \(\theta_0 - \theta_n = 0\) and substitute in \(\theta_{n+1} = \theta_1\).
+% The resulting matrix is not quite tridiagonal but has extra entries on the off-corners.
+% However, it can be written in the form \(M + u v^\top\) with \(M\) tridiagonal.
+% There is some freedom in choosing \(u\) and \(v\).
+% For simplest computation, we take \(u = e_0 + e_{n'-1}\).
+% This means that \(v = d_{n'-2} \tau_{n'-2} \tau_{n'-1}^2 e_1 - e_{n'-1}\).
+% With the same notation as above, the matrix \(M\) is given by the following formulae:
 %^^A
 % \begin{align*}
 % A_i &= d_i \overline{\tau}_{i+1} \overline{\tau}_i^2 \\
@@ -308,7 +328,9 @@ version 2005/12/01 or later.
 %^^A
 % B_i &= d_i \overline{\tau}_{i+1} \overline{\tau}_i^2 (3 \tau_{i-1} -1) + d_{i-1} \tau_{i-1} \tau_i^2(3 \overline{\tau}_{i+1} - 1) \\
 %^^A
-% C_0 &= 0 \\
+% B_{n'-1} &= d_{n'-1} \overline{\tau}_{n'} \overline{\tau}_{n'-1}^2 (3 \tau_{n'-2} -1) + d_{n'-2} \tau_{n'-2} \tau_{n'-1}^2(3 \overline{\tau}_{n'} - 1) + 1\\
+%^^A
+% C_0 &= - d_{n'-2} \tau_{n'-2} \tau_{n'-1}^2 \\
 %^^A
 % C_i &= d_{i-1} \tau_{i-1} \tau_i^2 \\
 %^^A
@@ -316,17 +338,10 @@ version 2005/12/01 or later.
 %^^A
 % D_i &= - d_i \overline{\tau}_{i+1} \overline{\tau}_i^2 (3 \tau_{i-1} - 1) \psi_i
 % - d_{i-1} \tau_{i-1} \tau_i^2 \psi_{i+1} \\
+%^^A
+% D_{n'-1} &= - d_{n'-1} \overline{\tau}_{n'} \overline{\tau}_{n'-1}^2 (3 \tau_{n'-2} - 1) \psi_{n'-1}
+% - d_{n'-2} \tau_{n'-2} \tau_{n'-1}^2 \psi_1
 % \end{align*}
-%^^A
-% This is not quite the real matrix as it does not include the \((0,n'-1)\)--{}term which is \(-1\).
-% However, it can be written in the form \(M + u v^\top\) with \(M\) tridiagonal and \(u = e_0\), \(v = - e_{n'-1}\).
-% Doing this means that we can use the Sherman--{}Morrison formula:
-%^^A
-% \[
-% (M + u v^\top)^{-1} = M^{-1} - \frac{M^{-1} u v^\top M^{-1}}{1 + v^\top M^{-1} u}.
-% \]
-%^^A
-% So to compute \((M + u v^\top)^{-1} D\) we need to compute \(M^{-1} D\) and \(M^{-1} u\).
 %
 % The next step in the implementation is to compute these coefficients and store them in appropriate property lists.
 % Having done that, we need to solve the resulting tridiagonal system.
@@ -345,8 +360,13 @@ version 2005/12/01 or later.
 % \theta_i &= (D_i' - C_i' \theta_{i+1})/B_i'
 % \end{align*}
 %^^A
-% For a closed path, we run this both with the vector \(D\) and the vector \(u = e_0\).
-% Then we take the inner product of each with \(-e_{n'-1}^\top\) which selects (and negates) the \(n'-1\)th term, and substitute into the Sherman--{}Morrison formula to get the \(\theta_i\).
+% For a closed path, we run this both with the vector \(D\) and the vector \(u = e_0 + e_{n'-1}\).
+% Then to get the real answer, we use the Sherman--{}Morrison formula:
+%^^A
+% \[
+% (M + u v^\top)^{-1} D = M^{-1} D - \frac{M^{-1} u v^\top M^{-1} D}{1 + v^\top M^{-1} u}.
+% \]
+%^^A
 % 
 % This leaves us with the values for \(\theta_i\).
 % We now substitute these into Hobby's formulae for the lengths:
@@ -523,17 +543,17 @@ version 2005/12/01 or later.
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\l_hobby_triu_prop}
+% \Verb+\l_hobby_triu_prop+
+%    \begin{macrocode}
+\prop_new:N \l_hobby_triu_prop
+%    \end{macrocode}
+% \end{macro}
+%
 % \begin{macro}{\l_hobby_psi_prop}
 % \Verb+\l_hobby_psi_prop+
 %    \begin{macrocode}
 \prop_new:N \l_hobby_psi_prop
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\l_hobby_psid_prop}
-% \Verb+\l_hobby_psid_prop+
-%    \begin{macrocode}
-\prop_new:N \l_hobby_psid_prop
 %    \end{macrocode}
 % \end{macro}
 %
@@ -565,13 +585,6 @@ version 2005/12/01 or later.
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\l_hobby_alpha_prop}
-% \Verb+\l_hobby_alpha_prop+
-%    \begin{macrocode}
-\prop_new:N \l_hobby_alpha_prop
-%    \end{macrocode}
-% \end{macro}
-%
 % \begin{macro}{\l_hobby_controla_prop}
 % \Verb+\l_hobby_controla_prop+
 %    \begin{macrocode}
@@ -597,6 +610,13 @@ version 2005/12/01 or later.
 % \Verb+\l_hobby_y_dim+
 %    \begin{macrocode}
 \dim_new:N \l_hobby_y_dim
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\l_hobby_triv_fp}
+% \Verb+\l_hobby_triv_fp+
+%    \begin{macrocode}
+\fp_new:N \l_hobby_triv_fp
 %    \end{macrocode}
 % \end{macro}
 %
@@ -837,7 +857,7 @@ version 2005/12/01 or later.
     \exp_args:NNo \prop_put:Nnx \l_hobby_pointsy_prop {\int_use:N \l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
     \prop_get:NnN \l_hobby_tensionin_prop {1} \l_tmpa_tl
     \exp_args:NNo \prop_put:Nnx \l_hobby_tensionin_prop {\int_use:N \l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
-    \prop_get:NnN \l_hobby_tensionout_prop {1} \l_tmpa_tl
+   \prop_get:NnN \l_hobby_tensionout_prop {1} \l_tmpa_tl
     \exp_args:NNo \prop_put:Nnx \l_hobby_tensionout_prop {\int_use:N \l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
 }{}
 %    \end{macrocode}
@@ -951,7 +971,7 @@ version 2005/12/01 or later.
 %
 % Lastly (before the adjustments), the target vector.
 %    \begin{macrocode}
-  \prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int - 1} {
+  \prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int - 2} {
   \exp_args:NNx \prop_get:NnN \l_hobby_psi_prop {\int_eval:n {##1 + 1}} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
@@ -993,19 +1013,88 @@ version 2005/12/01 or later.
 %
 % Next, there are some adjustments at the ends.
 % These differ depending on whether the path is open or closed.
-% First, we test to see if \(\theta_0\) has been specified.
 %    \begin{macrocode}
 \bool_if:NTF \l_hobby_closed_bool {
 %    \end{macrocode}
 % Closed path
 %    \begin{macrocode}
-\prop_put:NnN \l_hobby_trib_prop {0} {1}
-\prop_put:NnN \l_hobby_tric_prop {0} {0}
-\prop_put:NnN \l_hobby_trid_prop {0} {0}
+\exp_args:NNx \prop_get:NnN \l_hobby_distances_prop {\int_eval:n {\l_hobby_npoints_int - 2}} \l_tmpa_tl
+\fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+\exp_args:NNx \prop_get:NnN \l_hobby_tensionout_prop {\int_eval:n {\l_hobby_npoints_int - 2}} \l_tmpa_tl
+\fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+\exp_args:NNx \prop_get:NnN \l_hobby_tensionout_prop {\int_eval:n {\l_hobby_npoints_int - 1}} \l_tmpa_tl
+\fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+\fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+\fp_neg:N \l_hobby_tempa_fp
+\prop_put:Nnx \l_hobby_tric_prop {0} {\fp_to_tl:N \l_hobby_tempa_fp}
+
+\prop_put:Nnn \l_hobby_trib_prop {0} {1}
+\prop_put:Nnn \l_hobby_trid_prop {0} {0}
+
+\exp_args:NNx \prop_get:NnN \l_hobby_trib_prop {\int_eval:n {\l_hobby_npoints_int - 1}} \l_tmpa_tl
+\fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+\fp_add:Nn \l_hobby_tempa_fp {1}
+\exp_args:NNx \prop_put:Nnx \l_hobby_trib_prop {\int_eval:n {\l_hobby_npoints_int - 1}} {\fp_to_tl:N \l_hobby_tempa_fp}
+
+  \prop_get:NnN \l_hobby_psi_prop {1} \l_tmpa_tl
+  \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+
+  \exp_args:NNx \prop_get:NnN \l_hobby_tensionout_prop {\int_eval:n {\l_hobby_npoints_int -1}} \l_tmpa_tl
+  \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+  \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+
+  \exp_args:NNx \prop_get:NnN \l_hobby_tensionout_prop {\int_eval:n {\l_hobby_npoints_int -2}} \l_tmpa_tl
+  \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+
+  \exp_args:NNx \prop_get:NnN \l_hobby_distances_prop {\int_eval:n {\l_hobby_npoints_int - 2}} \l_tmpa_tl
+  \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+
+  \fp_neg:N \l_hobby_tempa_fp
+
+  \exp_args:NNx \prop_get:NnN \l_hobby_tensionout_prop {\int_eval:n {\l_hobby_npoints_int - 2}} \l_tmpa_tl
+  \fp_set:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
+  \fp_mul:Nn \l_hobby_tempb_fp {3}
+  \fp_sub:Nn \l_hobby_tempb_fp {1}
+
+  \exp_args:NNx \prop_get:NnN \l_hobby_psi_prop {\int_eval:n {\l_hobby_npoints_int - 1}} \l_tmpa_tl
+  \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
+
+  \exp_args:NNx \prop_get:NnN \l_hobby_tensionin_prop {\int_eval:n {\l_hobby_npoints_int - 1}} \l_tmpa_tl
+  \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
+  \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
+
+  \exp_args:NNx \prop_get:NnN \l_hobby_tensionin_prop {\int_use:N \l_hobby_npoints_int} \l_tmpa_tl
+  \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
+
+  \exp_args:NNx \prop_get:NnN \l_hobby_distances_prop {\int_eval:n {\l_hobby_npoints_int -1}} \l_tmpa_tl
+  \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
+
+  \fp_sub:Nn \l_hobby_tempa_fp {\l_hobby_tempb_fp}
+
+  \exp_args:NNx \prop_put:Nnx \l_hobby_trid_prop {\int_eval:n {\l_hobby_npoints_int - 1}} {\fp_to_tl:N \l_hobby_tempa_fp}
+%    \end{macrocode}
+% We also need to populate the \(u\)-vector
+%    \begin{macrocode}
+  \prop_put:Nnn \l_hobby_triu_prop {0} {1}
+  \exp_args:NNx \prop_put:Nnn \l_hobby_triu_prop {\int_eval:n {\l_hobby_npoints_int - 1}} {1}
+  \prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int - 2} {
+  \prop_put:Nnn \l_hobby_triu_prop {##1} {0}
+  }
+%    \end{macrocode}
+% And define the significant entry in the \(v\)-vector.
+%    \begin{macrocode}
+\exp_args:NNx \prop_get:NnN \l_hobby_tensionout_prop {\int_eval:n {\l_hobby_npoints_int -1}} \l_tmpa_tl
+\fp_set:Nn \l_hobby_triv_fp {\l_tmpa_tl}
+\fp_mul:Nn \l_hobby_triv_fp {\l_tmpa_tl}
+\exp_args:NNx \prop_get:NnN \l_hobby_tensionout_prop {\int_eval:n {\l_hobby_npoints_int -2}} \l_tmpa_tl
+\fp_mul:Nn \l_hobby_triv_fp {\l_tmpa_tl}
+\exp_args:NNx \prop_get:NnN \l_hobby_distances_prop {\int_eval:n {\l_hobby_npoints_int -2}} \l_tmpa_tl
+\fp_mul:Nn \l_hobby_triv_fp {\l_tmpa_tl}
 }
 {
 %    \end{macrocode}
 % Open path
+% First, we test to see if \(\theta_0\) has been specified.
 %    \begin{macrocode}
 \fp_if_undefined:NTF \l_hobby_inang_fp
 {
@@ -1237,6 +1326,22 @@ version 2005/12/01 or later.
   \fp_sub:Nn \l_hobby_tempb_fp {\l_hobby_tempa_fp}
 
   \prop_put:Nnx \l_hobby_trid_prop {##1} {\fp_to_tl:N \l_hobby_tempb_fp}
+
+  \bool_if:NTF \l_hobby_closed_bool {
+  \exp_args:NNx \prop_get:NnN \l_hobby_trib_prop {\int_eval:n{##1 - 1}} \l_tmpa_tl
+  \fp_set:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
+  \prop_get:NnN \l_hobby_triu_prop {##1} \l_tmpa_tl
+  \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
+
+  \exp_args:NNx \prop_get:NnN \l_hobby_triu_prop {\int_eval:n{##1 - 1}} \l_tmpa_tl
+  \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+  \prop_get:NnN \l_hobby_tria_prop {##1} \l_tmpa_tl
+  \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+
+  \fp_sub:Nn \l_hobby_tempb_fp {\l_hobby_tempa_fp}
+
+  \prop_put:Nnx \l_hobby_triu_prop {##1} {\fp_to_tl:N \l_hobby_tempb_fp}
+  }{}
 }
 
 \exp_args:NNx \prop_get:NnN \l_hobby_trid_prop {\int_eval:n {\l_hobby_npoints_int - 1}} \l_tmpa_tl
@@ -1246,6 +1351,18 @@ version 2005/12/01 or later.
 \fp_div:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
 \exp_args:NNx \prop_put:Nnx \l_hobby_theta_prop {\int_eval:n {\l_hobby_npoints_int - 1}} {\fp_to_tl:N \l_hobby_tempa_fp}
+
+\bool_if:NTF \l_hobby_closed_bool {
+  \exp_args:NNx \prop_get:NnN \l_hobby_triu_prop {\int_eval:n {\l_hobby_npoints_int - 1}} \l_tmpa_tl
+\fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+
+\exp_args:NNx \prop_get:NnN \l_hobby_trib_prop {\int_eval:n {\l_hobby_npoints_int - 1}} \l_tmpa_tl
+\fp_div:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+
+\exp_args:NNx \prop_put:Nnx \l_hobby_triu_prop {\int_eval:n {\l_hobby_npoints_int - 1}} {\fp_to_tl:N \l_hobby_tempa_fp}
+
+
+}{}
 
 \prg_stepwise_inline:nnnn {\l_hobby_npoints_int - 2} {-1} {0} {
   \exp_args:NNx \prop_get:NnN \l_hobby_theta_prop {\int_eval:n {##1 + 1}} \l_tmpa_tl
@@ -1259,6 +1376,50 @@ version 2005/12/01 or later.
   \fp_div:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
   \prop_put:Nnx \l_hobby_theta_prop {##1} {\fp_to_tl:N \l_hobby_tempa_fp}
 }
+\bool_if:NTF \l_hobby_closed_bool {
+%    \end{macrocode}
+% On a closed path, we also need to work out \(M^{-1} u\).
+%    \begin{macrocode}
+\prg_stepwise_inline:nnnn {\l_hobby_npoints_int - 2} {-1} {0} {
+  \exp_args:NNx \prop_get:NnN \l_hobby_triu_prop {\int_eval:n {##1 + 1}} \l_tmpa_tl
+  \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+  \prop_get:NnN \l_hobby_tric_prop {##1} \l_tmpa_tl
+  \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+  \prop_get:NnN \l_hobby_triu_prop {##1} \l_tmpa_tl
+  \fp_neg:N \l_hobby_tempa_fp
+  \fp_add:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+  \prop_get:NnN \l_hobby_trib_prop {##1} \l_tmpa_tl
+  \fp_div:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+  \prop_put:Nnx \l_hobby_triu_prop {##1} {\fp_to_tl:N \l_hobby_tempa_fp}
+}
+%    \end{macrocode}
+% Then we compute \(v^\top M^{-1}u\) and \(v^\top M^{-1} \theta\).
+% As \(v\) has a particularly simple form, these inner products are easy to compute.
+%    \begin{macrocode}
+\prop_get:NnN \l_hobby_triu_prop {1} \l_tmpa_tl
+\fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+\fp_mul:Nn \l_hobby_tempa_fp {\l_hobby_triv_fp}
+\exp_args:NNx \prop_get:NnN \l_hobby_triu_prop {\int_eval:n {\l_hobby_npoints_int - 1}} \l_tmpa_tl
+\fp_sub:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+\fp_add:Nn \l_hobby_tempa_fp {1}
+
+\prop_get:NnN \l_hobby_theta_prop {1} \l_tmpa_tl
+\fp_set:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
+\fp_mul:Nn \l_hobby_tempb_fp {\l_hobby_triv_fp}
+\exp_args:NNx \prop_get:NnN \l_hobby_theta_prop {\int_eval:n {\l_hobby_npoints_int - 1}} \l_tmpa_tl
+\fp_sub:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
+\fp_div:Nn \l_hobby_tempb_fp {\l_hobby_tempa_fp}
+
+\prg_stepwise_inline:nnnn {0} {1} {\l_hobby_npoints_int - 1} {
+  \prop_get:NnN \l_hobby_triu_prop {##1} \l_tmpa_tl
+  \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+  \fp_mul:Nn \l_hobby_tempa_fp {\l_hobby_tempb_fp}
+  \fp_neg:N \l_hobby_tempa_fp
+  \prop_get:NnN \l_hobby_theta_prop {##1} \l_tmpa_tl
+  \fp_add:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+  \prop_put:Nnx \l_hobby_theta_prop {##1} {\fp_use:N \l_hobby_tempa_fp}
+}
+}{}
 %    \end{macrocode}
 %
 % Now that we have computed the \(\theta_i\)s, we can quickly compute the \(\phi_i\)s.
@@ -1274,9 +1435,13 @@ version 2005/12/01 or later.
   }
 %    \end{macrocode}
 %
-% This works for all except \(\psi_n\).
-%
+% If the path is open, this works for all except \(\psi_n\).
+% If the path is closed, we can drop our added point.
+% Cheaply, of course.
 %    \begin{macrocode}
+\bool_if:NTF \l_hobby_closed_bool {
+\int_decr:N \l_hobby_npoints_int
+}{
   \exp_args:NNo \prop_get:NnN \l_hobby_tensionin_prop {\int_use:N \l_hobby_npoints_int} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempa_fp {3}
@@ -1321,6 +1486,7 @@ version 2005/12/01 or later.
 \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
 \exp_args:NNx \prop_put:Nnx \l_hobby_phi_prop {\int_use:N \l_hobby_npoints_int} {\fp_to_tl:N \l_hobby_tempa_fp}
+}
 %    \end{macrocode}
 %
 % Next task is to compute the \(\rho_i\) and \(\sigma_i\).
@@ -1395,10 +1561,11 @@ version 2005/12/01 or later.
 
   }
 
-  \prop_map_inline:Nn \l_hobby_theta_prop {
+\prg_stepwise_inline:nnnn {0} {1} {\l_hobby_npoints_int - 1} {
     \prop_get:NnN \l_hobby_angles_prop {##1} \l_tmpa_tl
     \fp_set:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
-    \fp_sub:Nn \l_hobby_tempc_fp {##2}
+  \prop_get:NnN \l_hobby_theta_prop {##1} \l_tmpa_tl
+    \fp_sub:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
     \fp_sin:Nn \l_hobby_tempd_fp {\l_hobby_tempc_fp}
     \fp_cos:Nn \l_hobby_tempc_fp {\l_hobby_tempc_fp}
     \prop_get:NnN \l_hobby_rho_prop {##1} \l_tmpa_tl
@@ -1416,10 +1583,11 @@ version 2005/12/01 or later.
   \exp_args:NNx \prop_put:Nnx \l_hobby_controla_prop {\int_eval:n {##1 + 1}} {x = \fp_use:N \l_hobby_tempc_fp, y = \fp_use:N \l_hobby_tempd_fp }
   }
 
-  \prop_map_inline:Nn \l_hobby_phi_prop {
+\prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int} {
     \exp_args:NNx \prop_get:NnN \l_hobby_angles_prop {\int_eval:n {##1 - 1}} \l_tmpa_tl
     \fp_set:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
-    \fp_add:Nn \l_hobby_tempc_fp {##2}
+  \prop_get:NnN \l_hobby_phi_prop {##1} \l_tmpa_tl
+    \fp_add:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
     \fp_sin:Nn \l_hobby_tempd_fp {\l_hobby_tempc_fp}
     \fp_cos:Nn \l_hobby_tempc_fp {\l_hobby_tempc_fp}
     \fp_neg:N \l_hobby_tempc_fp
@@ -1445,8 +1613,8 @@ version 2005/12/01 or later.
 % \begin{macro}{\hobbyinit}
 % Initialise the settings for Hobby's algorithm
 %    \begin{macrocode}
-\NewDocumentCommand \hobbyinit {m m} {
-\hobby_set_cmds:nn#1#2
+\NewDocumentCommand \hobbyinit {m m m} {
+\hobby_set_cmds:nnn#1#2#3
 \prop_clear:N \l_hobby_points_prop
 \prop_clear:N \l_hobby_pointsx_prop
 \prop_clear:N \l_hobby_pointsy_prop
@@ -1458,13 +1626,12 @@ version 2005/12/01 or later.
 \prop_clear:N \l_hobby_trib_prop
 \prop_clear:N \l_hobby_tric_prop
 \prop_clear:N \l_hobby_trid_prop
+\prop_clear:N \l_hobby_triu_prop
 \prop_clear:N \l_hobby_psi_prop
-\prop_clear:N \l_hobby_psid_prop
 \prop_clear:N \l_hobby_theta_prop
 \prop_clear:N \l_hobby_phi_prop
 \prop_clear:N \l_hobby_sigma_prop
 \prop_clear:N \l_hobby_rho_prop
-\prop_clear:N \l_hobby_alpha_prop
 \prop_clear:N \l_hobby_controla_prop
 \prop_clear:N \l_hobby_controlb_prop
 
@@ -1509,9 +1676,10 @@ version 2005/12/01 or later.
 %
 % \begin{macro}{\hobbygenpath}
 %    \begin{macrocode}
-\cs_new:Nn \hobby_set_cmds:nn {
+\cs_new:Nn \hobby_set_cmds:nnn {
   \cs_set_eq:NN \hobby_moveto:n #1
   \cs_set_eq:NN \hobby_curveto:nnn #2
+  \cs_set_eq:NN \hobby_close:n #3
 }
 \tl_new:N \l_tmpc_tl
 \NewDocumentCommand \hobbygenpath { } {
@@ -1524,6 +1692,10 @@ version 2005/12/01 or later.
     \prop_get:NnN \l_hobby_points_prop {##1} \l_tmpc_tl
     \exp_args:Nooo \hobby_curveto:nnn {\l_tmpa_tl} {\l_tmpb_tl} {\l_tmpc_tl}
 }
+  \bool_if:NTF \l_hobby_closed_bool {
+    \prop_get:NnN \l_hobby_points_prop {0} \l_tmpa_tl
+    \exp_args:No \hobby_close:n {\l_tmpa_tl}
+    }{}
 }
 %    \end{macrocode}
 % \end{macro}
@@ -1550,12 +1722,16 @@ version 2005/12/01 or later.
   y/.code={\pgf@y=#1cm},
 }
 
-\def\hobby@curveto#1#2#3{
+\def\hobby@curveto#1#2#3{%
   \pgfpathcurveto{\hobby@topgf{#1}}{\hobby@topgf{#2}}{\hobby@topgf{#3}}%
 }
 
 \def\hobby@topgf#1{%
-    \pgfqkeys{/pgf/hobby}{#1}
+    \pgfqkeys{/pgf/hobby}{#1}%
+}
+
+\def\hobby@close#1{%
+  \pgfpathclose
 }
 
 %    \end{macrocode}
@@ -1606,7 +1782,7 @@ version 2005/12/01 or later.
 % \begin{macro}{\curvethrough}
 %    \begin{macrocode}
 \newcommand\curvethrough[2][]{%
-  \hobbyinit\pgfutil@gobble\hobby@curveto
+  \hobbyinit\pgfutil@gobble\hobby@curveto\hobby@close
   \hobbysetparams{#1}%
   \hobby@processpts{#2}%
 }
@@ -1636,6 +1812,45 @@ version 2005/12/01 or later.
 \def\hobby@getonepoint#1..#2\relax{%
   \def\hobby@pt{#1}%
   \def\hobby@rest{#2}%
+}
+
+\def\tikz@curveto@auto{%
+  \hobbyinit\pgfutil@gobble\hobby@curveto\hobby@close
+  \pgfmathsetmacro\hobby@x{\the\tikz@lastx/1cm}%
+  \pgfmathsetmacro\hobby@y{\the\tikz@lasty/1cm}%
+  \pgfutil@ifundefined{tikz@scan@point@options}{%
+    \hobbyaddpoint{x = \hobby@x, y = \hobby@y}%
+  }{%
+  \expandafter\hobbyaddpoint\expandafter{\tikz@scan@point@options,x = \hobby@x, y = \hobby@y}%
+  }%
+  \let\tikz@scan@point@options=\pgfutil@empty
+  \tikz@scan@one@point\hobby@addfromtikz}
+
+\def\hobby@addfromtikz#1{%
+  #1%
+  \tikz@make@last@position{#1}%
+  \pgfmathsetmacro\hobby@x{\the\pgf@x/1cm}%
+  \pgfmathsetmacro\hobby@y{\the\pgf@y/1cm}%
+  \expandafter\hobbyaddpoint\expandafter{\tikz@scan@point@options,x = \hobby@x, y = \hobby@y}%
+  \hobby@donext}
+
+\def\hobby@donext{%
+  \pgfutil@ifnextchar.%
+  {\hobby@curveto@auto}%
+  {\hobby@finish@auto}}%
+
+\def\hobby@curveto@auto..{%
+  \pgfutil@ifnextchar c%
+  {\hobby@finish@auto ..}%
+  {\hobby@curveto@continue}}%
+
+\def\hobby@curveto@continue{%
+  \let\tikz@scan@point@options=\pgfutil@empty
+  \tikz@scan@one@point\hobby@addfromtikz}
+
+\def\hobby@finish@auto{%
+  \hobbygenpath
+  \tikz@scan@next@command%
 }
 %    \end{macrocode}
 % \end{macro}
