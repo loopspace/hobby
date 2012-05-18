@@ -77,16 +77,30 @@ version 2005/12/01 or later.
 %
 % The package is provided in form of a PGF library.
 % It can be loaded with
-%\begin{verbatim}
-%\usetikzlibrary{hobby}
-%\end{verbatim}
+% \begin{verbatim}
+% \usetikzlibrary{hobby}
+% \end{verbatim}
 % or
-%\begin{verbatim}
-%\usepgflibrary{hobby}
-%\end{verbatim}
-% or the equivalent ConTeXt commands.
+% \begin{verbatim}
+% \usepgflibrary{hobby}
+% \end{verbatim}
 %
-% The TikZ library installs a \Verb+to path+ which draws a smooth curve through the given points.
+% The TikZ library installs a \Verb+to path+ which draws a smooth curve through the given points:
+%
+% \begin{verbatim}
+% \draw (0,0) to[curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
+% \end{verbatim}
+%
+% There is also the facility to subvert TikZ's path processor and define curves simply using the \Verb+..+ separator between points.
+% Note that this relies on something a little special in TikZ: the syntax \Verb+(0,0) .. (2,3)+ is currently detected and processed but there is no action assigned to that syntax.
+% If a later version of TikZ assigns some action to that syntax, this package should make its override optional.
+%
+% \begin{verbatim}
+% \draw (-3,0) -- (0,0) .. (6,4) .. (4,9) .. (1,7) .. (3,5) -- ++(2,0);
+% \end{verbatim}
+%
+% The algorithm can deal with open or closed paths, it is possible to vary the ``tensions'' between the specified points of the paths, and for an open path it is possible to specify the incoming and outgoing angles either directly or via certain ``curl'' parameters.
+%
 % \tikzset{
 %   show curve controls/.style={
 %    decoration={
@@ -420,11 +434,12 @@ version 2005/12/01 or later.
 \RequirePackage{expl3}
 \ExplSyntaxOn
 %    \end{macrocode}
-% 
+% \subsubsection{Initialisation}
+%
 % We declare all our variables.
-% These are the globals.
 %
 % The function for computing the lengths of the control points depends on three parameters.
+% These are set to \(a = \sqrt{2}\), \(b = 1/16\), and \(c = \frac{3 - \sqrt{5}}{2}\).
 %    \begin{macrocode}
 \fp_new:N \g_hobby_parama_fp
 \fp_new:N \g_hobby_paramb_fp
@@ -443,220 +458,228 @@ version 2005/12/01 or later.
 \fp_div:Nn \g_hobby_paramc_fp {2}
 %    \end{macrocode}
 %
-% Now we define our objects for use in processing the path.
+% Now we define our objects for use in generating the path.
 %
 % \begin{macro}{\l_hobby_closed_bool}
-% \Verb+\l_hobby_closed_bool+
+% \Verb+\l_hobby_closed_bool+ is \Verb+true+ if the path is closed.
 %    \begin{macrocode}
 \bool_new:N \l_hobby_closed_bool
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\l_hobby_points_seq}
-% \Verb+\l_hobby_points_seq+
-%    \begin{macrocode}
-\seq_new:N \l_hobby_points_seq
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\l_hobby_path_tl}
-% \Verb+\l_hobby_path_tl+
-%    \begin{macrocode}
-\tl_new:N \l_hobby_path_tl
-%    \end{macrocode}
-% \end{macro}
-%
 % \begin{macro}{\l_hobby_points_prop}
-% \Verb+\l_hobby_points_prop+
+% \Verb+\l_hobby_points_prop+ is a property list holding the specified points on the path.
+% In the \LaTeX3 code, a ``point'' is a token list of the form \Verb+x = <number>, y = <number>+.
+% This gives us the greatest flexibility in passing points back and forth between the \LaTeX3 code and any calling code.
+% The property list is indexed by integers beginning with \(0\).
+% In the documentation, we will use the notation \(z_k\) to refer to the \(k\)th point.
 %    \begin{macrocode}
 \prop_new:N \l_hobby_points_prop
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_pointsx_prop}
-% \Verb+\l_hobby_pointsx_prop+
+% \Verb+\l_hobby_pointsx_prop+ is a property list holding the \(x\)--{}coordinates of the specified points.
 %    \begin{macrocode}
 \prop_new:N \l_hobby_pointsx_prop
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_pointsy_prop}
-% \Verb+\l_hobby_pointsy_prop+
+% \Verb+\l_hobby_pointsy_prop+ is a property list holding the \(y\)--{}coordinates of the specified points.
 %    \begin{macrocode}
 \prop_new:N \l_hobby_pointsy_prop
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_angles_prop}
-% \Verb+\l_hobby_angles_prop+
+% \Verb+\l_hobby_angles_prop+ is a property list holding the angles of the lines between the points.
+% Specifically, the angle indexed by \(k\) is the angle in radians of the line from \(z_k\) to \(z_{k+1}\).
 %    \begin{macrocode}
 \prop_new:N \l_hobby_angles_prop
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_distances_prop}
-% \Verb+\l_hobby_distances_prop+
+% \Verb+\l_hobby_distances_prop+ is a property list holding the distances between the points.
+% Specifically, the distance indexed by \(k\), which we will write as \(d_k\), is the length of the line from \(z_k\) to \(z_{k+1}\).
 %    \begin{macrocode}
 \prop_new:N \l_hobby_distances_prop
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_tensionout_prop}
-% \Verb+\l_hobby_tensionout_prop+
+% \Verb+\l_hobby_tensionout_prop+ is a property list holding the tension for the path as it leaves each point.
+% This is a parameter that controls how much the curve ``flexes'' as it leaves the point.
+% In the following, this will be written \(\tau_k\).
 %    \begin{macrocode}
 \prop_new:N \l_hobby_tensionout_prop
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_tensionin_prop}
-% \Verb+\l_hobby_tensionin_prop+
+% \Verb+\l_hobby_tensionin_prop+ is a property list holding the tension for the path as it arrives at each point.
+% This is a parameter that controls how much the curve ``flexes'' as it gets to the point.
+% In the following, this will be written \(\overline{\tau}_k\).
 %    \begin{macrocode}
 \prop_new:N \l_hobby_tensionin_prop
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_tria_prop}
-% \Verb+\l_hobby_tria_prop+
+% \Verb+\l_hobby_tria_prop+ is a property list holding the subdiagonal of the linear system that has to be solved to find the angles of the control points.
+% In the following, this will be denoted by \(A_i\).
+% The first index is \(1\).
 %    \begin{macrocode}
 \prop_new:N \l_hobby_tria_prop
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_trib_prop}
-% \Verb+\l_hobby_trib_prop+
+% \Verb+\l_hobby_trib_prop+ is a property list holding the diagonal of the linear system that has to be solved to find the angles of the control points.
+% In the following, this will be denoted by \(B_i\).
+% The first index is \(0\).
 %    \begin{macrocode}
 \prop_new:N \l_hobby_trib_prop
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_tric_prop}
-% \Verb+\l_hobby_tric_prop+
+% \Verb+\l_hobby_tric_prop+ is a property list holding the superdiagonal of the linear system that has to be solved to find the angles of the control points.
+% In the following, this will be denoted by \(C_i\).
+% The first index is \(0\).
 %    \begin{macrocode}
 \prop_new:N \l_hobby_tric_prop
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_trid_prop}
-% \Verb+\l_hobby_trid_prop+
+% \Verb+\l_hobby_trid_prop+ is a property list holding the target vector of the linear system that has to be solved to find the angles of the control points.
+% In the following, this will be denoted by \(D_i\).
+% The first index is \(1\).
 %    \begin{macrocode}
 \prop_new:N \l_hobby_trid_prop
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_triu_prop}
-% \Verb+\l_hobby_triu_prop+
+% \Verb+\l_hobby_triu_prop+ is a property list holding the perturbation of the linear system for closed paths.
+% The coefficient matrix for a \emph{open} path is tridiagonal and that means that Gaussian elimination runs faster than expected (\(O(n)\) instead of \(O(n^3)\)).
+% The matrix for a closed path is not tridiagonal but is not far off.
+% It can be solved by perturbing it to a tridiagonal matrix and then modifying the result.
+% This property list represents a utility vector in that perturbation. 
+% In the following, the vector will be denoted by \(u\).
+% The first index is \(1\).
 %    \begin{macrocode}
 \prop_new:N \l_hobby_triu_prop
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_psi_prop}
-% \Verb+\l_hobby_psi_prop+
+% \Verb+\l_hobby_psi_prop+ is a property list holding the difference of the angles of the lines entering and exiting a point.
+% That is, \(\psi_k\) is the angle between the lines joining \(z_k\) to \(z_{k-1}\) and \(z_{k+1}\).
+% The first index is \(1\).
 %    \begin{macrocode}
 \prop_new:N \l_hobby_psi_prop
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_theta_prop}
-% \Verb+\l_hobby_theta_prop+
+% \Verb+\l_hobby_theta_prop+ is a property list holding the angles of the outgoing control points for the generated path.
+% These are measured relative to the line joining the point to the next point on the path.
+% The first index is \(0\).
 %    \begin{macrocode}
 \prop_new:N \l_hobby_theta_prop
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_phi_prop}
-% \Verb+\l_hobby_phi_prop+
+% \Verb+\l_hobby_phi_prop+ is a property list holding the angles of the incoming control points for the generated path.
+% These are measured relative to the line joining the point to the previous point on the path.
+% The first index is \(1\).
 %    \begin{macrocode}
 \prop_new:N \l_hobby_phi_prop
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_sigma_prop}
-% \Verb+\l_hobby_sigma_prop+
+% \Verb+\l_hobby_sigma_prop+ is a property list holding the lengths of the outgoing control points for the generated path.
+% The units are such that the length of the line to the next specified point is one unit.
 %    \begin{macrocode}
 \prop_new:N \l_hobby_sigma_prop
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_rho_prop}
-% \Verb+\l_hobby_rho_prop+
+% \Verb+\l_hobby_rho_prop+ is a property list holding the lengths of the incoming control points for the generated path.
+% The units are such that the length of the line to the previous specified point is one unit.
 %    \begin{macrocode}
 \prop_new:N \l_hobby_rho_prop
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_controla_prop}
-% \Verb+\l_hobby_controla_prop+
+% \Verb+\l_hobby_controla_prop+ is a property list holding the coordinates of the first control points on the curves.
+% The format is the same as for \Verb+\l_hobby_points_prop+.
 %    \begin{macrocode}
 \prop_new:N \l_hobby_controla_prop
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_controlb_prop}
-% \Verb+\l_hobby_controlb_prop+
+% \Verb+\l_hobby_controlb_prop+ is a property list holding the coordinates of the second control points on the curves.
+% The format is the same as for \Verb+\l_hobby_points_prop+.
 %    \begin{macrocode}
 \prop_new:N \l_hobby_controlb_prop
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\l_hobby_x_dim}
-% \Verb+\l_hobby_x_dim+
-%    \begin{macrocode}
-\dim_new:N \l_hobby_x_dim
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\l_hobby_y_dim}
-% \Verb+\l_hobby_y_dim+
-%    \begin{macrocode}
-\dim_new:N \l_hobby_y_dim
-%    \end{macrocode}
-% \end{macro}
-%
 % \begin{macro}{\l_hobby_triv_fp}
-% \Verb+\l_hobby_triv_fp+
+% \Verb+\l_hobby_triv_fp+ is a number which is used when doing the perturbation of the solution of the linear system for a closed curve.
+% There is actually a vector, \(v\), that this corresponds to but that vector only has one component that needs computation.
 %    \begin{macrocode}
 \fp_new:N \l_hobby_triv_fp
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_tempa_fp}
-% \Verb+\l_hobby_tempa_fp+
+% \Verb+\l_hobby_tempa_fp+ is a temporary variable of type \Verb+fp+.
 %    \begin{macrocode}
 \fp_new:N \l_hobby_tempa_fp
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_tempb_fp}
-% \Verb+\l_hobby_tempb_fp+
+% \Verb+\l_hobby_tempb_fp+ is a temporary variable of type \Verb+fp+.
 %    \begin{macrocode}
 \fp_new:N \l_hobby_tempb_fp
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_tempc_fp}
-% \Verb+\l_hobby_tempc_fp+
+% \Verb+\l_hobby_tempc_fp+ is a temporary variable of type \Verb+fp+.
 %    \begin{macrocode}
 \fp_new:N \l_hobby_tempc_fp
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_tempd_fp}
-% \Verb+\l_hobby_tempd_fp+
+% \Verb+\l_hobby_tempd_fp+ is a temporary variable of type \Verb+fp+.
 %    \begin{macrocode}
 \fp_new:N \l_hobby_tempd_fp
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_temps_fp}
-% \Verb+\l_hobby_temps_fp+
+% \Verb+\l_hobby_temps_fp+ is a temporary variable of type \Verb+fp+.
 %    \begin{macrocode}
 \fp_new:N \l_hobby_temps_fp
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_incurl_fp}
-% \Verb+\l_hobby_incurl_fp+
+% \Verb+\l_hobby_incurl_fp+ is the ``curl'' at the end of an open path.
+% This is used if the angle at the end is not specified.
 %    \begin{macrocode}
 \fp_new:N \l_hobby_incurl_fp
 \fp_set:Nn \l_hobby_incurl_fp {1}
@@ -664,7 +687,8 @@ version 2005/12/01 or later.
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_outcurl_fp}
-% \Verb+\l_hobby_outcurl_fp+
+% \Verb+\l_hobby_outcurl_fp+ is the ``curl'' at the start of an open path.
+% This is used if the angle at the start is not specified.
 %    \begin{macrocode}
 \fp_new:N \l_hobby_outcurl_fp
 \fp_set:Nn \l_hobby_outcurl_fp {1}
@@ -672,7 +696,9 @@ version 2005/12/01 or later.
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_inang_fp}
-% \Verb+\l_hobby_inang_fp+
+% \Verb+\l_hobby_inang_fp+ is the angle at the end of an open path.
+% If this is not specified, it will be computed automatically.
+% It is set to \Verb+\c_undefined_fp+ to allow easy detection of when it has been specified.
 %    \begin{macrocode}
 \fp_new:N \l_hobby_inang_fp
 \fp_set_eq:NN \l_hobby_inang_fp \c_undefined_fp
@@ -680,7 +706,9 @@ version 2005/12/01 or later.
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_outang_fp}
-% \Verb+\l_hobby_outang_fp+
+% \Verb+\l_hobby_outang_fp+ is the angle at the start of an open path.
+% If this is not specified, it will be computed automatically.
+% It is set to \Verb+\c_undefined_fp+ to allow easy detection of when it has been specified.
 %    \begin{macrocode}
 \fp_new:N \l_hobby_outang_fp
 \fp_set_eq:NN \l_hobby_outang_fp \c_undefined_fp
@@ -688,20 +716,16 @@ version 2005/12/01 or later.
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_npoints_int}
-% \Verb+\l_hobby_npoints_int+
+% \Verb+\l_hobby_npoints_int+ is one less than the number of points on the curve.
+% As our list of points starts at \(0\), this is the index of the last point.
+% In the algorithm for a closed curve, some points are repeated whereupon this is incremented so that it is always the index of the last point. 
 %    \begin{macrocode}
 \int_new:N \l_hobby_npoints_int
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\l_hobby_temp_int}
-% \Verb+\l_hobby_temp_int+
-%    \begin{macrocode}
-\int_new:N \l_hobby_temp_int
-%    \end{macrocode}
-% \end{macro}
-%
 % A ``point'' is a key-value list setting the x-value, the y-value, and the tensions at that point.
+% Using keys makes it easier to pass points from the algorithm code to the calling code and vice versa without either knowing too much about the other.
 %    \begin{macrocode}
 \keys_define:nn {hobby / read in all} {
   x .fp_set:N = \l_hobby_tempa_fp,
@@ -711,6 +735,9 @@ version 2005/12/01 or later.
   tension~out .default:n = 1,
   tension~in .default:n = 1,
 }
+%    \end{macrocode}
+% There are certain other parameters than can be set for a give curve.
+%    \begin{macrocode}
 \keys_define:nn { hobby / read in params} {
   in~angle .fp_set:N = \l_hobby_inang_fp,
   out~angle .fp_set:N = \l_hobby_outang_fp,
@@ -726,17 +753,9 @@ version 2005/12/01 or later.
 % Assumptions: the points are in \Verb+\l_hobby_pointsx_prop+ and \Verb+\l_hobby_pointsy_prop+ and the index of the last point is \Verb+\l_hobby_npoints_int+.
 %    \begin{macrocode}
 \cs_set:Nn \hobby_distangle:n {
-    \int_compare:nTF { #1 < \l_hobby_npoints_int }
-    {
-      \int_set:Nn \l_hobby_temp_int {#1}
-      \int_incr:N \l_hobby_temp_int
-    }
-    {
-      \int_seq:Nn \l_hobby_temp_int {0}
-    }
-    \exp_args:NNo \prop_get:NnN \l_hobby_pointsx_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+    \exp_args:NNx \prop_get:NnN \l_hobby_pointsx_prop {\int_eval:n {#1 + 1}} \l_tmpa_tl
     \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
-    \exp_args:NNo \prop_get:NnN \l_hobby_pointsy_prop {\int_use:N \l_hobby_temp_int} \l_tmpa_tl
+    \exp_args:NNx \prop_get:NnN \l_hobby_pointsy_prop {\int_eval:n {#1 + 1}} \l_tmpa_tl
     \fp_set:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
     \prop_get:NnN \l_hobby_pointsx_prop {#1} \l_tmpa_tl
@@ -745,7 +764,7 @@ version 2005/12/01 or later.
     \fp_sub:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
     \fp_atantwo:NNN \l_hobby_tempc_fp \l_hobby_tempb_fp \l_hobby_tempa_fp
-    \fp_veclen:NNN \l_hobby_tempd_fp \l_hobby_tempa_fp \l_hobby_tempb_fp
+    \fp_veclen:NVV \l_hobby_tempd_fp \l_hobby_tempa_fp \l_hobby_tempb_fp
 
     \prop_put:Nnx \l_hobby_angles_prop {#1} {\fp_to_tl:N \l_hobby_tempc_fp}
     \prop_put:Nnx \l_hobby_distances_prop {#1} {\fp_to_tl:N \l_hobby_tempd_fp}
@@ -764,21 +783,68 @@ version 2005/12/01 or later.
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\group_after_set:NNn}
+% Useful for defining auxiliary macros that set variables according to some calculation.
+% From Will Robertson on TeX-SX, \url{http://tex.stackexchange.com/a/56319/86}.
+%    \begin{macrocode}
+\cs_if_free:NT \group_insert_after:N
+  {
+    \cs_set_eq:NN \group_insert_after:N \group_execute_after:N
+  }
+
+\cs_generate_variant:Nn \tl_if_empty:nT {v}
+\cs_generate_variant:Nn \tl_show:N {v}
+\cs_new:Nn \group_after_set:NNn
+{
+  #1 #2 {#3}
+
+  \cs_if_exist:cF { g_aftergroup_ \int_use:N \etex_currentgrouplevel:D _tl }
+    {
+      \tl_new:c { g_aftergroup_ \int_use:N \etex_currentgrouplevel:D _tl }
+    }
+
+  \tl_if_empty:vT { g_aftergroup_ \int_use:N \etex_currentgrouplevel:D _tl }
+    {
+      \group_insert_after:c
+        { g_aftergroup_ \int_use:N \etex_currentgrouplevel:D _tl }
+
+      \tl_gset:cx { g_aftergroup_ \int_use:N \etex_currentgrouplevel:D _tl }
+        {
+          \tl_gclear:c { g_aftergroup_ \int_use:N \etex_currentgrouplevel:D _tl }
+        }
+    }
+
+  \tl_gput_right:cx
+    { g_aftergroup_ \int_use:N \etex_currentgrouplevel:D _tl }
+    {
+      \exp_not:n { #1 #2 } { \exp_not:V #2 }
+    }
+}
+
+\cs_generate_variant:Nn \group_insert_after:N {c}
+\cs_generate_variant:Nn \group_after_set:NNn {NNV}
+%    \end{macrocode}
+% \end{macro}
+%
 % \begin{macro}{\fp_veclen:NNN}
 % Computes the length of the vector specified by the latter two arguments, storing the answer in the first.
 % Needs temporary variables.
 %    \begin{macrocode}
 \fp_new:N \l_hobby_veclena_fp
 \fp_new:N \l_hobby_veclenb_fp
-\cs_new:Nn \fp_veclen:NNN {
-  \fp_set_eq:NN \l_hobby_veclena_fp #2
-  \fp_set_eq:NN \l_hobby_veclenb_fp #3
-  \fp_mul:Nn \l_hobby_veclena_fp {\l_hobby_veclena_fp}
-  \fp_mul:Nn \l_hobby_veclenb_fp {\l_hobby_veclenb_fp}
-  \fp_add:Nn \l_hobby_veclena_fp {\l_hobby_veclenb_fp}
-  \fp_pow:Nn \l_hobby_veclena_fp {.5}
-  \fp_set_eq:NN #1 \l_hobby_veclena_fp
+\cs_new:Nn \fp_veclen:Nnn {
+  \group_begin:
+  \fp_set:Nn \l_hobby_tempa_fp {#2}
+  \fp_set:Nn \l_hobby_tempb_fp {#3}
+  \fp_mul:Nn \l_hobby_tempa_fp {\l_hobby_tempa_fp}
+  \fp_mul:Nn \l_hobby_tempb_fp {\l_hobby_tempb_fp}
+  \fp_add:Nn \l_hobby_tempa_fp {\l_hobby_tempb_fp}
+  \fp_pow:Nn \l_hobby_tempa_fp {.5}
+  \tl_set:Nx \l_tmpa_tl {\fp_use:N \l_hobby_tempa_fp}
+  \group_after_set:NNV \fp_set:Nn #1 \l_tmpa_tl
+  \group_end:
 }
+\cs_generate_variant:Nn \fp_veclen:Nnn {NVV}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -806,7 +872,7 @@ version 2005/12/01 or later.
 %    \end{macrocode}
 % For much of the time, we can pretend that a closed path is the same as an open path.
 % To do this, we need to make the end node an internal node by repeating the \(z_1\) node as the \(z_{n+1}\)th node.
-% We also check that the last and first nodes are the same, otherwise we repeat the \(z_0\) node as well.
+% We also check that the last (\(z_n\)) and first (\(z_0\)) nodes are the same, otherwise we repeat the \(z_0\) node as well.
 %    \begin{macrocode}
 \bool_if:NTF \l_hobby_closed_bool {
   \prop_get:NnN \l_hobby_pointsx_prop {0} \l_tmpa_tl
