@@ -74,14 +74,10 @@ version 2005/12/01 or later.
 %
 % \section{Usage}
 %
-% The package is provided in form of a PGF library.
+% The package is provided in form of a TikZ library.
 % It can be loaded with
 % \begin{verbatim}
 % \usetikzlibrary{hobby}
-% \end{verbatim}
-% or
-% \begin{verbatim}
-% \usepgflibrary{hobby}
 % \end{verbatim}
 %
 % The TikZ library installs a \Verb+to path+ which draws a smooth curve through the given points:
@@ -99,6 +95,9 @@ version 2005/12/01 or later.
 % \end{verbatim}
 %
 % The algorithm can deal with open or closed paths, it is possible to vary the ``tensions'' between the specified points of the paths, and for an open path it is possible to specify the incoming and outgoing angles either directly or via certain ``curl'' parameters.
+%
+% The algorithm is actually implemented in \LaTeX3 with (almost\footnote{At the moment, \LaTeX3 lacks a \Verb+atan2+ function so \Verb+PGFMath+ is used to remedy that.}) no reference to TikZ or PGF.
+% The TikZ library is simply a wrapper that takes the user's input, converts it into the right format for the \LaTeX3 code, and then calls that code to generate the path.
 %
 % \tikzset{
 %   show curve controls/.style={
