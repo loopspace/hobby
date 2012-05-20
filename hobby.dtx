@@ -72,33 +72,6 @@ version 2005/12/01 or later.
 % \date{2012-05-15}
 % \maketitle
 %
-% \section{Usage}
-%
-% The package is provided in form of a TikZ library.
-% It can be loaded with
-% \begin{verbatim}
-% \usetikzlibrary{hobby}
-% \end{verbatim}
-%
-% The TikZ library installs a \Verb+to path+ which draws a smooth curve through the given points:
-%
-% \begin{verbatim}
-% \draw (0,0) to[curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
-% \end{verbatim}
-%
-% There is also the facility to subvert TikZ's path processor and define curves simply using the \Verb+..+ separator between points.
-% Note that this relies on something a little special in TikZ: the syntax \Verb+(0,0) .. (2,3)+ is currently detected and processed but there is no action assigned to that syntax.
-% If a later version of TikZ assigns some action to that syntax, this package should make its override optional.
-%
-% \begin{verbatim}
-% \draw (-3,0) -- (0,0) .. (6,4) .. (4,9) .. (1,7) .. (3,5) -- ++(2,0);
-% \end{verbatim}
-%
-% The algorithm can deal with open or closed paths, it is possible to vary the ``tensions'' between the specified points of the paths, and for an open path it is possible to specify the incoming and outgoing angles either directly or via certain ``curl'' parameters.
-%
-% The algorithm is actually implemented in \LaTeX3 with (almost\footnote{At the moment, \LaTeX3 lacks a \Verb+atan2+ function so \Verb+PGFMath+ is used to remedy that.}) no reference to TikZ or PGF.
-% The TikZ library is simply a wrapper that takes the user's input, converts it into the right format for the \LaTeX3 code, and then calls that code to generate the path.
-%
 % \tikzset{
 %   show curve controls/.style={
 %    decoration={
@@ -117,7 +90,7 @@ version 2005/12/01 or later.
 %
 % \begin{figure}
 % \centering
-% \begin{tikzpicture}
+% \begin{tikzpicture}[scale=.5]
 % \draw[scale=.1,postaction=show curve controls,line width=1mm,red] (0,0)
 % .. controls (26.76463,-1.84543) and (51.4094,14.58441) .. (60,40)
 % .. controls (67.09875,61.00188) and (59.76253,84.57518) .. (40,90)
@@ -130,30 +103,7 @@ version 2005/12/01 or later.
 %  (1,7) circle[radius=2pt]
 %  (3,5) circle[radius=2pt];
 % \draw[postaction=show curve controls,thick] (0,0) to[curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
-% 
-% \end{tikzpicture}
-% \caption{Hobby's algorithm in TikZ overlaying the output of MetaPost}
-% \end{figure}
-% 
-% \begin{figure}
-% \centering
-% \begin{tikzpicture}
-% \fill[green] (0,0) circle[radius=2pt]
-%  (-3,0) circle[radius=2pt]
-%  (6,4) circle[radius=2pt]
-%  (4,9) circle[radius=2pt]
-%  (1,7) circle[radius=2pt]
-%  (3,5) circle[radius=2pt]
-%  ++(2,0) circle[radius=2pt]
-% ;
-% \draw (-3,0) -- (0,0) .. (6,4) .. (4,9) .. (1,7) .. (3,5) -- ++(2,0);
-% \end{tikzpicture}
-% \caption{Curve through points using \texttt{(6,4) .. (4,9)} syntax}
-% \end{figure}
-% 
-% \begin{figure}
-% \centering
-% \begin{tikzpicture}
+% \begin{scope}[xshift=10cm]
 % \draw[scale=.1,postaction=show curve controls,line width=1mm,red] (0,0)
 % .. controls (5.18756,-26.8353) and (60.36073,-18.40036) .. (60,40)
 % .. controls (59.87714,59.889) and (57.33896,81.64203) .. (40,90)
@@ -166,10 +116,68 @@ version 2005/12/01 or later.
 %  (1,7) circle[radius=2pt]
 %  (3,5) circle[radius=2pt];
 % \draw[postaction=show curve controls,thick] (0,0) to[closed,curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
-% 
+% \end{scope}
 % \end{tikzpicture}
-% \caption{Closed curve overlaying the output from MetaPost}
+% \caption{Hobby's algorithm in TikZ overlaying the output of MetaPost}
 % \end{figure}
+%
+% \section{Usage}
+%
+% The package is provided in form of a TikZ library.
+% It can be loaded with
+% \begin{verbatim}
+% \usetikzlibrary{hobby}
+% \end{verbatim}
+%
+% The TikZ library installs a \Verb+to path+ which draws a smooth curve through the given points:
+%
+% \begin{verbatim}
+% \begin{tikzpicture}
+% \draw (0,0) to[curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
+% \end{tikzpicture}
+% \end{verbatim}
+%
+% \begin{center}
+% \begin{tikzpicture}[scale=.5]
+% \draw (0,0) to[curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
+% \end{tikzpicture}
+% \end{center}
+%
+% The path can be open, as above, or closed:
+%
+% \begin{verbatim}
+% \begin{tikzpicture}
+% \draw (0,0) to[closed,curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
+% \end{tikzpicture}
+% \end{verbatim}
+%
+% \begin{center}
+% \begin{tikzpicture}[scale=.5]
+% \draw (0,0) to[closed,curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
+% \end{tikzpicture}
+% \end{center}
+
+% There is also the facility to subvert TikZ's path processor and define curves simply using the \Verb+..+ separator between points.
+% Note that this relies on something a little special in TikZ: the syntax \Verb+(0,0) .. (2,3)+ is currently detected and processed but there is no action assigned to that syntax.
+% If a later version of TikZ assigns some action to that syntax, this package should make its override optional.
+%
+% \begin{verbatim}
+% \begin{tikzpicture}
+% \draw (-3,0) -- (0,0) .. (6,4) .. (4,9) .. (1,7) .. (3,5) -- ++(2,0);
+% \end{tikzpicture}
+% \end{verbatim}
+%
+% \begin{center}
+% \begin{tikzpicture}[scale=.5]
+% \draw (-3,0) -- (0,0) .. (6,4) .. (4,9) .. (1,7) .. (3,5) -- ++(2,0);
+% \end{tikzpicture}
+% \end{center}
+%
+% The algorithm can deal with open or closed paths, it is possible to vary the ``tensions'' between the specified points of the paths, and for an open path it is possible to specify the incoming and outgoing angles either directly or via certain ``curl'' parameters.
+% See the Examples section for more examples.
+%
+% The algorithm is actually implemented in \LaTeX3 with (almost\footnote{At the moment, \LaTeX3 lacks a \Verb+atan2+ function so \Verb+PGFMath+ is used to remedy that.}) no reference to TikZ or PGF.
+% The TikZ library is simply a wrapper that takes the user's input, converts it into the right format for the \LaTeX3 code, and then calls that code to generate the path.
 % 
 % \section{Implementing Hobby's Algorithm}
 % 
@@ -411,30 +419,77 @@ version 2005/12/01 or later.
 % 
 % \section{Examples}
 %
+% \begin{verbatim}
 % \begin{tikzpicture}
 % \draw[postaction=show curve controls] (0,0) to[curve through={(1,.5) .. (2,0) .. (3,.5)}] (4,0);
-% \node[anchor=west] at (4.5,.25) {\texttt{ (0,0) to[curve through={(1,.5) .. (2,0) .. (3,.5)}] (4,0)}};
-% \begin{scope}[yshift=-1 cm]
-% \draw[postaction=show curve controls] (0,0) to[out angle=0,in angle=180,curve through={(1,.5) .. (2,0) .. (3,.5)}] (4,0);
-% \node[anchor=west] at (4.5,.25) {\texttt{ (0,0) to[out angle=0,in angle=180,curve through={(1,.5) .. (2,0) .. (3,.5)}] (4,0)}};
-% \begin{scope}[yshift=-1 cm]
-% \draw[postaction=show curve controls] (0,0) to[curve through={(1,.5) .. ([tension in=2]2,0) .. (3,.5)}] (4,0);
-% \node[anchor=west] at (4.5,.25) {\texttt{ (0,0) to[curve through={(1,.5) .. ([tension in=2]2,0) .. (3,.5)}] (4,0)}};
-% \begin{scope}[yshift=-1 cm]
-% \draw[postaction=show curve controls] (0,0) to[curve through={(1,.5) .. ([tension=2]2,0) .. (3,.5)}] (4,0);
-% \node[anchor=west] at (4.5,.25) {\texttt{ (0,0) to[curve through={(1,.5) .. ([tension=2]2,0) .. (3,.5)}] (4,0)}};
-% \begin{scope}[yshift=-1 cm]
-% \draw[postaction=show curve controls] (0,0) .. (1,.5) .. (2,0) .. (3,.5) .. (4,0);
-% \node[anchor=west] at (4.5,.25) {\texttt{ (0,0) .. (1,.5) .. (2,0) .. (3,.5) .. (4,0)}};
-% \end{scope}
-% \end{scope}
-% \end{scope}
-% \end{scope}
 % \end{tikzpicture}
+% \end{verbatim}
 %
+% \begin{center}
 % \begin{tikzpicture}
+% \draw[postaction=show curve controls] (0,0) to[curve through={(1,.5) .. (2,0) .. (3,.5)}] (4,0);
+% \end{tikzpicture}
+% \end{center}
+%
+% \begin{verbatim}
+% \begin{tikzpicture}
+% \draw[postaction=show curve controls] (0,0) to[out angle=0,in angle=180,curve through={(1,.5) .. (2,0) .. (3,.5)}] (4,0);
+% \end{tikzpicture}
+% \end{verbatim}
+%
+% \begin{center}
+% \begin{tikzpicture}
+% \draw[postaction=show curve controls] (0,0) to[out angle=0,in angle=180,curve through={(1,.5) .. (2,0) .. (3,.5)}] (4,0);
+% \end{tikzpicture}
+% \end{center}
+%
+% \begin{verbatim}
+% \begin{tikzpicture}
+% \draw[postaction=show curve controls] (0,0) to[curve through={(1,.5) .. ([tension in=2]2,0) .. (3,.5)}] (4,0);
+% \end{tikzpicture}
+% \end{verbatim}
+%
+% \begin{center}
+% \begin{tikzpicture}
+% \draw[postaction=show curve controls] (0,0) to[curve through={(1,.5) .. ([tension in=2]2,0) .. (3,.5)}] (4,0);
+% \end{tikzpicture}
+% \end{center}
+%
+% \begin{verbatim}
+% \begin{tikzpicture}
+% \draw[postaction=show curve controls] (0,0) to[curve through={(1,.5) .. ([tension=2]2,0) .. (3,.5)}] (4,0);
+% \end{tikzpicture}
+% \end{verbatim}
+%
+% \begin{center}
+% \begin{tikzpicture}
+% \draw[postaction=show curve controls] (0,0) to[curve through={(1,.5) .. ([tension=2]2,0) .. (3,.5)}] (4,0);
+% \end{tikzpicture}
+% \end{center}
+%
+% \begin{verbatim}
+% \begin{tikzpicture}
+% \draw[postaction=show curve controls] (0,0) .. (1,.5) .. (2,0) .. (3,.5) .. (4,0);
+% \end{tikzpicture}
+% \end{verbatim}
+%
+% \begin{center}
+% \begin{tikzpicture}
+% \draw[postaction=show curve controls] (0,0) .. (1,.5) .. (2,0) .. (3,.5) .. (4,0);
+% \end{tikzpicture}
+% \end{center}
+%
+% \begin{verbatim}
+% \begin{tikzpicture}[scale=.5]
 % \draw (0,0) .. (6,4) .. (4,9) .. (1,7) .. (3,5) .. cycle;
 % \end{tikzpicture}
+% \end{verbatim}
+%
+% \begin{center}
+% \begin{tikzpicture}[scale=.5]
+% \draw (0,0) .. (6,4) .. (4,9) .. (1,7) .. (3,5) .. cycle;
+% \end{tikzpicture}
+% \end{center}
 %
 % \StopEventually{\PrintChanges}
 % \section{Implementation}
@@ -448,6 +503,7 @@ version 2005/12/01 or later.
 % We use \LaTeX3 syntax so need to load the requisite packages
 %    \begin{macrocode}
 \RequirePackage{expl3}
+\RequirePackage{xparse}
 \ExplSyntaxOn
 %    \end{macrocode}
 % \subsubsection{Initialisation}
