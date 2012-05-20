@@ -1,0 +1,16 @@
+\immediate\write18{tex hobby.dtx}
+\documentclass{standalone}
+\usepackage{tikz}
+\usetikzlibrary{hobby}
+
+\begin{document}
+\begin{tikzpicture}[c/.style={insert path={circle[radius=2pt]}}]
+\fill[green] (0,0) [c] (1,.5) [c] (0,0) [c] (3,.5) [c] (4,0) [c];
+\draw (0,0) .. (1,.5) .. (0,0) .. (3,.5) .. (4,0);
+\end{tikzpicture}
+\end{document}
+
+
+% Local Variables:
+% tex-output-type: "pdf18"
+% End:
