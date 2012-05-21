@@ -501,6 +501,51 @@ version 2005/12/01 or later.
 % \end{tikzpicture}
 % \end{center}
 %
+% \section{Edge Cases}
+%
+% Angles are constrained to lie in the interval \((-\pi,pi]\).
+% This can introduce edge cases as there is a point where we have to compare an angle with \(-\pi\) and if it is equal, add \(2 \pi\).
+% This will occur if the path ``doubles back'' on itself as in the next example.
+% By nudging the repeated point slightly, the behaviour changes drastically.
+%
+% \begin{verbatim}
+% \begin{tikzpicture}
+% \draw (0,0) .. (1,0) .. (0,0) .. (0,-1);
+% \draw[xshift=2cm] (0,0) .. (1,0) .. (0,0.1) .. (0,-1);
+% \draw[xshift=4cm] (0,0) .. (1,0) .. (0,-0.1) .. (0,-1);
+% \end{tikzpicture}
+% \end{verbatim}
+%
+% \begin{center}
+% \begin{tikzpicture}
+% \draw (0,0) .. (1,0) .. (0,0) .. (0,-1);
+% \draw[xshift=2cm] (0,0) .. (1,0) .. (0,0.1) .. (0,-1);
+% \draw[xshift=4cm] (0,0) .. (1,0) .. (0,-0.1) .. (0,-1);
+% \end{tikzpicture}
+% \end{center}
+%
+% Due to the precision of the computations, it is not possible to always get this test correct.
+% The simplest solution is to nudge the repeated point in one direction or the other.
+% Experimenting shows that the ``nudge factor'' can be extremely small (note that it will be proportional to the distance between the specified points).
+% It is best to nudge it in the direction most normal to the line between the specified points as the goal is to nudge the difference of the angles.
+% An alternative solution is to add an additional point for the curve to go through.
+%
+% \begin{verbatim}
+% \begin{tikzpicture}
+% \draw (0,0) .. (1,0) .. (0,0) .. (0,-1);
+% \draw[xshift=2cm] (0,0) .. (1,0) .. (0,0.002) .. (0,-1);
+% \draw[xshift=4cm] (0,0) .. (1,0) .. (0,-0.002) .. (0,-1);
+% \end{tikzpicture}
+% \end{verbatim}
+%
+% \begin{center}
+% \begin{tikzpicture}
+% \draw (0,0) .. (1,0) .. (0,0) .. (0,-1);
+% \draw[xshift=2cm] (0,0) .. (1,0) .. (0,0.002) .. (0,-1);
+% \draw[xshift=4cm] (0,0) .. (1,0) .. (0,-0.002) .. (0,-1);
+% \end{tikzpicture}
+% \end{center}
+%
 % \StopEventually{\PrintChanges}
 % \section{Implementation}
 %
@@ -522,14 +567,55 @@ version 2005/12/01 or later.
 % These are implemented as \LaTeX3 ``property lists''.
 % To handle these in a cleaner way, we define certain wrapper functions that process the argument as an \emph{integer expression} before passing it to the corresponding property list function.
 %    \begin{macrocode}
-\cs_new:Nn \array_put:Nnn {\exp_args:NNx \prop_put:Nnn #1 {\int_eval:n {#2}} {#3}}
-\cs_new:Nn \array_get:NnN {\exp_args:NNx \prop_get:NnN #1 {\int_eval:n {#2}} #3}
-\cs_new:Nn \array_get:NnNTF {\exp_args:NNx \prop_get:NnNTF #1 {\int_eval:n {#2}} #3 {#4}{#5}}
+\cs_new:Nn \array_put:Nnn {
+  \exp_args:NNx \prop_put:Nnn #1 {\int_eval:n {#2}} {#3}
+}
+\cs_new:Nn \array_get:NnN {
+  \exp_args:NNx \prop_get:NnN #1 {\int_eval:n {#2}} #3
+}
+\cs_new:Nn \array_get:NnNTF {
+  \exp_args:NNx \prop_get:NnNTF #1 {\int_eval:n {#2}} #3 {#4}{#5}
+}
 
 \cs_new_eq:NN \array_new:N \prop_new:N
-\cs_new_eq:NN \array_show:N \prop_show:N
 \cs_new_eq:NN \array_clear:N \prop_clear:N
+\cs_new_eq:NN \array_if_empty:NTF \prop_if_empty:NTF
+\cs_new_eq:NN \array_map_function:NN \prop_map_function:NN
 
+\msg_kernel_new:nnn { array } { show }
+  {
+    The~array~\token_to_str:N #1~
+    \array_if_empty:NTF #1
+      { is~empty }
+      { contains~the~contiguous~sequence~of~items~(without~outer~braces): }
+  }
+
+\msg_kernel_new:nnn { array~all } { show }
+  {
+    The~array~\token_to_str:N #1~
+    \array_if_empty:NTF #1
+      { is~empty }
+      { contains~the~items~(without~outer~braces): }
+  }
+
+\cs_new_protected:Npn \array_show:N #1
+  {
+    \msg_aux_show:Nnx
+      #1
+      { array }
+      { \array_map_function:NN #1 \msg_aux_show:nn }
+  }
+
+\cs_new_protected:Npn \array_show_all:N #1
+  {
+    \msg_aux_show:Nnx
+      #1
+      { array }
+      { \prop_map_function:NN #1 \msg_aux_show:nn }
+  }
+
+\cs_generate_variant:Nn \array_show:N { c }
+\cs_generate_variant:Nn \array_show_all:N { c }
 \cs_generate_variant:Nn \array_put:Nnn {Nnx}
 %    \end{macrocode}
 %
@@ -1115,9 +1201,9 @@ version 2005/12/01 or later.
 % So for each internal point we compute the differences in the angles.
 %    \begin{macrocode}
   \prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int - 1} {
-  \array_get:NnN \l_hobby_angles_array {##1 - 1} \l_tmpa_tl
+  \array_get:NnN \l_hobby_angles_array {##1} \l_tmpa_tl
     \fp_set:Nn \l_hobby_tempa_fp {\tl_use:N \l_tmpa_tl}
-    \array_get:NnN \l_hobby_angles_array {##1} \l_tmpa_tl
+    \array_get:NnN \l_hobby_angles_array {##1 - 1} \l_tmpa_tl
     \fp_sub:Nn \l_hobby_tempa_fp {\tl_use:N \l_tmpa_tl}
 %    \end{macrocode}
 % We want to ensure that these angles lie in the range \((-\pi,\pi]\).
@@ -1141,6 +1227,17 @@ version 2005/12/01 or later.
       \fp_add:Nn \l_hobby_tempa_fp {\c_pi_fp}
     }
     {}
+%    \end{macrocode}
+% At the moment, the mixing of \Verb+pgfmath+ and \LaTeX3 that goes into computing the differences means that we can never get \Verb+\c_pi_fp+ so testing for equality is meaningless.
+% However, when \Verb+atan2+ is implemented in \LaTeX3 then this might make sense again.
+%
+%^^A    \fp_compare:nNnTF {\l_hobby_tempb_fp} = {\c_pi_fp }
+%^^A    {
+%^^A      \fp_add:Nn \l_hobby_tempa_fp {\c_pi_fp}
+%^^A      \fp_add:Nn \l_hobby_tempa_fp {\c_pi_fp}
+%^^A    }
+%^^A    {}
+%    \begin{macrocode}
     \array_put:Nnx \l_hobby_psi_array {##1}{\fp_to_tl:N \l_hobby_tempa_fp}
   }
 %    \end{macrocode}
@@ -1829,7 +1926,7 @@ version 2005/12/01 or later.
     \array_get:NnN \l_hobby_angles_array {##1} \l_tmpa_tl
     \fp_set:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
   \array_get:NnN \l_hobby_theta_array {##1} \l_tmpa_tl
-    \fp_sub:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
+    \fp_add:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
     \fp_sin:Nn \l_hobby_tempd_fp {\l_hobby_tempc_fp}
     \fp_cos:Nn \l_hobby_tempc_fp {\l_hobby_tempc_fp}
     \array_get:NnN \l_hobby_rho_array {##1} \l_tmpa_tl
@@ -1851,7 +1948,7 @@ version 2005/12/01 or later.
      \array_get:NnN \l_hobby_angles_array  {##1 - 1} \l_tmpa_tl
     \fp_set:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
   \array_get:NnN \l_hobby_phi_array {##1} \l_tmpa_tl
-    \fp_add:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
+    \fp_sub:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
     \fp_sin:Nn \l_hobby_tempd_fp {\l_hobby_tempc_fp}
     \fp_cos:Nn \l_hobby_tempc_fp {\l_hobby_tempc_fp}
     \fp_neg:N \l_hobby_tempc_fp
@@ -2075,12 +2172,22 @@ version 2005/12/01 or later.
   in angle/.code = {%
     \pgfmathparse{#1*pi/180}%
     \edef\@temp{ in angle=\pgfmathresult,}%
-    \expandafter\expandafter\expandafter\def\expandafter\expandafter\expandafter\hobby@opts\expandafter\expandafter\expandafter{\expandafter\hobby@opts\@temp}%
+    \expandafter\expandafter\expandafter%
+    \def%
+    \expandafter\expandafter\expandafter%
+    \hobby@opts%
+    \expandafter\expandafter\expandafter%
+    {\expandafter\hobby@opts\@temp}%
   },
   out angle/.code = {%
     \pgfmathparse{#1*pi/180}%
     \edef\@temp{ out angle=\pgfmathresult,}%
-    \expandafter\expandafter\expandafter\def\expandafter\expandafter\expandafter\hobby@opts\expandafter\expandafter\expandafter{\expandafter\hobby@opts\@temp}%
+    \expandafter\expandafter\expandafter%
+    \def%
+    \expandafter\expandafter\expandafter%
+    \hobby@opts%
+    \expandafter\expandafter\expandafter%
+    {\expandafter\hobby@opts\@temp}%
   },
   in curl/.code = {%
     \expandafter\def\expandafter\hobby@opts\expandafter{\hobby@opts in curl=#1,}%

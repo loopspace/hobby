@@ -1,12 +1,31 @@
 \immediate\write18{tex hobby.dtx}
-\documentclass{standalone}
+\documentclass{article}
 \usepackage{tikz}
 \usetikzlibrary{hobby}
+
+\pgfmathparse{rad(atan2(-1,0))}
+\show\pgfmathresult
 
 \begin{document}
 \begin{tikzpicture}[c/.style={insert path={circle[radius=2pt]}}]
 \fill[green] (0,0) [c] (1,.5) [c] (0,0) [c] (3,.5) [c] (4,0) [c];
-\draw (0,0) .. (1,.5) .. (0,0) .. (3,.5) .. (4,0);
+\draw (0,0) .. (1,.5) .. (-0.0019,0) .. (3,.5) .. (4,0);
+\end{tikzpicture}
+
+\begin{tikzpicture}
+\draw (0.0000, 0.0000) .. controls (-1.85420, 0.83131) and (1.44747, 2.48215)..(1.0000, 0.5000) .. controls (0.90917, 0.09765) and (0.31923, 0.27721)..(0.1000, 0.0000) .. controls (-1.10155, -1.51937) and (1.46789, -0.02595)..(3.0000, 0.5000) .. controls (3.41450, 0.64229) and (3.86513, 0.41698)..(4.0000, 0.0000);
+\end{tikzpicture}
+
+\begin{tikzpicture}
+\draw (0.0000, 0.0000) .. controls (0.30056, -0.75821) and (1.42623, -0.19537)..(1.0000, 0.5000) .. controls (0.69595, 0.99605) and (-0.14029, 0.67496)..(0.0000, 0.0000) .. controls (0.31344, -1.50803) and (1.85232, 0.35331)..(3.0000, 0.5000) .. controls (3.40390, 0.55162) and (3.79896, 0.35409)..(4.0000, 0.0000);
+\end{tikzpicture}
+
+\begin{tikzpicture}
+\draw (0,0) to[curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
+\end{tikzpicture}
+
+\begin{tikzpicture}
+\draw (0,0) to[closed,curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
 \end{tikzpicture}
 \end{document}
 
