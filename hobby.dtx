@@ -28,6 +28,8 @@ version 2005/12/01 or later.
 \generate{\file{pgflibraryhobby.code.tex} {\from{hobby.dtx}{pgflibrary}}}
 \generate{\file{hobby.code.tex}
 {\from{hobby.dtx}{hobby}}}
+\generate{\file{pml3array.sty}
+{\from{hobby.dtx}{array}}}
 %</install>
 %<install>\endbatchfile
 %<*internal>
@@ -559,65 +561,10 @@ version 2005/12/01 or later.
 %    \begin{macrocode}
 \RequirePackage{expl3}
 \RequirePackage{xparse}
+\RequirePackage{pml3array}
 \ExplSyntaxOn
 %    \end{macrocode}
 % \subsubsection{Initialisation}
-%
-% A lot of our data structures are really arrays.
-% These are implemented as \LaTeX3 ``property lists''.
-% To handle these in a cleaner way, we define certain wrapper functions that process the argument as an \emph{integer expression} before passing it to the corresponding property list function.
-%    \begin{macrocode}
-\cs_new:Nn \array_put:Nnn {
-  \exp_args:NNx \prop_put:Nnn #1 {\int_eval:n {#2}} {#3}
-}
-\cs_new:Nn \array_get:NnN {
-  \exp_args:NNx \prop_get:NnN #1 {\int_eval:n {#2}} #3
-}
-\cs_new:Nn \array_get:NnNTF {
-  \exp_args:NNx \prop_get:NnNTF #1 {\int_eval:n {#2}} #3 {#4}{#5}
-}
-
-\cs_new_eq:NN \array_new:N \prop_new:N
-\cs_new_eq:NN \array_clear:N \prop_clear:N
-\cs_new_eq:NN \array_if_empty:NTF \prop_if_empty:NTF
-\cs_new_eq:NN \array_map_function:NN \prop_map_function:NN
-
-\msg_kernel_new:nnn { array } { show }
-  {
-    The~array~\token_to_str:N #1~
-    \array_if_empty:NTF #1
-      { is~empty }
-      { contains~the~contiguous~sequence~of~items~(without~outer~braces): }
-  }
-
-\msg_kernel_new:nnn { array~all } { show }
-  {
-    The~array~\token_to_str:N #1~
-    \array_if_empty:NTF #1
-      { is~empty }
-      { contains~the~items~(without~outer~braces): }
-  }
-
-\cs_new_protected:Npn \array_show:N #1
-  {
-    \msg_aux_show:Nnx
-      #1
-      { array }
-      { \array_map_function:NN #1 \msg_aux_show:nn }
-  }
-
-\cs_new_protected:Npn \array_show_all:N #1
-  {
-    \msg_aux_show:Nnx
-      #1
-      { array }
-      { \prop_map_function:NN #1 \msg_aux_show:nn }
-  }
-
-\cs_generate_variant:Nn \array_show:N { c }
-\cs_generate_variant:Nn \array_show_all:N { c }
-\cs_generate_variant:Nn \array_put:Nnn {Nnx}
-%    \end{macrocode}
 %
 % We declare all our variables.
 %
@@ -2347,4 +2294,183 @@ version 2005/12/01 or later.
 %</tikzlibrary>
 % \fi
 %
+% \subsection{Arrays}
+%
+% \iffalse
+%<*array>
+% \fi
+% 
+%
+% A lot of our data structures are really arrays.
+% These are implemented as \LaTeX3 ``property lists''.
+% For ease of use, an array is a property list with numeric entries together with entries ``base'' and ``top'' which hold the lowest and highest indices that have been set.
+%
+%    \begin{macrocode}
+\RequirePackage{expl3}
+\ExplSyntaxOn
+%    \end{macrocode}
+% \begin{macro}{\array_adjust_ends:Nn}
+% This ensures that the ``base'' and ``top'' are big enough to include the given index.
+%    \begin{macrocode}
+\cs_new:Npn \array_adjust_ends:Nn #1#2 {
+  \prop_get:NnNTF #1 {base} \l_tmpa_tl
+  {
+    \int_compare:nNnTF {\l_tmpa_tl} > {#2}
+    {
+      \prop_put:Nnx #1 {base} {\int_eval:n {#2}}
+    }
+    {}
+  }
+  {
+    \prop_put:Nnx #1 {base} {\int_eval:n {#2}}
+  }
+  \prop_get:NnNTF #1 {top} \l_tmpa_tl
+  {
+    \int_compare:nNnTF {\l_tmpa_tl} < {#2}
+    {
+      \prop_put:Nnx #1 {top} {\int_eval:n {#2}}
+    }
+    {}
+  }
+  {
+    \prop_put:Nnx #1 {top} {\int_eval:n {#2}}
+  }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\array_put:Nnn}
+% When adding a value to an array we have to adjust the ends.
+%    \begin{macrocode}
+\cs_new:Npn \array_put:Nnn #1#2#3 {
+  \exp_args:NNx \prop_put:Nnn #1 {\int_eval:n {#2}} {#3}
+  \array_adjust_ends:Nn #1{#2}
+}
+\cs_generate_variant:Nn \array_put:Nnn {Nnx}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\array_get:NnN}
+%    \begin{macrocode}
+\cs_new:Npn \array_get:NnN #1#2#3 {
+  \exp_args:NNx \prop_get:NnN #1 {\int_eval:n {#2}} #3
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\array_get:NnNTF}
+%    \begin{macrocode}
+\cs_new:Npn \array_get:NnNTF #1#2#3#4#5 {
+  \exp_args:NNx \prop_get:NnNTF #1 {\int_eval:n {#2}} #3 {#4}{#5}
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\array_if_empty:NTF}
+%    \begin{macrocode}
+\cs_new_eq:NN \array_if_empty:NTF \prop_if_empty:NTF
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\array_new:N}
+%    \begin{macrocode}
+\cs_new_eq:NN \array_new:N \prop_new:N
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\array_clear:N}
+%    \begin{macrocode}
+\cs_new_eq:NN \array_clear:N \prop_clear:N
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\array_map_function}
+% When stepping through an array, we want to iterate in order so a simple wrapper to \Verb+\prop_map_function+ is not enough.
+% This maps through every value from the base to the top so the function should be prepared to deal with a \Verb+\q_no_value+.
+%    \begin{macrocode}
+\int_new:N \l_array_base_int
+\int_new:N \l_array_top_int
+\cs_new:Npn \array_map_function:NN #1#2
+{
+  \array_if_empty:NTF #1 {} {
+    \prop_get:NnNTF #1 {base} \l_tmpa_tl {
+      \int_set:Nn \l_array_base_int {\l_tmpa_tl}
+    }{
+      \int_set:Nn \l_array_base_int {0}
+    }
+    \prop_get:NnNTF #1 {top} \l_tmpa_tl {
+      \int_set:Nn \l_array_top_int {\l_tmpa_tl}
+    }{
+      \int_set:Nn \l_array_top_int {0}
+    }
+    \prg_stepwise_inline:nnnn {\l_array_base_int} {1} {\l_array_top_int} {
+  \array_get:NnN #1 {##1} \l_tmpa_tl
+  \exp_args:Nno #2 {##1} \l_tmpa_tl
+}
+} {}
+}
+\cs_generate_variant:Nn \array_map_function:NN {     Nc }
+\cs_generate_variant:Nn \array_map_function:NN { c , cc }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\array_map_inline:Nn}
+% Inline version of the above.
+%    \begin{macrocode}
+\cs_new_protected:Npn \array_map_inline:Nn #1#2
+  {
+    \int_gincr:N \g_prg_map_int
+    \cs_gset:cpn { array_map_inline_ \int_use:N \g_prg_map_int :nn }
+      ##1##2 {#2}
+    \exp_args:NNc \array_map_function:NN #1
+      { array_map_inline_ \int_use:N \g_prg_map_int :nn }
+    \prg_break_point:n { \int_gdecr:N \g_prg_map_int }
+  }
+\cs_generate_variant:Nn \array_map_inline:Nn { c }
+\cs_new_eq:NN \array_map_break:  \prg_map_break:
+\cs_new_eq:NN \array_map_break:n \prg_map_break:n
+%    \end{macrocode}
+% \end{macro}
+%
+% For displaying arrays, we need some messages.
+%    \begin{macrocode}
+\msg_kernel_new:nnn { array } { show }
+  {
+    The~array~\token_to_str:N #1~
+    \array_if_empty:NTF #1
+      { is~empty }
+      { contains~the~items~(without~outer~braces): }
+  }
+%    \end{macrocode}
+%
+% \begin{macro}{\array_show:N}
+% Mapping through an array isn't expandable so we have to set a token list to its contents first before passing it to the message handler.
+%    \begin{macrocode}
+\tl_new:N \l_array_show_tl
+\cs_new_protected:Npn \array_show:N #1
+  {
+    \tl_clear:N \l_array_show_tl
+    \array_map_function:NN #1 \array_show_aux:nn
+    \msg_aux_show:Nnx
+      #1
+      { array }
+      { \l_array_show_tl }
+  }
+
+\cs_new_protected:Npn \array_show_aux:nn #1#2
+{
+  \tl_put_right:No \l_array_show_tl {\msg_aux_show:nn {#1}{#2}}
+}
+\cs_generate_variant:Nn \array_show:N { c }
+%    \end{macrocode}
+% \end{macro}
+%
+%    \begin{macrocode}
+\ExplSyntaxOff
+%    \end{macrocode}
+%
+% \iffalse
+%</array>
+% \fi
+% 
 %\Finale
