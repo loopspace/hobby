@@ -54,15 +54,6 @@ version 2005/12/01 or later.
 \EnableCrossrefs
 \CodelineIndex
 \RecordChanges
-\tikzset{
-  shape example/.style={
-    color=black!30,
-    draw,
-    fill=yellow!30,
-    line width=.5cm,
-    inner xsep=2.5cm,
-    inner ysep=0.5cm}
-}
 \begin{document}
   \DocInput{\jobname.dtx}
 \end{document}
@@ -184,7 +175,7 @@ version 2005/12/01 or later.
 % \section{Implementing Hobby's Algorithm}
 % 
 % We start with a list of \(n+1\) points, \(z_0, \dotsc, z_n\).
-% The base code assumes that these are already stored in two arrays\footnote{Arrays are thinly disguised property lists}: the \(x\)--coordinates in \Verb+\l_hobby_pointsx_array+ and the \(y\)--coordinates in \Verb+\l_hobby_pointsy_array+.
+% The base code assumes that these are already stored in two arrays\footnote{Arrays are thinly disguised property lists}: the \(x\)--coordinates in \Verb+\l_hobby_points_x_array+ and the \(y\)--coordinates in \Verb+\l_hobby_points_y_array+.
 % As our arrays are \(0\)--indexed, the actual number of points is one more than this.
 % For a closed curve, we have \(z_n = z_0\)\footnote{Note that there is a difference between a closed curve and an open curve whose endpoints happen to overlap}.
 % For closed curves it will be convenient to add an additional point at \(z_1\): thus \(z_{n+1} = z_1\).
@@ -548,6 +539,27 @@ version 2005/12/01 or later.
 % \end{tikzpicture}
 % \end{center}
 %
+% Lastly, it is possible to add an \Verb+excess angle+ key to a coordinate.
+% This will add the corresponding multiple of \(2\pi\) to the angle difference.
+%
+% \begin{verbatim}
+% \begin{tikzpicture}
+% \draw (0,0) .. (1,0) .. (0,0) .. (0,-1);
+% \draw[xshift=2cm] (0,0) .. ([excess angle=1]1,0) .. (0,0) .. (0,-1);
+% \draw[xshift=4cm] (0,0) .. ([excess angle=-1]1,0) .. (0,0) .. (0,-1);
+% \end{tikzpicture}
+% \end{verbatim}
+%
+% \begin{center}
+% \begin{tikzpicture}
+% \draw (0,0) .. (1,0) .. (0,0) .. (0,-1);
+% \draw[xshift=2cm] (0,0) .. ([excess angle=1]1,0) .. (0,0) .. (0,-1);
+% \draw[xshift=4cm] (0,0) .. ([excess angle=-1]1,0) .. (0,0) .. (0,-1);
+% \end{tikzpicture}
+% \end{center}
+%
+% Although this is intended to be an integer, no check is done and so some quite odd curves can result from changing this parameter.
+%
 % \StopEventually{\PrintChanges}
 % \section{Implementation}
 %
@@ -615,17 +627,17 @@ version 2005/12/01 or later.
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\l_hobby_pointsx_array}
-% \Verb+\l_hobby_pointsx_array+ is an array holding the \(x\)--{}coordinates of the specified points.
+% \begin{macro}{\l_hobby_points_x_array}
+% \Verb+\l_hobby_points_x_array+ is an array holding the \(x\)--{}coordinates of the specified points.
 %    \begin{macrocode}
-\array_new:N \l_hobby_pointsx_array
+\array_new:N \l_hobby_points_x_array
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\l_hobby_pointsy_array}
-% \Verb+\l_hobby_pointsy_array+ is an array holding the \(y\)--{}coordinates of the specified points.
+% \begin{macro}{\l_hobby_points_y_array}
+% \Verb+\l_hobby_points_y_array+ is an array holding the \(y\)--{}coordinates of the specified points.
 %    \begin{macrocode}
-\array_new:N \l_hobby_pointsy_array
+\array_new:N \l_hobby_points_y_array
 %    \end{macrocode}
 % \end{macro}
 %
@@ -645,21 +657,21 @@ version 2005/12/01 or later.
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\l_hobby_tensionout_array}
-% \Verb+\l_hobby_tensionout_array+ is an array holding the tension for the path as it leaves each point.
+% \begin{macro}{\l_hobby_tension_out_array}
+% \Verb+\l_hobby_tension_out_array+ is an array holding the tension for the path as it leaves each point.
 % This is a parameter that controls how much the curve ``flexes'' as it leaves the point.
 % In the following, this will be written \(\tau_k\).
 %    \begin{macrocode}
-\array_new:N \l_hobby_tensionout_array
+\array_new:N \l_hobby_tension_out_array
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\l_hobby_tensionin_array}
-% \Verb+\l_hobby_tensionin_array+ is an array holding the tension for the path as it arrives at each point.
+% \begin{macro}{\l_hobby_tension_in_array}
+% \Verb+\l_hobby_tension_in_array+ is an array holding the tension for the path as it arrives at each point.
 % This is a parameter that controls how much the curve ``flexes'' as it gets to the point.
 % In the following, this will be written \(\overline{\tau}_k\).
 %    \begin{macrocode}
-\array_new:N \l_hobby_tensionin_array
+\array_new:N \l_hobby_tension_in_array
 %    \end{macrocode}
 % \end{macro}
 %
@@ -709,6 +721,15 @@ version 2005/12/01 or later.
 % The first index is \(1\).
 %    \begin{macrocode}
 \array_new:N \l_hobby_triu_array
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\l_hobby_excessangle_array}
+% \Verb+\l_hobby_excessangle_array+ is an array that allows the user to say that the algorithm should add a multiple of \(2 \pi\) to the angle differences.
+% This is because these angles are wrapped to the interval \((-\pi,\pi]\) but the wrapping might go wrong near the end points due to computation accuracy.
+% The first index is \(1\).
+%    \begin{macrocode}
+\array_new:N \l_hobby_excessangle_array
 %    \end{macrocode}
 % \end{macro}
 %
@@ -869,9 +890,11 @@ version 2005/12/01 or later.
   y .fp_set:N = \l_hobby_tempb_fp,
   tension~out .fp_set:N = \l_hobby_tempc_fp,
   tension~in .fp_set:N = \l_hobby_tempd_fp,
+  excess~angle .fp_set:N = \l_hobby_temps_fp,
   tension .meta:n = { tension~out=#1, tension~in=#1 },
   tension~out .default:n = 1,
   tension~in .default:n = 1,
+  excess~angle .default:n = 0,
 }
 %    \end{macrocode}
 % There are certain other parameters than can be set for a give curve.
@@ -890,17 +913,17 @@ version 2005/12/01 or later.
 % \begin{macro}{\hobby_distangle:n}
 % Computes the distance and angle between successive points.
 % The argument given is the index of the current point.
-% Assumptions: the points are in \Verb+\l_hobby_pointsx_array+ and \Verb+\l_hobby_pointsy_array+ and the index of the last point is \Verb+\l_hobby_npoints_int+.
+% Assumptions: the points are in \Verb+\l_hobby_points_x_array+ and \Verb+\l_hobby_points_y_array+ and the index of the last point is \Verb+\l_hobby_npoints_int+.
 %    \begin{macrocode}
 \cs_set:Nn \hobby_distangle:n {
-  \array_get:NnN \l_hobby_pointsx_array {#1 + 1} \l_tmpa_tl
+  \array_get:NnN \l_hobby_points_x_array {#1 + 1} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
-  \array_get:NnN \l_hobby_pointsy_array {#1 + 1} \l_tmpa_tl
+  \array_get:NnN \l_hobby_points_y_array {#1 + 1} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
-  \array_get:NnN \l_hobby_pointsx_array {#1} \l_tmpa_tl
+  \array_get:NnN \l_hobby_points_x_array {#1} \l_tmpa_tl
   \fp_sub:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
-  \array_get:NnN \l_hobby_pointsy_array {#1} \l_tmpa_tl
+  \array_get:NnN \l_hobby_points_y_array {#1} \l_tmpa_tl
   \fp_sub:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
   \fp_atantwo:NNN \l_hobby_tempc_fp \l_hobby_tempb_fp   \l_hobby_tempa_fp
@@ -1041,11 +1064,12 @@ version 2005/12/01 or later.
 % So these must be set up by a wrapper function which then calls this one.
 % The list of required information is:
 % \begin{enumerate}
-% \item \Verb+\l_hobby_pointsx_array+
-% \item \Verb+\l_hobby_pointsy_array+
+% \item \Verb+\l_hobby_points_x_array+
+% \item \Verb+\l_hobby_points_y_array+
 % \item \Verb+\l_hobby_npoints_int+
-% \item \Verb+\l_hobby_tensionout_array+
-% \item \Verb+\l_hobby_tensionin_array+
+% \item \Verb+\l_hobby_tension_out_array+
+% \item \Verb+\l_hobby_tension_in_array+
+% \item \Verb+\l_hobby_excessangle_array+
 % \item \Verb+\l_hobby_incurl_fp+
 % \item \Verb+\l_hobby_outcurl_fp+
 % \item \Verb+\l_hobby_inang_fp+
@@ -1062,9 +1086,9 @@ version 2005/12/01 or later.
 % We also check that the last (\(z_n\)) and first (\(z_0\)) nodes are the same, otherwise we repeat the \(z_0\) node as well.
 %    \begin{macrocode}
 \bool_if:NTF \l_hobby_closed_bool {
-  \array_get:NnN \l_hobby_pointsx_array {0} \l_tmpa_tl
+  \array_get:NnN \l_hobby_points_x_array {0} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
-  \array_get:NnN \l_hobby_pointsx_array {\l_hobby_npoints_int} \l_tmpa_tl
+  \array_get:NnN \l_hobby_points_x_array {\l_hobby_npoints_int} \l_tmpa_tl
   \fp_sub:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 %    \end{macrocode}
 % Are the \(x\)-values of the first and last points different?
@@ -1074,9 +1098,9 @@ version 2005/12/01 or later.
 %    \end{macrocode}
 % No, so compare the \(y\)-values.
 %    \begin{macrocode}
-    \array_get:NnN \l_hobby_pointsy_array {0} \l_tmpa_tl
+    \array_get:NnN \l_hobby_points_y_array {0} \l_tmpa_tl
     \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
-    \array_get:NnN \l_hobby_pointsy_array {\l_hobby_npoints_int} \l_tmpa_tl
+    \array_get:NnN \l_hobby_points_y_array {\l_hobby_npoints_int} \l_tmpa_tl
     \fp_sub:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 %    \end{macrocode}
 % Are the \(x\)-values of the first and last points different?
@@ -1094,14 +1118,16 @@ version 2005/12/01 or later.
     \int_incr:N \l_hobby_npoints_int
     \array_get:NnN \l_hobby_points_array {0} \l_tmpa_tl
     \array_put:Nnx \l_hobby_points_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
-    \array_get:NnN \l_hobby_pointsx_array {0} \l_tmpa_tl
-\array_put:Nnx \l_hobby_pointsx_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
-    \array_get:NnN \l_hobby_pointsy_array {0} \l_tmpa_tl
-\array_put:Nnx \l_hobby_pointsy_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
-    \array_get:NnN \l_hobby_tensionin_array {0} \l_tmpa_tl
-\array_put:Nnx \l_hobby_tensionin_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
-    \array_get:NnN \l_hobby_tensionout_array {0} \l_tmpa_tl
-\array_put:Nnx \l_hobby_tensionout_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \array_get:NnN \l_hobby_points_x_array {0} \l_tmpa_tl
+\array_put:Nnx \l_hobby_points_x_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \array_get:NnN \l_hobby_points_y_array {0} \l_tmpa_tl
+\array_put:Nnx \l_hobby_points_y_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \array_get:NnN \l_hobby_tension_in_array {0} \l_tmpa_tl
+\array_put:Nnx \l_hobby_tension_in_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \array_get:NnN \l_hobby_tension_out_array {0} \l_tmpa_tl
+\array_put:Nnx \l_hobby_tension_out_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \array_get:NnN \l_hobby_excessangle_array {0} \l_tmpa_tl
+\array_put:Nnx \l_hobby_excessangle_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
   }
   }
   {
@@ -1111,14 +1137,16 @@ version 2005/12/01 or later.
     \int_incr:N \l_hobby_npoints_int
     \array_get:NnN \l_hobby_points_array {0} \l_tmpa_tl
     \array_put:Nnx \l_hobby_points_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
-    \array_get:NnN \l_hobby_pointsx_array {0} \l_tmpa_tl
-\array_put:Nnx \l_hobby_pointsx_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
-    \array_get:NnN \l_hobby_pointsy_array {0} \l_tmpa_tl
-\array_put:Nnx \l_hobby_pointsy_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
-    \array_get:NnN \l_hobby_tensionin_array {0} \l_tmpa_tl
-\array_put:Nnx \l_hobby_tensionin_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
-    \array_get:NnN \l_hobby_tensionout_array {0} \l_tmpa_tl
-\array_put:Nnx \l_hobby_tensionout_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \array_get:NnN \l_hobby_points_x_array {0} \l_tmpa_tl
+\array_put:Nnx \l_hobby_points_x_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \array_get:NnN \l_hobby_points_y_array {0} \l_tmpa_tl
+\array_put:Nnx \l_hobby_points_y_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \array_get:NnN \l_hobby_tension_in_array {0} \l_tmpa_tl
+\array_put:Nnx \l_hobby_tension_in_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \array_get:NnN \l_hobby_tension_out_array {0} \l_tmpa_tl
+\array_put:Nnx \l_hobby_tension_out_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \array_get:NnN \l_hobby_excessangle_array {0} \l_tmpa_tl
+\array_put:Nnx \l_hobby_excessangle_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
   }
 %    \end{macrocode}
 % Now that we are sure that the first and last points are identical, we need to duplicate the first-but-one point (and all of its data).
@@ -1126,14 +1154,16 @@ version 2005/12/01 or later.
     \int_incr:N \l_hobby_npoints_int
     \array_get:NnN \l_hobby_points_array {1} \l_tmpa_tl
   \array_put:Nnx \l_hobby_points_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
-    \array_get:NnN \l_hobby_pointsx_array {1} \l_tmpa_tl
-\array_put:Nnx \l_hobby_pointsx_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
-    \array_get:NnN \l_hobby_pointsy_array {1} \l_tmpa_tl
-\array_put:Nnx \l_hobby_pointsy_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
-    \array_get:NnN \l_hobby_tensionin_array {1} \l_tmpa_tl
-\array_put:Nnx \l_hobby_tensionin_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
-   \array_get:NnN \l_hobby_tensionout_array {1} \l_tmpa_tl
-\array_put:Nnx \l_hobby_tensionout_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \array_get:NnN \l_hobby_points_x_array {1} \l_tmpa_tl
+\array_put:Nnx \l_hobby_points_x_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \array_get:NnN \l_hobby_points_y_array {1} \l_tmpa_tl
+\array_put:Nnx \l_hobby_points_y_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+    \array_get:NnN \l_hobby_tension_in_array {1} \l_tmpa_tl
+\array_put:Nnx \l_hobby_tension_in_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+   \array_get:NnN \l_hobby_tension_out_array {1} \l_tmpa_tl
+\array_put:Nnx \l_hobby_tension_out_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
+   \array_get:NnN \l_hobby_excessangle_array {1} \l_tmpa_tl
+\array_put:Nnx \l_hobby_excessangle_array {\l_hobby_npoints_int} {\tl_use:N \l_tmpa_tl}
 }{}
 %    \end{macrocode}
 % 
@@ -1184,6 +1214,16 @@ version 2005/12/01 or later.
 %^^A      \fp_add:Nn \l_hobby_tempa_fp {\c_pi_fp}
 %^^A    }
 %^^A    {}
+%
+% The wrapping routine might not get it right at the edges so we add in the override.  
+%    \begin{macrocode}
+\array_get:NnNTF \l_hobby_excessangle_array {##1} \l_tmpa_tl {
+  \fp_set:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
+  \fp_mul:Nn \l_hobby_tempb_fp {\c_pi_fp}
+  \fp_mul:Nn \l_hobby_tempb_fp {2}
+  \fp_add:Nn \l_hobby_tempa_fp {\l_hobby_tempb_fp}
+  }{}
+%    \end{macrocode}
 %    \begin{macrocode}
     \array_put:Nnx \l_hobby_psi_array {##1}{\fp_to_tl:N \l_hobby_tempa_fp}
   }
@@ -1194,12 +1234,12 @@ version 2005/12/01 or later.
 % This is indexed from \(1\) to \(n-1\).
 %    \begin{macrocode}
   \prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int - 1} {
-    \array_get:NnN \l_hobby_tensionin_array {##1} \l_tmpa_tl
+    \array_get:NnN \l_hobby_tension_in_array {##1} \l_tmpa_tl
     \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
     \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
     \array_get:NnN \l_hobby_distances_array {##1} \l_tmpa_tl
     \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
-  \array_get:NnN \l_hobby_tensionin_array {##1 + 1} \l_tmpa_tl
+  \array_get:NnN \l_hobby_tension_in_array {##1 + 1} \l_tmpa_tl
     \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
     \array_put:Nnx \l_hobby_tria_array {##1} {\fp_to_tl:N \l_hobby_tempa_fp}
   }
@@ -1210,31 +1250,31 @@ version 2005/12/01 or later.
 %    \begin{macrocode}
   \prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int - 1} {
 
-  \array_get:NnN \l_hobby_tensionin_array {##1 + 1} \l_tmpa_tl
+  \array_get:NnN \l_hobby_tension_in_array {##1 + 1} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempa_fp {3}
   \fp_sub:Nn \l_hobby_tempa_fp {1}
 
-  \array_get:NnN \l_hobby_tensionout_array {##1} \l_tmpa_tl
+  \array_get:NnN \l_hobby_tension_out_array {##1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
-  \array_get:NnN \l_hobby_tensionout_array {##1 - 1} \l_tmpa_tl
+  \array_get:NnN \l_hobby_tension_out_array {##1 - 1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
   \array_get:NnN \l_hobby_distances_array {##1 - 1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
-  \array_get:NnN \l_hobby_tensionout_array {##1 - 1} \l_tmpa_tl
+  \array_get:NnN \l_hobby_tension_out_array {##1 - 1} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {3}
   \fp_sub:Nn \l_hobby_tempb_fp {1}
 
-  \array_get:NnN \l_hobby_tensionin_array {##1} \l_tmpa_tl
+  \array_get:NnN \l_hobby_tension_in_array {##1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
-  \array_get:NnN \l_hobby_tensionin_array {##1 + 1} \l_tmpa_tl
+  \array_get:NnN \l_hobby_tension_in_array {##1 + 1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
   \array_get:NnN \l_hobby_distances_array {##1} \l_tmpa_tl
@@ -1249,11 +1289,11 @@ version 2005/12/01 or later.
 % Next, the superdiagonal.
 %    \begin{macrocode}
   \prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int - 2} {
-  \array_get:NnN \l_hobby_tensionin_array {##1} \l_tmpa_tl
+  \array_get:NnN \l_hobby_tension_in_array {##1} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
-  \array_get:NnN \l_hobby_tensionin_array {##1 - 1} \l_tmpa_tl
+  \array_get:NnN \l_hobby_tension_in_array {##1 - 1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
   \array_get:NnN \l_hobby_distances_array {##1 - 1} \l_tmpa_tl
@@ -1269,11 +1309,11 @@ version 2005/12/01 or later.
   \array_get:NnN \l_hobby_psi_array {##1 + 1} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
-  \array_get:NnN \l_hobby_tensionout_array {##1} \l_tmpa_tl
+  \array_get:NnN \l_hobby_tension_out_array {##1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
-  \array_get:NnN \l_hobby_tensionout_array {##1 - 1} \l_tmpa_tl
+  \array_get:NnN \l_hobby_tension_out_array {##1 - 1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
   \array_get:NnN \l_hobby_distances_array {##1 - 1} \l_tmpa_tl
@@ -1281,7 +1321,7 @@ version 2005/12/01 or later.
 
   \fp_neg:N \l_hobby_tempa_fp
 
-  \array_get:NnN \l_hobby_tensionout_array {##1 - 1} \l_tmpa_tl
+  \array_get:NnN \l_hobby_tension_out_array {##1 - 1} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {3}
   \fp_sub:Nn \l_hobby_tempb_fp {1}
@@ -1289,11 +1329,11 @@ version 2005/12/01 or later.
   \array_get:NnN \l_hobby_psi_array {##1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
-  \array_get:NnN \l_hobby_tensionin_array {##1} \l_tmpa_tl
+  \array_get:NnN \l_hobby_tension_in_array {##1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
-  \array_get:NnN \l_hobby_tensionin_array {##1 + 1} \l_tmpa_tl
+  \array_get:NnN \l_hobby_tension_in_array {##1 + 1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
   \array_get:NnN \l_hobby_distances_array {##1} \l_tmpa_tl
@@ -1314,9 +1354,9 @@ version 2005/12/01 or later.
 %    \begin{macrocode}
 \array_get:NnN \l_hobby_distances_array {\l_hobby_npoints_int - 2} \l_tmpa_tl
 \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
-\array_get:NnN \l_hobby_tensionout_array {\l_hobby_npoints_int - 2} \l_tmpa_tl
+\array_get:NnN \l_hobby_tension_out_array {\l_hobby_npoints_int - 2} \l_tmpa_tl
 \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
-\array_get:NnN \l_hobby_tensionout_array {\l_hobby_npoints_int - 1} \l_tmpa_tl
+\array_get:NnN \l_hobby_tension_out_array {\l_hobby_npoints_int - 1} \l_tmpa_tl
 \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 \fp_neg:N \l_hobby_tempa_fp
@@ -1333,11 +1373,11 @@ version 2005/12/01 or later.
   \array_get:NnN \l_hobby_psi_array {1} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
- \array_get:NnN \l_hobby_tensionout_array {\l_hobby_npoints_int -1} \l_tmpa_tl
+ \array_get:NnN \l_hobby_tension_out_array {\l_hobby_npoints_int -1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
-\array_get:NnN \l_hobby_tensionout_array {\l_hobby_npoints_int -2} \l_tmpa_tl
+\array_get:NnN \l_hobby_tension_out_array {\l_hobby_npoints_int -2} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
 \array_get:NnN \l_hobby_distances_array {\l_hobby_npoints_int - 2} \l_tmpa_tl
@@ -1345,7 +1385,7 @@ version 2005/12/01 or later.
 
   \fp_neg:N \l_hobby_tempa_fp
 
- \array_get:NnN \l_hobby_tensionout_array {\l_hobby_npoints_int - 2} \l_tmpa_tl
+ \array_get:NnN \l_hobby_tension_out_array {\l_hobby_npoints_int - 2} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {3}
   \fp_sub:Nn \l_hobby_tempb_fp {1}
@@ -1353,11 +1393,11 @@ version 2005/12/01 or later.
 \array_get:NnN \l_hobby_psi_array {\l_hobby_npoints_int - 1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
-\array_get:NnN \l_hobby_tensionin_array {\l_hobby_npoints_int - 1} \l_tmpa_tl
+\array_get:NnN \l_hobby_tension_in_array {\l_hobby_npoints_int - 1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
- \array_get:NnN \l_hobby_tensionin_array {\l_hobby_npoints_int} \l_tmpa_tl
+ \array_get:NnN \l_hobby_tension_in_array {\l_hobby_npoints_int} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
 \array_get:NnN \l_hobby_distances_array {\l_hobby_npoints_int -1} \l_tmpa_tl
@@ -1377,10 +1417,10 @@ version 2005/12/01 or later.
 %    \end{macrocode}
 % And define the significant entry in the \(v\)-vector.
 %    \begin{macrocode}
-\array_get:NnN \l_hobby_tensionout_array {\l_hobby_npoints_int -1} \l_tmpa_tl
+\array_get:NnN \l_hobby_tension_out_array {\l_hobby_npoints_int -1} \l_tmpa_tl
 \fp_set:Nn \l_hobby_triv_fp {\l_tmpa_tl}
 \fp_mul:Nn \l_hobby_triv_fp {\l_tmpa_tl}
- \array_get:NnN \l_hobby_tensionout_array {\l_hobby_npoints_int -2} \l_tmpa_tl
+ \array_get:NnN \l_hobby_tension_out_array {\l_hobby_npoints_int -2} \l_tmpa_tl
 \fp_mul:Nn \l_hobby_triv_fp {\l_tmpa_tl}
  \array_get:NnN \l_hobby_distances_array {\l_hobby_npoints_int -2} \l_tmpa_tl
 \fp_mul:Nn \l_hobby_triv_fp {\l_tmpa_tl}
@@ -1392,18 +1432,18 @@ version 2005/12/01 or later.
 %    \begin{macrocode}
 \fp_if_undefined:NTF \l_hobby_outang_fp
 {
-  \array_get:NnN \l_hobby_tensionin_array {1} \l_tmpa_tl
+  \array_get:NnN \l_hobby_tension_in_array {1} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempa_fp {\l_hobby_incurl_fp}
 
-  \array_get:NnN \l_hobby_tensionin_array {1} \l_tmpa_tl
+  \array_get:NnN \l_hobby_tension_in_array {1} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {3}
   \fp_sub:Nn \l_hobby_tempb_fp {1}
 
-  \array_get:NnN \l_hobby_tensionout_array {0} \l_tmpa_tl
+  \array_get:NnN \l_hobby_tension_out_array {0} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
@@ -1412,17 +1452,17 @@ version 2005/12/01 or later.
   
   \array_put:Nnx \l_hobby_trib_array {0}  {\fp_to_tl:N \l_hobby_tempa_fp}
 
-  \array_get:NnN \l_hobby_tensionout_array {0} \l_tmpa_tl
+  \array_get:NnN \l_hobby_tension_out_array {0} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
-  \array_get:NnN \l_hobby_tensionout_array {0} \l_tmpa_tl
+  \array_get:NnN \l_hobby_tension_out_array {0} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {3}
   \fp_sub:Nn \l_hobby_tempb_fp {1}
 
-  \array_get:NnN \l_hobby_tensionin_array {1} \l_tmpa_tl
+  \array_get:NnN \l_hobby_tension_in_array {1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
@@ -1455,29 +1495,29 @@ version 2005/12/01 or later.
 %    \begin{macrocode}
 \fp_if_undefined:NTF \l_hobby_inang_fp
 {
- \array_get:NnN \l_hobby_tensionout_array {\l_hobby_npoints_int - 1} \l_tmpa_tl
+ \array_get:NnN \l_hobby_tension_out_array {\l_hobby_npoints_int - 1} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
- \array_get:NnN \l_hobby_tensionout_array {\l_hobby_npoints_int - 2} \l_tmpa_tl
+ \array_get:NnN \l_hobby_tension_out_array {\l_hobby_npoints_int - 2} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
  \array_get:NnN \l_hobby_distances_array {\l_hobby_npoints_int - 2} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
- \array_get:NnN \l_hobby_tensionin_array {\l_hobby_npoints_int} \l_tmpa_tl
+ \array_get:NnN \l_hobby_tension_in_array {\l_hobby_npoints_int} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {3}
   \fp_sub:Nn \l_hobby_tempb_fp {1}
 
- \array_get:NnN \l_hobby_tensionout_array {\l_hobby_npoints_int - 1} \l_tmpa_tl
+ \array_get:NnN \l_hobby_tension_out_array {\l_hobby_npoints_int - 1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
   \fp_mul:Nn \l_hobby_tempb_fp {\l_hobby_outcurl_fp}
 
- \array_get:NnN \l_hobby_tensionin_array {\l_hobby_npoints_int } \l_tmpa_tl
+ \array_get:NnN \l_hobby_tension_in_array {\l_hobby_npoints_int } \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
@@ -1486,17 +1526,17 @@ version 2005/12/01 or later.
 
   \fp_mul:Nn \l_hobby_tempa_fp {\l_hobby_tempb_fp}
 
- \array_get:NnN \l_hobby_tensionout_array {\l_hobby_npoints_int -2} \l_tmpa_tl
+ \array_get:NnN \l_hobby_tension_out_array {\l_hobby_npoints_int -2} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {3}
   \fp_sub:Nn \l_hobby_tempb_fp {1}
 
- \array_get:NnN \l_hobby_tensionin_array {\l_hobby_npoints_int} \l_tmpa_tl
+ \array_get:NnN \l_hobby_tension_in_array {\l_hobby_npoints_int} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
- \array_get:NnN \l_hobby_tensionout_array {\l_hobby_npoints_int - 1} \l_tmpa_tl
+ \array_get:NnN \l_hobby_tension_out_array {\l_hobby_npoints_int - 1} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
@@ -1516,7 +1556,7 @@ version 2005/12/01 or later.
  \array_put:Nnx \l_hobby_trib_array {\l_hobby_npoints_int - 1} {\fp_to_tl:N \l_hobby_tempa_fp}
 
 
- \array_get:NnN \l_hobby_tensionout_array {\l_hobby_npoints_int - 2} \l_tmpa_tl
+ \array_get:NnN \l_hobby_tension_out_array {\l_hobby_npoints_int - 2} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {3}
   \fp_sub:Nn \l_hobby_tempb_fp {1}
@@ -1524,11 +1564,11 @@ version 2005/12/01 or later.
  \array_get:NnN \l_hobby_psi_array {\l_hobby_npoints_int - 1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
- \array_get:NnN \l_hobby_tensionin_array {\l_hobby_npoints_int - 1} \l_tmpa_tl
+ \array_get:NnN \l_hobby_tension_in_array {\l_hobby_npoints_int - 1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
- \array_get:NnN \l_hobby_tensionin_array {\l_hobby_npoints_int} \l_tmpa_tl
+ \array_get:NnN \l_hobby_tension_in_array {\l_hobby_npoints_int} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
  \array_get:NnN \l_hobby_distances_array {\l_hobby_npoints_int - 1} \l_tmpa_tl
@@ -1558,11 +1598,11 @@ version 2005/12/01 or later.
   }
   {}
 
- \array_get:NnN \l_hobby_tensionout_array {\l_hobby_npoints_int - 1} \l_tmpa_tl
+ \array_get:NnN \l_hobby_tension_out_array {\l_hobby_npoints_int - 1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
- \array_get:NnN \l_hobby_tensionout_array {\l_hobby_npoints_int - 2} \l_tmpa_tl
+ \array_get:NnN \l_hobby_tension_out_array {\l_hobby_npoints_int - 2} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
  \array_get:NnN \l_hobby_distances_array {\l_hobby_npoints_int - 2} \l_tmpa_tl
@@ -1570,7 +1610,7 @@ version 2005/12/01 or later.
 
   \fp_neg:N \l_hobby_tempa_fp
 
-  \array_get:NnN \l_hobby_tensionout_array {\l_hobby_npoints_int - 2} \l_tmpa_tl
+  \array_get:NnN \l_hobby_tension_out_array {\l_hobby_npoints_int - 2} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {3}
   \fp_sub:Nn \l_hobby_tempb_fp {1}
@@ -1578,11 +1618,11 @@ version 2005/12/01 or later.
  \array_get:NnN \l_hobby_psi_array {\l_hobby_npoints_int - 1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
-   \array_get:NnN \l_hobby_tensionin_array  {\l_hobby_npoints_int - 1} \l_tmpa_tl
+   \array_get:NnN \l_hobby_tension_in_array  {\l_hobby_npoints_int - 1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
-  \exp_args:NNo \array_get:NnN \l_hobby_tensionin_array {\l_hobby_npoints_int} \l_tmpa_tl
+  \exp_args:NNo \array_get:NnN \l_hobby_tension_in_array {\l_hobby_npoints_int} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
    \array_get:NnN \l_hobby_distances_array  {\l_hobby_npoints_int - 1} \l_tmpa_tl
@@ -1773,36 +1813,36 @@ version 2005/12/01 or later.
 %    \begin{macrocode}
 \fp_if_undefined:NTF \l_hobby_inang_fp
 {
-  \array_get:NnN \l_hobby_tensionin_array {\l_hobby_npoints_int} \l_tmpa_tl
+  \array_get:NnN \l_hobby_tension_in_array {\l_hobby_npoints_int} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempa_fp {3}
   \fp_sub:Nn \l_hobby_tempa_fp {1}
 
-   \array_get:NnN \l_hobby_tensionout_array      {\l_hobby_npoints_int - 1} \l_tmpa_tl
+   \array_get:NnN \l_hobby_tension_out_array      {\l_hobby_npoints_int - 1} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
 
   \fp_mul:Nn \l_hobby_tempa_fp {\l_hobby_outcurl_fp}
 
-  \array_get:NnN \l_hobby_tensionin_array {\l_hobby_npoints_int } \l_tmpa_tl
+  \array_get:NnN \l_hobby_tension_in_array {\l_hobby_npoints_int } \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
   \fp_add:Nn \l_hobby_tempa_fp {\l_hobby_tempb_fp}
 
-   \array_get:NnN \l_hobby_tensionout_array  {\l_hobby_npoints_int -2} \l_tmpa_tl
+   \array_get:NnN \l_hobby_tension_out_array  {\l_hobby_npoints_int -2} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {3}
   \fp_sub:Nn \l_hobby_tempb_fp {1}
 
-   \array_get:NnN \l_hobby_tensionin_array {\l_hobby_npoints_int} \l_tmpa_tl
+   \array_get:NnN \l_hobby_tension_in_array {\l_hobby_npoints_int} \l_tmpa_tl
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempb_fp {\l_tmpa_tl}
 
-   \array_get:NnN \l_hobby_tensionout_array  {\l_hobby_npoints_int - 1} \l_tmpa_tl
+   \array_get:NnN \l_hobby_tension_out_array  {\l_hobby_npoints_int - 1} \l_tmpa_tl
   \fp_set:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
   \fp_mul:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
@@ -1884,9 +1924,9 @@ version 2005/12/01 or later.
     \fp_mul:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
     \fp_div:Nn \l_hobby_tempd_fp {3}
     \fp_div:Nn \l_hobby_tempc_fp {3}
-  \array_get:NnN \l_hobby_pointsx_array {##1} \l_tmpa_tl
+  \array_get:NnN \l_hobby_points_x_array {##1} \l_tmpa_tl
     \fp_add:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
-  \array_get:NnN \l_hobby_pointsy_array {##1} \l_tmpa_tl
+  \array_get:NnN \l_hobby_points_y_array {##1} \l_tmpa_tl
     \fp_add:Nn \l_hobby_tempd_fp {\l_tmpa_tl}
    \array_put:Nnx \l_hobby_controla_array  {##1 + 1} {x = \fp_use:N \l_hobby_tempc_fp, y = \fp_use:N \l_hobby_tempd_fp }
   }
@@ -1908,9 +1948,9 @@ version 2005/12/01 or later.
     \fp_mul:Nn \l_hobby_tempd_fp {\l_tmpa_tl}
     \fp_div:Nn \l_hobby_tempc_fp {3}
     \fp_div:Nn \l_hobby_tempd_fp {3}
-    \array_get:NnN \l_hobby_pointsx_array {##1} \l_tmpa_tl
+    \array_get:NnN \l_hobby_points_x_array {##1} \l_tmpa_tl
     \fp_add:Nn \l_hobby_tempc_fp {\l_tmpa_tl}
-    \array_get:NnN \l_hobby_pointsy_array {##1} \l_tmpa_tl
+    \array_get:NnN \l_hobby_points_y_array {##1} \l_tmpa_tl
     \fp_add:Nn \l_hobby_tempd_fp {\l_tmpa_tl}
     \array_put:Nnx \l_hobby_controlb_array {##1} {x = \fp_use:N \l_hobby_tempc_fp, y = \fp_use:N \l_hobby_tempd_fp }
   }
@@ -1924,12 +1964,13 @@ version 2005/12/01 or later.
 \NewDocumentCommand \hobbyinit {m m m} {
 \hobby_set_cmds:nnn#1#2#3
 \array_clear:N \l_hobby_points_array
-\array_clear:N \l_hobby_pointsx_array
-\array_clear:N \l_hobby_pointsy_array
+\array_clear:N \l_hobby_points_x_array
+\array_clear:N \l_hobby_points_y_array
 \array_clear:N \l_hobby_angles_array
 \array_clear:N \l_hobby_distances_array
-\array_clear:N \l_hobby_tensionout_array
-\array_clear:N \l_hobby_tensionin_array
+\array_clear:N \l_hobby_tension_out_array
+\array_clear:N \l_hobby_tension_in_array
+\array_clear:N \l_hobby_excessangle_array
 \array_clear:N \l_hobby_tria_array
 \array_clear:N \l_hobby_trib_array
 \array_clear:N \l_hobby_tric_array
@@ -1962,14 +2003,16 @@ version 2005/12/01 or later.
     {
       tension~out,
       tension~in,
+      excess~angle,
       #1
     }
     \int_incr:N \l_hobby_npoints_int
-    \array_put:Nnx \l_hobby_tensionout_array {\l_hobby_npoints_int } {\fp_to_tl:N \l_hobby_tempc_fp}
-    \array_put:Nnx \l_hobby_tensionin_array {\l_hobby_npoints_int } {\fp_to_tl:N \l_hobby_tempd_fp}
+    \array_put:Nnx \l_hobby_tension_out_array {\l_hobby_npoints_int } {\fp_to_tl:N \l_hobby_tempc_fp}
+    \array_put:Nnx \l_hobby_tension_in_array {\l_hobby_npoints_int } {\fp_to_tl:N \l_hobby_tempd_fp}
+    \array_put:Nnx \l_hobby_excessangle_array {\l_hobby_npoints_int } {\fp_to_tl:N \l_hobby_temps_fp}
     \array_put:Nnx \l_hobby_points_array {\l_hobby_npoints_int } {x = \fp_use:N \l_hobby_tempa_fp, y = \fp_use:N \l_hobby_tempb_fp }
-    \array_put:Nnx \l_hobby_pointsx_array {\l_hobby_npoints_int } {\fp_to_tl:N \l_hobby_tempa_fp}
-    \array_put:Nnx \l_hobby_pointsy_array {\l_hobby_npoints_int } {\fp_to_tl:N \l_hobby_tempb_fp}
+    \array_put:Nnx \l_hobby_points_x_array {\l_hobby_npoints_int } {\fp_to_tl:N \l_hobby_tempa_fp}
+    \array_put:Nnx \l_hobby_points_y_array {\l_hobby_npoints_int } {\fp_to_tl:N \l_hobby_tempb_fp}
 }
 %    \end{macrocode}
 % \end{macro}
@@ -2112,6 +2155,7 @@ version 2005/12/01 or later.
   tension in/.code = {},
   tension out/.code = {},
   tension/.code = {},
+  excess angle/.code = {},
   closed/.code = {%
     \expandafter\def\expandafter\hobby@opts\expandafter{\hobby@opts closed=#1,disjoint=#1}%
   },
@@ -2309,6 +2353,19 @@ version 2005/12/01 or later.
 \RequirePackage{expl3}
 \ExplSyntaxOn
 %    \end{macrocode}
+% Some auxiliary variables.
+%    \begin{macrocode}
+\tl_new:N \l_array_tmp_tl
+\tl_new:N \l_array_show_tl
+\int_new:N \l_array_base_int
+\int_new:N \l_array_top_int
+\int_new:N \l_array_tmp_int
+%    \end{macrocode}
+% The global variable \Verb+\g_array_base_int+ says what index a blank array should start with when pushed or unshifted.
+%    \begin{macrocode}
+\int_new:N \g_array_base_int
+\int_set:Nn \g_array_base_int {0}
+%    \end{macrocode}
 % \begin{macro}{\array_adjust_ends:Nn}
 % This ensures that the ``base'' and ``top'' are big enough to include the given index.
 %    \begin{macrocode}
@@ -2388,29 +2445,54 @@ version 2005/12/01 or later.
 % When stepping through an array, we want to iterate in order so a simple wrapper to \Verb+\prop_map_function+ is not enough.
 % This maps through every value from the base to the top so the function should be prepared to deal with a \Verb+\q_no_value+.
 %    \begin{macrocode}
-\int_new:N \l_array_base_int
-\int_new:N \l_array_top_int
 \cs_new:Npn \array_map_function:NN #1#2
 {
   \array_if_empty:NTF #1 {} {
-    \prop_get:NnNTF #1 {base} \l_tmpa_tl {
-      \int_set:Nn \l_array_base_int {\l_tmpa_tl}
+    \prop_get:NnNTF #1 {base} \l_array_tmp_tl {
+      \int_set:Nn \l_array_base_int {\l_array_tmp_tl}
     }{
       \int_set:Nn \l_array_base_int {0}
     }
-    \prop_get:NnNTF #1 {top} \l_tmpa_tl {
-      \int_set:Nn \l_array_top_int {\l_tmpa_tl}
+    \prop_get:NnNTF #1 {top} \l_array_tmp_tl {
+      \int_set:Nn \l_array_top_int {\l_array_tmp_tl}
     }{
       \int_set:Nn \l_array_top_int {0}
     }
     \prg_stepwise_inline:nnnn {\l_array_base_int} {1} {\l_array_top_int} {
-  \array_get:NnN #1 {##1} \l_tmpa_tl
-  \exp_args:Nno #2 {##1} \l_tmpa_tl
+  \array_get:NnN #1 {##1} \l_array_tmp_tl
+  \exp_args:Nno #2 {##1} \l_array_tmp_tl
 }
 } {}
 }
 \cs_generate_variant:Nn \array_map_function:NN {     Nc }
 \cs_generate_variant:Nn \array_map_function:NN { c , cc }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\array_reverse_map_function}
+% This steps through the array in reverse order.
+%    \begin{macrocode}
+\cs_new:Npn \array_reverse_map_function:NN #1#2
+{
+  \array_if_empty:NTF #1 {} {
+    \prop_get:NnNTF #1 {base} \l_array_tmp_tl {
+      \int_set:Nn \l_array_base_int {\l_array_tmp_tl}
+    }{
+      \int_set:Nn \l_array_base_int {0}
+    }
+    \prop_get:NnNTF #1 {top} \l_array_tmp_tl {
+      \int_set:Nn \l_array_top_int {\l_array_tmp_tl}
+    }{
+      \int_set:Nn \l_array_top_int {0}
+    }
+    \prg_stepwise_inline:nnnn {\l_array_top_int} {-1} {\l_array_base_int} {
+  \array_get:NnN #1 {##1} \l_array_tmp_tl
+  \exp_args:Nno #2 {##1} \l_array_tmp_tl
+}
+} {}
+}
+\cs_generate_variant:Nn \array_reverse_map_function:NN {     Nc }
+\cs_generate_variant:Nn \array_reverse_map_function:NN { c , cc }
 %    \end{macrocode}
 % \end{macro}
 %
@@ -2427,8 +2509,22 @@ version 2005/12/01 or later.
     \prg_break_point:n { \int_gdecr:N \g_prg_map_int }
   }
 \cs_generate_variant:Nn \array_map_inline:Nn { c }
-\cs_new_eq:NN \array_map_break:  \prg_map_break:
-\cs_new_eq:NN \array_map_break:n \prg_map_break:n
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\array_reverse_map_inline:Nn}
+% Inline version of the above.
+%    \begin{macrocode}
+\cs_new_protected:Npn \array_reverse_map_inline:Nn #1#2
+  {
+    \int_gincr:N \g_prg_map_int
+    \cs_gset:cpn { array_map_inline_ \int_use:N \g_prg_map_int :nn }
+      ##1##2 {#2}
+    \exp_args:NNc \array_reverse_map_function:NN #1
+      { array_map_inline_ \int_use:N \g_prg_map_int :nn }
+    \prg_break_point:n { \int_gdecr:N \g_prg_map_int }
+  }
+\cs_generate_variant:Nn \array_reverse_map_inline:Nn { c }
 %    \end{macrocode}
 % \end{macro}
 %
@@ -2446,7 +2542,6 @@ version 2005/12/01 or later.
 % \begin{macro}{\array_show:N}
 % Mapping through an array isn't expandable so we have to set a token list to its contents first before passing it to the message handler.
 %    \begin{macrocode}
-\tl_new:N \l_array_show_tl
 \cs_new_protected:Npn \array_show:N #1
   {
     \tl_clear:N \l_array_show_tl
@@ -2459,9 +2554,120 @@ version 2005/12/01 or later.
 
 \cs_new_protected:Npn \array_show_aux:nn #1#2
 {
+  \tl_if_eq:NNTF {#2} {\q_no_value} {}
+  {
   \tl_put_right:No \l_array_show_tl {\msg_aux_show:nn {#1}{#2}}
+  }
 }
 \cs_generate_variant:Nn \array_show:N { c }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\array_push:Nn}
+%    \begin{macrocode}
+\cs_new_protected:Npn \array_push:Nn #1#2
+{
+  \prop_get:NnNTF #1 {top} \l_array_tmp_tl
+  {
+    \int_set:Nn \l_array_tmp_int {\l_array_tmp_tl}
+    \int_incr:N \l_array_tmp_int
+    \array_put:Nnn #1 {\l_array_tmp_int} {#2}
+  }
+  {
+    \array_put:Nnn #1 {\g_array_base_int} {#2}
+  }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\array_unshift:Nn}
+%    \begin{macrocode}
+\cs_new_protected:Npn \array_unshift:Nn #1#2
+{
+  \prop_get:NnNTF #1 {base} \l_array_tmp_tl
+  {
+    \int_set:Nn \l_array_tmp_int {\l_array_tmp_tl}
+    \int_decr:N \l_array_tmp_int
+    \array_put:Nnn #1 {\l_array_tmp_int} {#2}
+  }
+  {
+    \array_put:Nnn #1 {\g_array_base_int} {#2}
+  }
+
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\array_pop:NN}
+%    \begin{macrocode}
+\cs_new_protected:Npn \array_pop:NN #1#2
+{
+  \prop_get:NnN #1 {top} \l_array_tmp_tl
+  \array_get:NnN #1 {\l_array_tmp_tl} #2
+  \array_del:Nn #1 {\l_array_tmp_tl}
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\array_shift:NN}
+%    \begin{macrocode}
+\cs_new_protected:Npn \array_shift:NN #1#2
+{
+  \prop_get:NnN #1 {base} \l_array_tmp_tl
+  \array_get:NnN #1 {\l_array_tmp_tl} #2
+  \array_del:Nn #1 {\l_array_tmp_tl}
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\array_del:Nn}
+%    \begin{macrocode}
+\cs_new_protected:Npn \array_del:Nn #1#2
+{
+  \exp_args:NNx \prop_del:Nn #1 {\int_eval:n {#2}}
+  \int_set:Nn \l_array_tmp_int {0}
+  \array_map_inline:Nn #1 {
+    \tl_if_eq:NNTF {##2} {\q_no_value} {}
+    {
+      \int_incr:N \l_array_tmp_int
+    }
+  }
+  \int_show:N \l_array_tmp_int
+  \int_compare:nNnTF {\l_array_tmp_int} = {0}
+  {
+    \prop_clear:N #1
+  }
+  {
+  \prop_get:NnN #1 {top} \l_array_tmp_tl
+  \int_compare:nNnTF {#2} = {\l_array_tmp_tl} {
+    \prop_get:NnN #1 {base} \l_array_tmp_tl
+    \int_set:Nn \l_array_tmp_int {\l_array_tmp_tl}
+    \array_map_inline:Nn #1 {
+    \tl_if_eq:NNTF {##2} {\q_no_value} {}
+    {
+      \int_compare:nNnTF {\l_array_tmp_int} < {##1} {
+        \int_set:Nn \l_array_tmp_int {##1}
+      }{}
+    }
+      }
+    \prop_put:Nnx #1 {top} {\int_use:N \l_array_tmp_int}
+  }{}
+  \prop_get:NnN #1 {base} \l_array_tmp_tl
+  \int_compare:nNnTF {#2} = {\l_array_tmp_tl} {
+p    \prop_get:NnN #1 {top} \l_array_tmp_tl
+    \int_set:Nn \l_array_tmp_int {\l_array_tmp_tl}
+    \array_map_inline:Nn #1 {
+    \tl_if_eq:NNTF {##2} {\q_no_value} {}
+    {
+      \int_compare:nNnTF {\l_array_tmp_int} > {##1} {
+        \int_set:Nn \l_array_tmp_int {##1}
+      }{}
+    }
+      }
+    \prop_put:Nnx #1 {base} {\int_use:N \l_array_tmp_int}
+  }{}
+  }
+}
 %    \end{macrocode}
 % \end{macro}
 %
