@@ -1443,7 +1443,30 @@ version 2005/12/01 or later.
   \array_put:Nnn \l_hobby_matrix_c_array {0} {0}
   \fp_set_eq:NN \l_hobby_tempa_fp \l_hobby_out_angle_fp
   \array_get:NnN \l_hobby_angles_array {0} \l_tmpa_tl
-  \fp_add:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+  \fp_sub:Nn \l_hobby_tempa_fp {\l_tmpa_tl}
+%    \end{macrocode}
+% We want to ensure that these angles lie in the range \((-\pi,\pi]\).
+% So if the angle is bigger than \(\pi\), we subtract \(2 \pi\).
+% (It shouldn't be that we can get bigger than \(3 \pi\) - check this.)
+%    \begin{macrocode}
+    \fp_compare:nNnTF {\l_hobby_tempa_fp} > { \c_pi_fp }
+    {
+      \fp_sub:Nn \l_hobby_tempa_fp {\c_pi_fp}
+      \fp_sub:Nn \l_hobby_tempa_fp {\c_pi_fp}
+    }
+    {}
+%    \end{macrocode}
+% Similarly, we check to see if the angle is less than \(-\pi\).
+%    \begin{macrocode}
+    \fp_set_eq:NN \l_hobby_tempb_fp \l_hobby_tempa_fp
+    \fp_neg:N \l_hobby_tempb_fp
+    \fp_compare:nNnTF {\l_hobby_tempb_fp} > {\c_pi_fp }
+    {
+      \fp_add:Nn \l_hobby_tempa_fp {\c_pi_fp}
+      \fp_add:Nn \l_hobby_tempa_fp {\c_pi_fp}
+    }
+    {}
+%    \end{macrocode}
   \array_put:Nnx \l_hobby_matrix_d_array {0} {\fp_to_tl:N \l_hobby_tempa_fp}
 }
 %    \end{macrocode}
@@ -2494,7 +2517,7 @@ version 2005/12/01 or later.
 %
 % For displaying arrays, we need some messages.
 %    \begin{macrocode}
-\msg_kernel_new:nnn { array } { show }
+\msg_new:nnn { array } { show }
   {
     The~array~\token_to_str:N #1~
     \array_if_empty:NTF #1
@@ -2510,7 +2533,7 @@ version 2005/12/01 or later.
   {
     \tl_clear:N \l_array_show_tl
     \array_map_function:NN #1 \array_show_aux:nn
-    \msg_aux_show:Nnx
+    \__msg_show_variable:Nnx
       #1
       { array }
       { \l_array_show_tl }
@@ -2520,7 +2543,7 @@ version 2005/12/01 or later.
 {
   \tl_if_eq:NNTF {#2} {\q_no_value} {}
   {
-  \tl_put_right:No \l_array_show_tl {\msg_aux_show:nn {#1}{#2}}
+  \tl_put_right:No \l_array_show_tl {\__msg_show_item:nn {#1}{#2}}
   }
 }
 \cs_generate_variant:Nn \array_show:N { c }
