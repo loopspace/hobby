@@ -29,7 +29,7 @@
 }
 
 
-\bibliographystyle{plain}
+%\bibliographystyle{plain}
 
 
 \providecommand*{\url}{\texttt}
@@ -164,7 +164,7 @@ The resulting path produced with this ``quick'' version is not as ideal as that 
 \section{Examples}
 
 \begin{itemize}
-\item Basic curve (using shortcut notation).
+\item Basic curve.
 \begin{verbatim}
 \begin{tikzpicture}
 \draw[postaction=show curve controls]
@@ -217,7 +217,7 @@ The angles given are absolute.
 (0,0) to[curve through={(1,.5) .. ([tension=2]2,0) .. (3,.5)}] (4,0);
 \end{tikzpicture}
 \end{center}
-\item Specifying the \emph{curl} parameters (if using the shortcut, these have to be passed via one of the points).
+\item Specifying the \emph{curl} parameters (if using the shortcut, these have to be passed via one of the points but obviously apply to the whole curve).
 \begin{verbatim}
 \begin{tikzpicture}[use Hobby shortcut]
 \draw[postaction=show curve controls]
@@ -641,6 +641,6 @@ Then \(A_1 = d_1\), \(B_1 = 2 d_1 + d_0\), and \(D_1 = - 2 d_1 \psi_1\).
 Thus \(\theta_1 = (-2 d_1 \psi_1 - d_1 \theta_0)/(2 d_1 + d_0) = - (2 \psi_1 + \theta_0) \frac{d_1}{2 d_1 + d_0}\).
 We compute \(\phi_1 = -\psi_1 - \theta_1 = \frac{- \psi_1 d_0 + \theta_0 d_1}{2 d_1 + d_0}\) and \(\phi_2 = \theta_1\).
 
-\bibliography{hobby}
+\begin{thebibliography}{1} \bibitem{MR834054} John~D. Hobby. \newblock Smooth, easy to compute interpolating splines. \newblock {\em Discrete Comput. Geom.}, 1:123--140, 1986. \end{thebibliography}
 
 \end{document}
