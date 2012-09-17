@@ -1320,6 +1320,252 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 }
 %    \end{macrocode}
 % \end{function}
+%
+% Plot handlers
+%
+% \begin{function}{\pgfplothanderhobby}
+% Basic plot handler; uses full algorithm but therefore expensive
+%    \begin{macrocode}
+\def\pgfplothandlerhobby{%
+  \def\pgf@plotstreamstart{%
+    \hobbyinit\hobby@moveto\hobby@curveto\hobby@close
+    \global\let\pgf@plotstreampoint=\pgf@plot@hobby@firstpt
+    \global\let\pgf@plotstreamspecial=\pgfutil@gobble
+    \global\let\pgf@plotstreamend=\hobbygenpath
+  }
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\pgfplothandlerclosedhobby}
+% Same as above but produces a closed curve
+%    \begin{macrocode}
+\def\pgfplothandlerclosedhobby{%
+  \def\pgf@plotstreamstart{%
+    \hobbyinit\hobby@moveto\hobby@curveto\hobby@close
+    \hobbysetparams{closed=true,disjoint=true}%
+    \global\let\pgf@plotstreampoint=\pgf@plot@hobby@firstpt
+    \global\let\pgf@plotstreamspecial=\pgfutil@gobble
+    \global\let\pgf@plotstreamend=\hobbygenpath
+  }
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\pgf@plot@hobby@firstpt}
+% First point, move or line as appropriate and then start the algorithm.
+%    \begin{macrocode}
+\def\pgf@plot@hobby@firstpt#1{%
+  \pgf@plot@first@action{#1}%
+  \pgf@plot@hobby@handler{#1}%
+  \global\let\pgf@plotstreampoint=\pgf@plot@hobby@handler
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\pgf@plot@hobby@handler}
+% Add points to the array for the algorithm to work on.
+%    \begin{macrocode}
+\def\pgf@plot@hobby@handler#1{%
+    #1%
+    \pgfmathsetmacro\hobby@x{\the\pgf@x/1cm}%
+    \pgfmathsetmacro\hobby@y{\the\pgf@y/1cm}%
+    \hobbyaddpoint{x = \hobby@x, y = \hobby@y}%
+  }
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\pgfplothandlerquickhobby}
+% Uses the ``quick'' algorithm.
+%    \begin{macrocode}
+\def\pgfplothandlerquickhobby{%
+  \def\pgf@plotstreamstart{%
+    \global\let\hobby@quick@curveto=\pgfpathcurveto
+    \global\let\pgf@plotstreampoint=\pgf@plot@qhobby@firstpt
+    \global\let\pgf@plotstreamspecial=\pgfutil@gobble
+    \global\let\pgf@plotstreamend=\hobby@quick@computeend
+  }
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\pgf@plot@qhobby@firstpt}
+% Carry out first action (move or line) and save point.
+%    \begin{macrocode}
+\def\pgf@plot@qhobby@firstpt#1{%
+  \pgf@plot@first@action{#1}%
+  #1%
+  \edef\hobby@qpoints{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+  \def\hobby@qpointa{}%
+  \def\hobby@angle{}%
+  \global\let\pgf@plotstreampoint=\pgf@plot@qhobby@secondpt
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\pgf@plot@qhobby@secondpt}
+% Also need to save second point.
+%    \begin{macrocode}
+\def\pgf@plot@qhobby@secondpt#1{%
+  #1%
+  \edef\hobby@qpointa{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+  \global\let\pgf@plotstreampoint=\hobby@quick@compute
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@sf}
+% Working with points leads to computations out of range so we scale to get them into the computable arena.
+%    \begin{macrocode}
+\pgfmathsetmacro\hobby@sf{10cm}
+%    \end{macrocode}
+% \end{function}
+%
+%
+% \begin{function}{\hobby@quick@compute}
+% This is the macro that does all the work of computing the control points.
+% The argument is the current point, \Verb+\hobby@qpointa+ is the middle point, and \Verb+\hobby@qpoints+ is the first point.
+%    \begin{macrocode}
+\def\hobby@quick@compute#1{%
+%    \end{macrocode}
+% Save the current (second - counting from zero) point in \Verb+\pgf@xb+ and \Verb+\pgf@yb+.
+%    \begin{macrocode}
+  #1%
+  \pgf@xb=\pgf@x
+  \pgf@yb=\pgf@y
+%    \end{macrocode}
+% Save the previous (first) point in \Verb+\pgf@xa+ and \Verb+\pgf@ya+.
+%    \begin{macrocode}
+  \hobby@qpointa
+  \pgf@xa=\pgf@x
+  \pgf@ya=\pgf@y
+%    \end{macrocode}
+% Adjust so that \Verb+(\pgf@xb,\pgf@yb)+ is the vector from second to third.
+% Then compute and store the distance and angle of this vector.
+% We view this as the vector \emph{from} the midpoint and everything to do with that point has the suffix \Verb+one+.
+% Note that we divide by the scale factor here.
+%    \begin{macrocode}
+  \advance\pgf@xb by -\pgf@xa
+  \advance\pgf@yb by -\pgf@ya
+  \pgfmathsetmacro\hobby@done{sqrt((\pgf@xb/\hobby@sf)^2 + (\pgf@yb/\hobby@sf)^2)}%
+  \pgfmathsetmacro\hobby@omegaone{rad(atan2(\pgf@xb,\pgf@yb))}%
+%    \end{macrocode}
+% Now we do the same with the vector from the zeroth to the first point.
+%    \begin{macrocode}
+  \hobby@qpoints
+  \advance\pgf@xa by -\pgf@x
+  \advance\pgf@ya by -\pgf@y
+  \pgfmathsetmacro\hobby@dzero{sqrt((\pgf@xa/\hobby@sf)^2 + (\pgf@ya/\hobby@sf)^2)}%
+  \pgfmathsetmacro\hobby@omegazero{rad(atan2(\pgf@xa,\pgf@ya))}%
+%    \end{macrocode}
+% \Verb+\hobby@psi+ is the angle subtended at the midpoint.
+% We adjust to ensure that it is in the right range.
+%    \begin{macrocode}
+  \pgfmathsetmacro\hobby@psi{\hobby@omegaone - \hobby@omegazero}%
+  \pgfmathsetmacro\hobby@psi{\hobby@psi > pi ? \hobby@psi - 2*pi : \hobby@psi}%
+  \pgfmathsetmacro\hobby@psi{\hobby@psi < -pi ? \hobby@psi + 2*pi : \hobby@psi}%
+%    \end{macrocode}
+% Now we test to see if we're on the first run or not.
+% If the first, we have no incoming angle.
+%    \begin{macrocode}
+  \ifx\hobby@angle\pgfutil@empty
+%    \end{macrocode}
+% First.
+%    \begin{macrocode}
+  \pgfmathsetmacro\hobby@thetaone{-\hobby@psi * \hobby@done%
+/(\hobby@done + \hobby@dzero)}%
+  \pgfmathsetmacro\hobby@thetazero{-\hobby@psi - \hobby@thetaone}%
+  \let\hobby@phione=\hobby@thetazero
+  \let\hobby@phitwo=\hobby@thetaone
+  \else
+%    \end{macrocode}
+% Second or later.
+%    \begin{macrocode}
+  \let\hobby@thetazero=\hobby@angle
+  \pgfmathsetmacro\hobby@thetaone{%
+  -(2 * \hobby@psi + \hobby@thetazero) * \hobby@done%
+  / (2 * \hobby@done + \hobby@dzero)}%
+  \pgfmathsetmacro\hobby@phione{-\hobby@psi - \hobby@thetaone}%
+  \let\hobby@phitwo=\hobby@thetaone
+  \fi
+%    \end{macrocode}
+% Save the outgoing angle.
+%    \begin{macrocode}
+  \let\hobby@angle=\hobby@thetaone
+%    \end{macrocode}
+% Compute the control points from the angles.
+%    \begin{macrocode}
+  \hobby@quick@ctrlpts{\hobby@thetazero}{\hobby@phione}{\hobby@qpoints}{\hobby@qpointa}{\hobby@dzero}{\hobby@omegazero}%
+%    \end{macrocode}
+% Now call the call-back function 
+%    \begin{macrocode}
+  \edef\hobby@temp{\noexpand\hobby@quick@curveto{\noexpand\pgfqpoint{\the\pgf@xa}{\the\pgf@ya}}{\noexpand\pgfqpoint{\the\pgf@xb}{\the\pgf@yb}}{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}}%
+\hobby@temp
+%    \end{macrocode}
+% Cycle the points round for the next iteration.
+%    \begin{macrocode}
+  \let\hobby@qpoints=\hobby@qpointa
+  #1
+  \edef\hobby@qpointa{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}
+% This is the additional code for the final run.
+%    \begin{macrocode}
+\def\hobby@quick@computeend{%
+%    \end{macrocode}
+% Compute the control points for the second part of the curve and add that to the path.
+%    \begin{macrocode}
+  \hobby@quick@ctrlpts{\hobby@thetaone}{\hobby@phitwo}{\hobby@qpoints}{\hobby@qpointa}{\hobby@done}{\hobby@omegaone}%
+%    \end{macrocode}
+% Now call the call-back function 
+%    \begin{macrocode}
+  \edef\hobby@temp{\noexpand\hobby@quick@curveto{\noexpand\pgfqpoint{\the\pgf@xa}{\the\pgf@ya}}{\noexpand\pgfqpoint{\the\pgf@xb}{\the\pgf@yb}}{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}}%
+\hobby@temp
+}%
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@quick@ctrlpts}
+% Compute the control points from the angles and points given.
+%    \begin{macrocode}
+\def\hobby@quick@ctrlpts#1#2#3#4#5#6{%
+  \pgfmathsetmacro\hobby@alpha{%
+    sqrt(2) * (sin(#1 r) - 1/16 * sin(#2 r))%
+* (sin(#2 r) - 1/16 * sin(#1 r))%
+ * (cos(#1 r) - cos(#2 r))}%
+  \pgfmathsetmacro\hobby@rho{%
+    (2 + \hobby@alpha)/(1 + (1 - (3 - sqrt(5))/2)%
+ * cos(#1 r) + (3 - sqrt(5))/2 * cos(#2 r))}%
+  \pgfmathsetmacro\hobby@sigma{%
+    (2 - \hobby@alpha)/(1 + (1 - (3 - sqrt(5))/2)%
+  * cos(#2 r) +  (3 - sqrt(5))/2 * cos(#1 r))}%
+  #3%
+  \pgf@xa=\pgf@x
+  \pgf@ya=\pgf@y
+  \pgfmathsetlength\pgf@xa{%
+    \pgf@xa + #5 * \hobby@rho%
+  * cos((#1 + #6) r)/3*\hobby@sf}%
+  \pgfmathsetlength\pgf@ya{%
+    \pgf@ya + #5 * \hobby@rho%
+  * sin((#1 + #6) r)/3*\hobby@sf}%
+  #4%
+  \pgf@xb=\pgf@x
+  \pgf@yb=\pgf@y
+  \pgfmathsetlength\pgf@xb{%
+    \pgf@xb - #5 * \hobby@sigma%
+  * cos((-#2 + #6) r)/3*\hobby@sf}%
+  \pgfmathsetlength\pgf@yb{%
+    \pgf@yb - #5 * \hobby@sigma%
+  * sin((-#2 + #6) r)/3*\hobby@sf}%
+  #4%
+}
+%    \end{macrocode}
+% \end{function}
+%
+%
 % \iffalse
 %</pgflibrary>
 % \fi
@@ -1563,6 +1809,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
         \def\hobby@qpointa{}%
         \def\hobby@quick@path{}%
         \def\hobby@angle{}%
+        \let\hobby@quick@curveto=\hobby@quick@makepath
 %    \end{macrocode}
 % Now start parsing the rest of the coordinates.
 %    \begin{macrocode}
@@ -1578,12 +1825,12 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \end{macrocode}
 % \end{function}
 %
-% \begin{function}{\hobby@sf}
-% Working with points leads to computations out of range so we scale to get them into the computable arena.
+% Add plot handlers
 %    \begin{macrocode}
-\pgfmathsetmacro\hobby@sf{10cm}
+\tikzoption{hobby}[]{\let\tikz@plot@handler=\pgfplothandlerhobby}
+\tikzoption{quick hobby}[]{\let\tikz@plot@handler=\pgfplothandlerquickhobby}
+\tikzoption{closed hobby}[]{\let\tikz@plot@handler=\pgfplothandlerclosedhobby}
 %    \end{macrocode}
-% \end{function}
 %
 % \begin{function}{\hobby@quickfirst}
 % The first time around we just set the next point.
@@ -1612,165 +1859,37 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % \end{function}
 %
 % \begin{function}{\hobby@quick}
-% This is the macro that does all the work of computing the control points.
+% This is our wrapper function that handles the loop.
 %    \begin{macrocode}
 \def\hobby@quick#1{%
-%    \end{macrocode}
-% Save the current (second - counting from zero) point in \Verb+\pgf@xb+ and \Verb+\pgf@yb+.
-%    \begin{macrocode}
-  #1%
-  \pgf@xb=\pgf@x
-  \pgf@yb=\pgf@y
-%    \end{macrocode}
-% Save the previous (first) point in \Verb+\pgf@xa+ and \Verb+\pgf@ya+.
-%    \begin{macrocode}
-  \hobby@qpointa
-  \pgf@xa=\pgf@x
-  \pgf@ya=\pgf@y
-%    \end{macrocode}
-% Adjust so that \Verb+(\pgf@xb,\pgf@yb)+ is the vector from second to third.
-% Then compute and store the distance and angle of this vector.
-% We view this as the vector \emph{from} the midpoint and everything to do with that point has the suffix \Verb+one+.
-% Note that we divide by the scale factor here.
-%    \begin{macrocode}
-  \advance\pgf@xb by -\pgf@xa
-  \advance\pgf@yb by -\pgf@ya
-  \pgfmathsetmacro\hobby@done{sqrt((\pgf@xb/\hobby@sf)^2 + (\pgf@yb/\hobby@sf)^2)}%
-  \pgfmathsetmacro\hobby@omegaone{rad(atan2(\pgf@xb,\pgf@yb))}%
-%    \end{macrocode}
-% Now we do the same with the vector from the zeroth to the first point.
-%    \begin{macrocode}
-  \hobby@qpoints
-  \advance\pgf@xa by -\pgf@x
-  \advance\pgf@ya by -\pgf@y
-  \pgfmathsetmacro\hobby@dzero{sqrt((\pgf@xa/\hobby@sf)^2 + (\pgf@ya/\hobby@sf)^2)}%
-  \pgfmathsetmacro\hobby@omegazero{rad(atan2(\pgf@xa,\pgf@ya))}%
-%    \end{macrocode}
-% \Verb+\hobby@psi+ is the angle subtended at the midpoint.
-% We adjust to ensure that it is in the right range.
-%    \begin{macrocode}
-  \pgfmathsetmacro\hobby@psi{\hobby@omegaone - \hobby@omegazero}%
-  \pgfmathsetmacro\hobby@psi{\hobby@psi > pi ? \hobby@psi - 2*pi : \hobby@psi}%
-  \pgfmathsetmacro\hobby@psi{\hobby@psi < -pi ? \hobby@psi + 2*pi : \hobby@psi}%
-%    \end{macrocode}
-% Now we test to see if we're on the first run or not.
-% If the first, we have no incoming angle.
-%    \begin{macrocode}
-  \ifx\hobby@angle\pgfutil@empty
-%    \end{macrocode}
-% First.
-%    \begin{macrocode}
-  \pgfmathsetmacro\hobby@thetaone{-\hobby@psi * \hobby@done%
-/(\hobby@done + \hobby@dzero)}%
-  \pgfmathsetmacro\hobby@thetazero{-\hobby@psi - \hobby@thetaone}%
-  \let\hobby@phione=\hobby@thetazero
-  \let\hobby@phitwo=\hobby@thetaone
-  \else
-%    \end{macrocode}
-% Second or later.
-%    \begin{macrocode}
-  \let\hobby@thetazero=\hobby@angle
-  \pgfmathsetmacro\hobby@thetaone{%
-  -(2 * \hobby@psi + \hobby@thetazero) * \hobby@done%
-  / (2 * \hobby@done + \hobby@dzero)}%
-  \pgfmathsetmacro\hobby@phione{-\hobby@psi - \hobby@thetaone}%
-  \let\hobby@phitwo=\hobby@thetaone
-  \fi
-%    \end{macrocode}
-% Save the outgoing angle.
-%    \begin{macrocode}
-  \let\hobby@angle=\hobby@thetaone
-%    \end{macrocode}
-% Compute the control lengths.
-%    \begin{macrocode}
-  \pgfmathsetmacro\hobby@alpha{%
-    sqrt(2) * (sin(\hobby@thetazero r) - 1/16 * sin(\hobby@phione r))%
-* (sin(\hobby@phione r) - 1/16 * sin(\hobby@thetazero r))%
- * (cos(\hobby@thetazero r) - cos(\hobby@phione r))}%
-  \pgfmathsetmacro\hobby@rho{%
-    (2 + \hobby@alpha)/(1 + (1 - (3 - sqrt(5))/2)%
- * cos(\hobby@thetazero r) + (3 - sqrt(5))/2 * cos(\hobby@phione r))}%
-  \pgfmathsetmacro\hobby@sigma{%
-    (2 - \hobby@alpha)/(1 + (1 - (3 - sqrt(5))/2)%
-  * cos(\hobby@phione r) +  (3 - sqrt(5))/2 * cos(\hobby@thetazero r))}%
-%    \end{macrocode}
-% Now compute the control points.
-%    \begin{macrocode}
-  \hobby@qpoints
-  \pgf@xa=\pgf@x
-  \pgf@ya=\pgf@y
-  \pgfmathsetlength\pgf@xa{%
-    \pgf@xa + \hobby@dzero * \hobby@rho%
-  * cos((\hobby@thetazero + \hobby@omegazero) r)/3*\hobby@sf}%
-  \pgfmathsetlength\pgf@ya{%
-    \pgf@ya + \hobby@dzero * \hobby@rho%
-  * sin((\hobby@thetazero + \hobby@omegazero) r)/3*\hobby@sf}%
-  \hobby@qpointa
-  \pgf@xb=\pgf@x
-  \pgf@yb=\pgf@y
-  \pgfmathsetlength\pgf@xb{%
-    \pgf@xb - \hobby@dzero * \hobby@sigma%
-  * cos((-\hobby@phione + \hobby@omegazero) r)/3*\hobby@sf}%
-  \pgfmathsetlength\pgf@yb{%
-    \pgf@yb - \hobby@dzero * \hobby@sigma%
-  * sin((-\hobby@phione + \hobby@omegazero) r)/3*\hobby@sf}%
-%    \end{macrocode}
-% Now add the relevant part to the path.
-%    \begin{macrocode}
-  \hobby@qpointa
-  \edef\hobby@quick@path{\hobby@quick@path .. controls%
-  (\the\pgf@xa,\the\pgf@ya) and (\the\pgf@xb,\the\pgf@yb) .. (\the\pgf@x,\the\pgf@y) }%
-%    \end{macrocode}
-% Cycle the points round for the next iteration.
-%    \begin{macrocode}
-  \let\hobby@qpoints=\hobby@qpointa
-  #1
-  \edef\hobby@qpointa{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
-%    \end{macrocode}
-% Test to see if we have more points.
-% If not, the next thing we see will be that \Verb+\relax+.
-%    \begin{macrocode}
+  \hobby@quick@compute{#1}%
   \pgfutil@ifnextchar\relax{%
 %    \end{macrocode}
-% No more points.
-% Compute the control points for the second part of the curve and add that to the path.
+% End of loop
 %    \begin{macrocode}
-  \pgfmathsetmacro\hobby@alpha{%
-    sqrt(2) * (sin(\hobby@thetaone r) - 1/16 * sin(\hobby@phitwo r))%
-    * (sin(\hobby@phitwo r) - 1/16 * sin(\hobby@thetaone r))%
-    * (cos(\hobby@thetaone r) - cos(\hobby@phitwo r))}%
-  \pgfmathsetmacro\hobby@rho{%
-    (2 + \hobby@alpha)/(1 + (1 - (3 - sqrt(5))/2)%
-  * cos(\hobby@thetaone r) +  (3 - sqrt(5))/2 * cos(\hobby@phitwo r))}%
-  \pgfmathsetmacro\hobby@sigma{%
-    (2 - \hobby@alpha)/(1 + (1 - (3 - sqrt(5))/2)%
-  * cos(\hobby@phitwo r) +  (3 - sqrt(5))/2 * cos(\hobby@thetaone r))}%
-  \hobby@qpoints
-  \pgf@xa=\pgf@x
-  \pgf@ya=\pgf@y
-  \pgfmathsetlength\pgf@xa{%
-    \pgf@xa + \hobby@done * \hobby@rho%
-  * cos((\hobby@thetaone + \hobby@omegaone) r)/3*\hobby@sf}%
-  \pgfmathsetlength\pgf@ya{%
-    \pgf@ya + \hobby@done * \hobby@rho%
-  * sin((\hobby@thetaone + \hobby@omegaone) r)/3*\hobby@sf}%
-  \hobby@qpointa
-  \pgf@xb=\pgf@x
-  \pgf@yb=\pgf@y
-  \pgfmathsetlength\pgf@xb{%
-    \pgf@xb - \hobby@done * \hobby@sigma%
-  * cos((-\hobby@phitwo + \hobby@omegaone) r)/3*\hobby@sf}%
-  \pgfmathsetlength\pgf@yb{%
-    \pgf@yb - \hobby@done * \hobby@sigma%
-  * sin((-\hobby@phitwo + \hobby@omegaone) r)/3*\hobby@sf}%
-  \hobby@qpointa
-  \edef\hobby@quick@path{\hobby@quick@path .. controls%
-  (\the\pgf@xa,\the\pgf@ya) and (\the\pgf@xb,\the\pgf@yb) .. (\the\pgf@x,\the\pgf@y) }%
-}{%
+    \hobby@quick@computeend%
+  }{%
 %    \end{macrocode}
 % More to go, scan in the next coordinate and off we go again.
 %    \begin{macrocode}
 \tikz@scan@one@point\hobby@quick}}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@quick@makepath}
+% Path constructor for \Verb+to path+ use.
+%    \begin{macrocode}
+\def\hobby@quick@makepath#1#2#3{%
+  #1%
+  \pgf@xa=\pgf@x\relax
+  \pgf@ya=\pgf@y\relax
+  #2%
+  \pgf@xb=\pgf@x\relax
+  \pgf@yb=\pgf@y\relax
+  #3%
+  \edef\hobby@quick@path{\hobby@quick@path .. controls%
+  (\the\pgf@xa,\the\pgf@ya) and (\the\pgf@xb,\the\pgf@yb) .. (\the\pgf@x,\the\pgf@y) }%
+}
 %    \end{macrocode}
 % \end{function}
 %
