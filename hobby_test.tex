@@ -10,6 +10,8 @@
 
 \begin{document}
 
+\tikz \draw (0,0) to[quick curve through={(1,1) (2,0) ([quick hobby/blank curve=true]3,1) ([quick hobby/blank curve=false]2,1)}] (10:2cm);
+\end{document}
 \tikz \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
 
 \tikz[smooth] \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
