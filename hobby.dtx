@@ -157,6 +157,8 @@ and the derived files            hobby.code.tex
 %
 %    \begin{macrocode}
 \cs_generate_variant:Nn \fp_set:Nn {Nx}
+\cs_generate_variant:Nn \tl_if_eq:nnTF {VnTF}
+\cs_generate_variant:Nn \tl_if_eq:nnTF {xnTF}
 %    \end{macrocode}
 %
 % \subsubsection{Initialisation}
@@ -215,6 +217,13 @@ and the derived files            hobby.code.tex
 % \Verb+\l_hobby_points_y_array+ is an array holding the \(y\)--{}coordinates of the specified points.
 %    \begin{macrocode}
 \array_new:N \l_hobby_points_y_array
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\l_hobby_actions_array}
+% \Verb+\l_hobby_actions_array+ is an array holding the (encoded) action to be taken out on the segment of the path ending at that point.
+%    \begin{macrocode}
+\array_new:N \l_hobby_actions_array
 %    \end{macrocode}
 % \end{function}
 %
@@ -468,7 +477,11 @@ and the derived files            hobby.code.tex
   tension~out .fp_set:N = \l_hobby_tempc_fp,
   tension~in .fp_set:N = \l_hobby_tempd_fp,
   excess~angle .fp_set:N = \l_hobby_temps_fp,
+  break .tl_set:N = \l_tmpb_tl,
+  blank .tl_set:N = \l_tmpa_tl,
   tension .meta:n = { tension~out=#1, tension~in=#1 },
+  break .default:n = false,
+  blank .default:n = false,
   tension~out .default:n = 1,
   tension~in .default:n = 1,
   excess~angle .default:n = 0,
@@ -480,9 +493,21 @@ and the derived files            hobby.code.tex
   closed .default:n = true,
   disjoint .bool_set:N = \l_hobby_disjoint_bool,
   disjoint .default:n = true,
+  break~default .code:n = {
+    \keys_define:nn { hobby / read in all } 
+    {
+      break .default:n = #1
+    }
+  },
+  blank~default .code:n = {
+    \keys_define:nn { hobby / read in all } 
+    {
+      blank .default:n = #1
+    }
+  },
 }
 %    \end{macrocode}
-% There are certain other parameters than can be set for a give curve.
+% There are certain other parameters that can be set for a given curve.
 %    \begin{macrocode}
 \keys_define:nn { hobby / read in params} {
   in~angle .fp_set:N = \l_hobby_in_angle_fp,
@@ -493,6 +518,18 @@ and the derived files            hobby.code.tex
   closed .default:n = true,
   disjoint .bool_set:N = \l_hobby_disjoint_bool,
   disjoint .default:n = true,
+  break~default .code:n = {
+    \keys_define:nn { hobby / read in all } 
+    {
+      break .default:n = #1
+    }
+  },
+  blank~default .code:n = {
+    \keys_define:nn { hobby / read in all } 
+    {
+      blank .default:n = #1
+    }
+  },
 }
 %    \end{macrocode}
 % \begin{function}{\hobby_distangle:n}
@@ -590,6 +627,7 @@ and the derived files            hobby.code.tex
 % \item \Verb+\l_hobby_in_angle_fp+
 % \item \Verb+\l_hobby_out_angle_fp+
 % \item \Verb+\l_hobby_closed_bool+
+% \item \Verb+\l_hobby_actions_array+
 % \end{enumerate}
 %
 %    \begin{macrocode}
@@ -1197,8 +1235,17 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
       tension~out,
       tension~in,
       excess~angle,
+      blank,
+      break,
       #1
     }
+    \tl_if_eq:VnTF {\l_tmpa_tl} {true}
+     {\tl_set:Nn \l_tmpa_tl {1}}
+     {\tl_set:Nn \l_tmpa_tl {0}}
+    \tl_if_eq:VnTF {\l_tmpb_tl} {true}
+     {\tl_put_right:Nn \l_tmpa_tl {1}}
+     {\tl_put_right:Nn \l_tmpa_tl {0}}
+    \array_push:Nx \l_hobby_actions_array {\l_tmpa_tl}
     \array_push:Nx \l_hobby_tension_out_array {\fp_to_tl:N \l_hobby_tempc_fp}
     \array_push:Nx \l_hobby_tension_in_array {\fp_to_tl:N \l_hobby_tempd_fp}
     \array_push:Nx \l_hobby_excess_angle_array {\fp_to_tl:N \l_hobby_temps_fp}
@@ -1248,8 +1295,16 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \array_get:NnN \l_hobby_controla_array {##1} \l_tmpa_tl
     \array_get:NnN \l_hobby_controlb_array {##1} \l_tmpb_tl
     \array_get:NnN \l_hobby_points_array {##1} \l_tmpc_tl
-    \exp_args:Nooo \hobby_curveto:nnn {\l_tmpa_tl} {\l_tmpb_tl} {\l_tmpc_tl}
-}
+    \array_get:NnN \l_hobby_actions_array {##1} \l_tmpd_tl
+    \tl_if_eq:xnTF {\tl_item:Nn \l_tmpd_tl {1}} {1} {
+      \exp_args:No \hobby_moveto:n {\l_tmpc_tl}
+    }{
+      \exp_args:Nooo \hobby_curveto:nnn {\l_tmpa_tl} {\l_tmpb_tl} {\l_tmpc_tl}
+    }
+    \tl_if_eq:xnTF {\tl_item:Nn \l_tmpd_tl {2}} {1} {
+      \exp_args:No \hobby_moveto:n {\l_tmpc_tl}
+    }{}
+  }
   \bool_if:NT \l_hobby_closed_bool {
     \array_get:NnN \l_hobby_points_array {0} \l_tmpa_tl
     \exp_args:No \hobby_close:n {\l_tmpa_tl}
@@ -1332,6 +1387,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \global\let\pgf@plotstreampoint=\pgf@plot@hobby@firstpt
     \global\let\pgf@plotstreamspecial=\pgfutil@gobble
     \global\let\pgf@plotstreamend=\hobbygenpath
+    \let\tikz@scan@point@options=\pgfutil@empty
   }
 }
 %    \end{macrocode}
@@ -1613,6 +1669,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % We set various TikZ keys.
 % These include the \Verb+to path+ constructor and all the various parameters that will eventually get passed to the path-generation code.
 %    \begin{macrocode}
+\def\hobby@point@options{}%
 \tikzset{
   curve through/.style={
     to path={
@@ -1623,10 +1680,30 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
       }
     }
   },
-  tension in/.code = {},
-  tension out/.code = {},
-  tension/.code = {},
-  excess angle/.code = {},
+  tension in/.code = {%
+    \expandafter\def\expandafter\hobby@point@options\expandafter%
+    {\hobby@point@options,tension in=#1}%
+  },
+  tension out/.code = {%
+    \expandafter\def\expandafter\hobby@point@options\expandafter%
+    {\hobby@point@options,tension out=#1}%
+  },
+  tension/.code = {%
+    \expandafter\def\expandafter\hobby@point@options\expandafter%
+    {\hobby@point@options,tension=#1}%
+  },
+  excess angle/.code = {%
+    \expandafter\def\expandafter\hobby@point@options\expandafter%
+    {\hobby@point@options,excess angle=#1}%
+  },
+  break/.code = {%
+    \expandafter\def\expandafter\hobby@point@options\expandafter%
+    {\hobby@point@options,break=#1}%
+  },
+  blank/.code = {%
+    \expandafter\def\expandafter\hobby@point@options\expandafter%
+    {\hobby@point@options,blank=#1}%
+  },
   closed/.code = {%
     \expandafter\def\expandafter\hobby@opts\expandafter{\hobby@opts%
       closed=#1,disjoint=#1}%
@@ -1698,7 +1775,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \expandafter\tikz@scan@one@point\expandafter\pgfutil@firstofone\hobby@pt\relax
   \pgfmathsetmacro\hobby@x{\the\pgf@x/1cm}%
   \pgfmathsetmacro\hobby@y{\the\pgf@y/1cm}%
-  \expandafter\hobbyaddpoint\expandafter{\tikz@scan@point@options,%
+  \def\hobby@point@options{}%
+  \expandafter\tikzset\expandafter{\tikz@scan@point@options}%
+  \expandafter\hobbyaddpoint\expandafter{\hobby@point@options,%
     x = \hobby@x, y = \hobby@y}%
   \expandafter\hobby@next\expandafter{\hobby@rest}%
 }
@@ -1725,13 +1804,15 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % We want to be sure that we're only called once so we don't had control back to TikZ but use our own parser to process the rest of the curve until we reach a syntax that we don't understand.
 %    \begin{macrocode}
 \def\hobby@curveto@auto{%
-  \hobbyinit\pgfutil@gobble\hobby@curveto\hobby@close
+  \hobbyinit\hobby@moveto\hobby@curveto\hobby@close
   \pgfmathsetmacro\hobby@x{\the\tikz@lastx/1cm}%
   \pgfmathsetmacro\hobby@y{\the\tikz@lasty/1cm}%
   \pgfutil@ifundefined{tikz@scan@point@options}{%
     \hobbyaddpoint{x = \hobby@x, y = \hobby@y}%
   }{%
-  \expandafter\hobbyaddpoint\expandafter{\tikz@scan@point@options,%
+    \def\hobby@point@options{}%
+    \expandafter\tikzset\expandafter{\tikz@scan@point@options}%
+  \expandafter\hobbyaddpoint\expandafter{\hobby@point@options,%
       x = \hobby@x, y = \hobby@y}%
   }%
   \let\tikz@scan@point@options=\pgfutil@empty
@@ -1747,7 +1828,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \tikz@make@last@position{#1}%
   \pgfmathsetmacro\hobby@x{\the\pgf@x/1cm}%
   \pgfmathsetmacro\hobby@y{\the\pgf@y/1cm}%
-  \expandafter\hobbyaddpoint\expandafter{\tikz@scan@point@options,%
+  \def\hobby@point@options{}%
+  \expandafter\tikzset\expandafter{\tikz@scan@point@options}%
+  \expandafter\hobbyaddpoint\expandafter{\hobby@point@options,%
     x = \hobby@x, y = \hobby@y}%
   \afterassignment\hobby@donext\let\@let@token=%
 }
@@ -1809,6 +1892,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \begin{macrocode}
 \def\hobby@closeandfinish@auto ycle{%
   \hobbysetparams{closed=true,disjoint=true}%
+  \let\@let@token=\pgfutil@empty
   \hobby@finish@auto%
 }
 %    \end{macrocode}
@@ -2270,7 +2354,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     }
     \prg_stepwise_inline:nnnn {\l_array_base_int} {1} {\l_array_top_int} {
   \array_get:NnN #1 {##1} \l_array_tmp_tl
-  \exp_args:Nno #2 {##1} \l_array_tmp_tl
+  \exp_args:NnV #2 {##1} \l_array_tmp_tl
 }
 } {}
 }
@@ -2340,7 +2424,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %
 % For displaying arrays, we need some messages.
 %    \begin{macrocode}
-\msg_new:nnn { array } { show }
+\__msg_kernel_new:nnn { kernel } { show-array }
   {
     The~array~\token_to_str:N #1~
     \array_if_empty:NTF #1
@@ -2359,12 +2443,12 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \__msg_show_variable:Nnx
       #1
       { array }
-      { \l_array_show_tl }
+    { \l_array_show_tl }
   }
 
 \cs_new_protected:Npn \array_show_aux:nn #1#2
 {
-  \tl_if_eq:NNTF {#2} {\q_no_value} {}
+  \tl_if_eq:nnTF {#2} {\q_no_value} {}
   {
   \tl_put_right:No \l_array_show_tl {\__msg_show_item:nn {#1}{#2}}
   }

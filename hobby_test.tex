@@ -10,8 +10,12 @@
 
 \begin{document}
 
-\tikz \draw (0,0) to[quick curve through={(1,1) (2,0) ([quick hobby/blank curve=true]3,1) ([quick hobby/blank curve=false]2,1)}] (10:2cm);
-\end{document}
+\tikz[hobby] \draw plot coordinates {(0,0) ([blank=true]1,1) (2,0) (3,1) (2,1) (10:2cm)};
+
+\tikz[hobby] \draw (0,0) .. (1,1) .. ([blank=true]2,0) .. (3,1) .. ([blank=true]2,1) .. (10:2cm);
+
+\tikz \draw (0,0) to[quick curve through={(1,1) (2,0) ([quick hobby/blank curve=once]3,1) (2,1)}] (10:2cm);
+
 \tikz \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
 
 \tikz[smooth] \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
@@ -179,7 +183,6 @@ We compute \(\phi_1 = -\psi_1 - \theta_1 = \frac{- \psi_1 d_0 + \theta_0 d_1}{2 
 \draw[green,line width=2pt] (0,0) to[quick curve through={(6,4) (4,9)  (1,7)}] (3,5);
 \end{tikzpicture}
 
-\end{document}
 
 \begin{tikzpicture}[c/.style={insert path={circle[radius=2pt]}}]
 \fill[green] (0,0) [c] (1,.5) [c] (0,0) [c] (3,.5) [c] (4,0) [c];
