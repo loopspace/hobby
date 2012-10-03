@@ -157,6 +157,8 @@ and the derived files            hobby.code.tex
 %
 %    \begin{macrocode}
 \cs_generate_variant:Nn \fp_set:Nn {Nx}
+\cs_generate_variant:Nn \tl_if_eq:nnTF {VnTF}
+\cs_generate_variant:Nn \tl_if_eq:nnTF {xnTF}
 %    \end{macrocode}
 %
 % \subsubsection{Initialisation}
@@ -215,6 +217,13 @@ and the derived files            hobby.code.tex
 % \Verb+\l_hobby_points_y_array+ is an array holding the \(y\)--{}coordinates of the specified points.
 %    \begin{macrocode}
 \array_new:N \l_hobby_points_y_array
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\l_hobby_actions_array}
+% \Verb+\l_hobby_actions_array+ is an array holding the (encoded) action to be taken out on the segment of the path ending at that point.
+%    \begin{macrocode}
+\array_new:N \l_hobby_actions_array
 %    \end{macrocode}
 % \end{function}
 %
@@ -468,7 +477,11 @@ and the derived files            hobby.code.tex
   tension~out .fp_set:N = \l_hobby_tempc_fp,
   tension~in .fp_set:N = \l_hobby_tempd_fp,
   excess~angle .fp_set:N = \l_hobby_temps_fp,
+  break .tl_set:N = \l_tmpb_tl,
+  blank .tl_set:N = \l_tmpa_tl,
   tension .meta:n = { tension~out=#1, tension~in=#1 },
+  break .default:n = false,
+  blank .default:n = false,
   tension~out .default:n = 1,
   tension~in .default:n = 1,
   excess~angle .default:n = 0,
@@ -480,9 +493,21 @@ and the derived files            hobby.code.tex
   closed .default:n = true,
   disjoint .bool_set:N = \l_hobby_disjoint_bool,
   disjoint .default:n = true,
+  break~default .code:n = {
+    \keys_define:nn { hobby / read in all } 
+    {
+      break .default:n = #1
+    }
+  },
+  blank~default .code:n = {
+    \keys_define:nn { hobby / read in all } 
+    {
+      blank .default:n = #1
+    }
+  },
 }
 %    \end{macrocode}
-% There are certain other parameters than can be set for a give curve.
+% There are certain other parameters that can be set for a given curve.
 %    \begin{macrocode}
 \keys_define:nn { hobby / read in params} {
   in~angle .fp_set:N = \l_hobby_in_angle_fp,
@@ -493,6 +518,18 @@ and the derived files            hobby.code.tex
   closed .default:n = true,
   disjoint .bool_set:N = \l_hobby_disjoint_bool,
   disjoint .default:n = true,
+  break~default .code:n = {
+    \keys_define:nn { hobby / read in all } 
+    {
+      break .default:n = #1
+    }
+  },
+  blank~default .code:n = {
+    \keys_define:nn { hobby / read in all } 
+    {
+      blank .default:n = #1
+    }
+  },
 }
 %    \end{macrocode}
 % \begin{function}{\hobby_distangle:n}
@@ -590,6 +627,7 @@ and the derived files            hobby.code.tex
 % \item \Verb+\l_hobby_in_angle_fp+
 % \item \Verb+\l_hobby_out_angle_fp+
 % \item \Verb+\l_hobby_closed_bool+
+% \item \Verb+\l_hobby_actions_array+
 % \end{enumerate}
 %
 %    \begin{macrocode}
@@ -1197,8 +1235,17 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
       tension~out,
       tension~in,
       excess~angle,
+      blank,
+      break,
       #1
     }
+    \tl_if_eq:VnTF {\l_tmpa_tl} {true}
+     {\tl_set:Nn \l_tmpa_tl {1}}
+     {\tl_set:Nn \l_tmpa_tl {0}}
+    \tl_if_eq:VnTF {\l_tmpb_tl} {true}
+     {\tl_put_right:Nn \l_tmpa_tl {1}}
+     {\tl_put_right:Nn \l_tmpa_tl {0}}
+    \array_push:Nx \l_hobby_actions_array {\l_tmpa_tl}
     \array_push:Nx \l_hobby_tension_out_array {\fp_to_tl:N \l_hobby_tempc_fp}
     \array_push:Nx \l_hobby_tension_in_array {\fp_to_tl:N \l_hobby_tempd_fp}
     \array_push:Nx \l_hobby_excess_angle_array {\fp_to_tl:N \l_hobby_temps_fp}
@@ -1248,8 +1295,16 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \array_get:NnN \l_hobby_controla_array {##1} \l_tmpa_tl
     \array_get:NnN \l_hobby_controlb_array {##1} \l_tmpb_tl
     \array_get:NnN \l_hobby_points_array {##1} \l_tmpc_tl
-    \exp_args:Nooo \hobby_curveto:nnn {\l_tmpa_tl} {\l_tmpb_tl} {\l_tmpc_tl}
-}
+    \array_get:NnN \l_hobby_actions_array {##1} \l_tmpd_tl
+    \tl_if_eq:xnTF {\tl_item:Nn \l_tmpd_tl {1}} {1} {
+      \exp_args:No \hobby_moveto:n {\l_tmpc_tl}
+    }{
+      \exp_args:Nooo \hobby_curveto:nnn {\l_tmpa_tl} {\l_tmpb_tl} {\l_tmpc_tl}
+    }
+    \tl_if_eq:xnTF {\tl_item:Nn \l_tmpd_tl {2}} {1} {
+      \exp_args:No \hobby_moveto:n {\l_tmpc_tl}
+    }{}
+  }
   \bool_if:NT \l_hobby_closed_bool {
     \array_get:NnN \l_hobby_points_array {0} \l_tmpa_tl
     \exp_args:No \hobby_close:n {\l_tmpa_tl}
@@ -1320,260 +1375,126 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 }
 %    \end{macrocode}
 % \end{function}
-% \iffalse
-%</pgflibrary>
-% \fi
 %
-% \subsection{TikZ Library}
+% Plot handlers
 %
-% \iffalse
-%<*tikzlibrary>
-% \fi
-% 
+% \begin{function}{\pgfplothanderhobby}
+% Basic plot handler; uses full algorithm but therefore expensive
 %    \begin{macrocode}
-\usepgflibrary{hobby}
-\let\hobby@opts=\pgfutil@empty
-%    \end{macrocode}
-%
-% We set various TikZ keys.
-% These include the \Verb+to path+ constructor and all the various parameters that will eventually get passed to the path-generation code.
-%    \begin{macrocode}
-\tikzset{
-  curve through/.style={
-    to path={
-      \pgfextra{
-        \expandafter\curvethrough\expandafter[\hobby@opts]{%
-          (\tikztostart) .. #1 .. (\tikztotarget)%
-        }
-      }
-    }
-  },
-  tension in/.code = {},
-  tension out/.code = {},
-  tension/.code = {},
-  excess angle/.code = {},
-  closed/.code = {%
-    \expandafter\def\expandafter\hobby@opts\expandafter{\hobby@opts%
-      closed=#1,disjoint=#1}%
-  },
-  closed/.default = true,
-  in angle/.code = {%
-    \pgfmathparse{#1*pi/180}%
-    \edef\@temp{ in angle=\pgfmathresult,}%
-    \expandafter\expandafter\expandafter%
-    \def%
-    \expandafter\expandafter\expandafter%
-    \hobby@opts%
-    \expandafter\expandafter\expandafter%
-    {\expandafter\hobby@opts\@temp}%
-  },
-  out angle/.code = {%
-    \pgfmathparse{#1*pi/180}%
-    \edef\@temp{ out angle=\pgfmathresult,}%
-    \expandafter\expandafter\expandafter%
-    \def%
-    \expandafter\expandafter\expandafter%
-    \hobby@opts%
-    \expandafter\expandafter\expandafter%
-    {\expandafter\hobby@opts\@temp}%
-  },
-  in curl/.code = {%
-    \expandafter\def\expandafter\hobby@opts\expandafter{\hobby@opts in curl=#1,}%
-  },
-  out curl/.code = {%
-    \expandafter\def\expandafter\hobby@opts\expandafter{\hobby@opts out curl=#1,}%
-  },
-  use Hobby shortcut/.code={%
-    \let\tikz@curveto@auto=\hobby@curveto@auto
+\def\pgfplothandlerhobby{%
+  \def\pgf@plotstreamstart{%
+    \hobbyinit\hobby@moveto\hobby@curveto\hobby@close
+    \global\let\pgf@plotstreampoint=\pgf@plot@hobby@firstpt
+    \global\let\pgf@plotstreamspecial=\pgfutil@gobble
+    \global\let\pgf@plotstreamend=\hobbygenpath
+    \let\tikz@scan@point@options=\pgfutil@empty
   }
 }
 %    \end{macrocode}
-% \begin{function}{\curvethrough}
-% This is the parent command.
-% We initialise the path-generation code, set any parameters, and then hand over control to the point processing macro.
+% \end{function}
+%
+% \begin{function}{\pgfplothandlerclosedhobby}
+% Same as above but produces a closed curve
 %    \begin{macrocode}
-\newcommand\curvethrough[2][]{%
-  \hobbyinit\hobby@moveto\hobby@curveto\hobby@close
-  \hobbysetparams{#1}%
-  \hobby@processpts{#2}%
+\def\pgfplothandlerclosedhobby{%
+  \def\pgf@plotstreamstart{%
+    \hobbyinit\hobby@moveto\hobby@curveto\hobby@close
+    \hobbysetparams{closed=true,disjoint=true}%
+    \global\let\pgf@plotstreampoint=\pgf@plot@hobby@firstpt
+    \global\let\pgf@plotstreamspecial=\pgfutil@gobble
+    \global\let\pgf@plotstreamend=\hobbygenpath
+  }
 }
 %    \end{macrocode}
 % \end{function}
 %
-% \begin{function}{\hobby@processpts}
-% This processes a list of points in the format \Verb+(0,0) .. (1,1)+.
-% Each point is scanned by TikZ and then added to the stack to be built into the path.
-% If there are any remaining points, we call ourself again with them.
-% Otherwise, we hand over control to the path-generation code.
+% \begin{function}{\pgf@plot@hobby@firstpt}
+% First point, move or line as appropriate and then start the algorithm.
 %    \begin{macrocode}
-\newcommand\hobby@processpts[1]{%
-  \pgfutil@in@{..}{#1}%
-  \ifpgfutil@in@%
-    \hobby@getonepoint #1 \relax
-    \let\hobby@next=\hobby@processpts
-  \else
-    \def\hobby@pt{#1}%
-    \def\hobby@rest{}%
-    \let\hobby@next=\hobbygenpath
-  \fi
-  \let\tikz@scan@point@options=\pgfutil@empty
-  \expandafter\tikz@scan@one@point\expandafter\pgfutil@firstofone\hobby@pt\relax
-  \pgfmathsetmacro\hobby@x{\the\pgf@x/1cm}%
-  \pgfmathsetmacro\hobby@y{\the\pgf@y/1cm}%
-  \expandafter\hobbyaddpoint\expandafter{\tikz@scan@point@options,%
-    x = \hobby@x, y = \hobby@y}%
-  \expandafter\hobby@next\expandafter{\hobby@rest}%
+\def\pgf@plot@hobby@firstpt#1{%
+  \pgf@plot@first@action{#1}%
+  \pgf@plot@hobby@handler{#1}%
+  \global\let\pgf@plotstreampoint=\pgf@plot@hobby@handler
 }
 %    \end{macrocode}
 % \end{function}
 %
-% \begin{function}{\hobby@onepoint}
-% This strips off the next point.
+% \begin{function}{\pgf@plot@hobby@handler}
+% Add points to the array for the algorithm to work on.
 %    \begin{macrocode}
-\def\hobby@getonepoint#1..#2\relax{%
-  \def\hobby@pt{#1}%
-  \def\hobby@rest{#2}%
-}
-%    \end{macrocode}
-% \end{function}
-%
-% There is a ``spare hook'' in the TikZ path processing code.
-% If TikZ encounters a path of the form \Verb+(0,0) .. (1,1)+ then it calls a macro \Verb+\tikz@curveto@auto+.
-% However, that macro is not defined in the TikZ code.
-% The following code provides a suitable definition.
-% To play nice, we don't install it by default but define a key (defined above) that installs it.
-% \begin{function}{\hobby@curveto@auto}
-% When we're called by TikZ, we initialise the path generation code and start adding points.
-% We want to be sure that we're only called once so we don't had control back to TikZ but use our own parser to process the rest of the curve until we reach a syntax that we don't understand.
-%    \begin{macrocode}
-\def\hobby@curveto@auto{%
-  \hobbyinit\pgfutil@gobble\hobby@curveto\hobby@close
-  \pgfmathsetmacro\hobby@x{\the\tikz@lastx/1cm}%
-  \pgfmathsetmacro\hobby@y{\the\tikz@lasty/1cm}%
-  \pgfutil@ifundefined{tikz@scan@point@options}{%
+\def\pgf@plot@hobby@handler#1{%
+    #1%
+    \pgfmathsetmacro\hobby@x{\the\pgf@x/1cm}%
+    \pgfmathsetmacro\hobby@y{\the\pgf@y/1cm}%
     \hobbyaddpoint{x = \hobby@x, y = \hobby@y}%
-  }{%
-  \expandafter\hobbyaddpoint\expandafter{\tikz@scan@point@options,%
-      x = \hobby@x, y = \hobby@y}%
-  }%
-  \let\tikz@scan@point@options=\pgfutil@empty
-  \tikz@scan@one@point\hobby@addfromtikz}
-%    \end{macrocode}
-% \end{function}
-%
-% \begin{function}{\hobby@addfromtikz}
-% This adds our current point to the stack.
-%    \begin{macrocode}
-\def\hobby@addfromtikz#1{%
-  #1%
-  \tikz@make@last@position{#1}%
-  \pgfmathsetmacro\hobby@x{\the\pgf@x/1cm}%
-  \pgfmathsetmacro\hobby@y{\the\pgf@y/1cm}%
-  \expandafter\hobbyaddpoint\expandafter{\tikz@scan@point@options,%
-    x = \hobby@x, y = \hobby@y}%
-  \hobby@donext}
-%    \end{macrocode}
-% \end{function}
-%
-% \begin{function}{\hobby@donext}
-% Now we look to see if the next character is a dot.
-% If not, we're done so generate the path.
-%    \begin{macrocode}
-\def\hobby@donext{%
-  \pgfutil@ifnextchar.%
-  {\hobby@curveto@check}%
-  {\hobby@finish@auto}}%
-%    \end{macrocode}
-% \end{function}
-%
-% \begin{function}{\hobby@curveto@check}
-% It was a dot, so look at what comes after.
-% It might be \Verb+.. c+ in which case we might be done.
-% If not, we assume we're still adding points.
-%    \begin{macrocode}
-\def\hobby@curveto@check..{%
-  \pgfutil@ifnextchar c%
-  {\hobby@maybefinish@auto}%
-  {\hobby@curveto@continue}}%
-%    \end{macrocode}
-% \end{function}
-%
-% \begin{function}{\hobby@maybefinish@auto}
-% We got \Verb+.. c+.
-% It might be \Verb+.. controls+ in which case we're done.
-% It might be \Verb+.. cycle+ in which case we have a closed path, after which we're done.
-%    \begin{macrocode}
-\def\hobby@maybefinish@auto c{%
-  \pgfutil@ifnextchar o%
-  {\hobby@finish@auto .. c}%
-  {\hobby@closeandfinish@auto}}
-%    \end{macrocode}
-% \end{function}
-%
-% \begin{function}{\hobby@closeandfinish@auto}
-% We got \Verb+.. cycle+ so eat it, flag the path as closed, and generate it.
-%    \begin{macrocode}
-\def\hobby@closeandfinish@auto ycle{%
-  \hobbysetparams{closed=true,disjoint=true}%
-  \hobby@finish@auto%
-}
-%    \end{macrocode}
-% \end{function}
-%
-% \begin{function}{\hobby@curveto@continue}
-% Scan next coordinate and repeat the cycle.
-%    \begin{macrocode}
-\def\hobby@curveto@continue{%
-  \let\tikz@scan@point@options=\pgfutil@empty
-  \tikz@scan@one@point\hobby@addfromtikz}
-%    \end{macrocode}
-% \end{function}
-%
-% \begin{function}{\hobby@finish@auto}
-% Generate the path and then hand control back to TikZ.
-%    \begin{macrocode}
-\def\hobby@finish@auto{%
-  \hobbygenpath
-  \tikz@scan@next@command%
-}
-%    \end{macrocode}
-% \end{function}
-%
-% \begin{function}{quick curve through}
-% The \Verb+quick curve through+ is a \Verb+to path+ which does the ``quick'' version of Hobby's algorithm.
-% The syntax is as with the \Verb+curve through+: to pass the midpoints as the argument to the style.
-% We need to pass three points to the auxiliary macro.
-% These are passed as \Verb+\hobby@qpoints+, \Verb+\hobby@qpointa+, and the current point.
-% Then these get cycled round for the next triple.
-% The path gets built up and stored as \Verb+\hobby@quick@path+.
-% We also have to remember the angle computed for the next round.
-%    \begin{macrocode}
-\tikzset{
-  quick curve through/.style={%
-    to path={%
-      \pgfextra{%
-%    \end{macrocode}
-% Scan the starting point and store the coordinates in \Verb+\hobby@qpointa+
-%    \begin{macrocode}
-      \tikz@scan@one@point\pgfutil@firstofone(\tikztostart)%
-        \edef\hobby@qpoints{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
-%    \end{macrocode}
-% Blank the path and auxiliary macros.
-%    \begin{macrocode}
-        \def\hobby@qpointa{}%
-        \def\hobby@quick@path{}%
-        \def\hobby@angle{}%
-%    \end{macrocode}
-% Now start parsing the rest of the coordinates.
-%    \begin{macrocode}
-        \tikz@scan@one@point\hobby@quickfirst #1 (\tikztotarget)\relax
-      }
-%    \end{macrocode}
-% Invoke the path
-%    \begin{macrocode}
-      \hobby@quick@path
-    }
   }
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\pgfplothandlerquickhobby}
+% Uses the ``quick'' algorithm.
+%    \begin{macrocode}
+\def\pgfplothandlerquickhobby{%
+  \def\pgf@plotstreamstart{%
+    \global\let\hobby@quick@curveto=\pgfpathcurveto
+    \global\let\pgf@plotstreampoint=\pgf@plot@qhobby@firstpt
+    \global\let\pgf@plotstreamspecial=\pgfutil@gobble
+    \global\let\pgf@plotstreamend=\pgf@plot@qhobby@end
+  }
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\pgf@plot@qhobby@firstpt}
+% Carry out first action (move or line) and save point.
+%    \begin{macrocode}
+\def\pgf@plot@qhobby@firstpt#1{%
+  #1%
+  \edef\hobby@temp{\noexpand\pgf@plot@first@action{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}}\hobby@temp%
+  \xdef\hobby@qpoints{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+  \gdef\hobby@qpointa{}%
+  \gdef\hobby@angle{}%
+  \global\let\pgf@plotstreampoint=\pgf@plot@qhobby@secondpt
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\pgf@plot@qhobby@secondpt}
+% Also need to save second point.
+%    \begin{macrocode}
+\def\pgf@plot@qhobby@secondpt#1{%
+  #1%
+  \xdef\hobby@qpointa{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+  \global\let\pgf@plotstreampoint=\pgf@plot@qhobby@handler
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\pgf@plot@qhobby@handler}
+% Wrapper around the computation macro that saves the variables globally.
+%    \begin{macrocode}
+\def\pgf@plot@qhobby@handler#1{%
+  #1
+  \edef\hobby@temp{\noexpand\hobby@quick@compute{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}}\hobby@temp
+  \global\let\hobby@qpointa=\hobby@qpointa
+  \global\let\hobby@qpoints=\hobby@qpoints
+  \global\let\hobby@angle=\hobby@angle
+%    \end{macrocode}
+% Also need to save some data for the last point
+%    \begin{macrocode}
+  \global\let\hobby@thetaone=\hobby@thetaone
+  \global\let\hobby@phitwo=\hobby@phitwo
+  \global\let\hobby@done=\hobby@done
+  \global\let\hobby@omegaone=\hobby@omegaone
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\pgf@plot@qhobby@end}
+%    Wrapper around the finalisation step.
+%    \begin{macrocode}
+\def\pgf@plot@qhobby@end{%
+  \hobby@quick@computeend
 }
 %    \end{macrocode}
 % \end{function}
@@ -1585,36 +1506,12 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \end{macrocode}
 % \end{function}
 %
-% \begin{function}{\hobby@quickfirst}
-% The first time around we just set the next point.
-%    \begin{macrocode}
-\def\hobby@quickfirst#1{%
-  #1%
-  \edef\hobby@qpointa{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
-%    \end{macrocode}
-% Now a check to ensure that we have more points.
-%    \begin{macrocode}
-  \pgfutil@ifnextchar\relax{%
-%    \end{macrocode}
-% Ooops, no more points.
-% That's not good.
-% Bail-out.
-%    \begin{macrocode}
-    \edef\hobby@quick@path{ -- (\the\pgf@x,\the\pgf@y)}%
-  }{%
-%    \end{macrocode}
-% Okay, have more points.
-% Phew.
-% Call the next round.
-%    \begin{macrocode}
-    \tikz@scan@one@point\hobby@quick}}
-%    \end{macrocode}
-% \end{function}
 %
-% \begin{function}{\hobby@quick}
+% \begin{function}{\hobby@quick@compute}
 % This is the macro that does all the work of computing the control points.
+% The argument is the current point, \Verb+\hobby@qpointa+ is the middle point, and \Verb+\hobby@qpoints+ is the first point.
 %    \begin{macrocode}
-\def\hobby@quick#1{%
+\def\hobby@quick@compute#1{%
 %    \end{macrocode}
 % Save the current (second - counting from zero) point in \Verb+\pgf@xb+ and \Verb+\pgf@yb+.
 %    \begin{macrocode}
@@ -1681,96 +1578,645 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \begin{macrocode}
   \let\hobby@angle=\hobby@thetaone
 %    \end{macrocode}
-% Compute the control lengths.
+% Compute the control points from the angles.
 %    \begin{macrocode}
-  \pgfmathsetmacro\hobby@alpha{%
-    sqrt(2) * (sin(\hobby@thetazero r) - 1/16 * sin(\hobby@phione r))%
-* (sin(\hobby@phione r) - 1/16 * sin(\hobby@thetazero r))%
- * (cos(\hobby@thetazero r) - cos(\hobby@phione r))}%
-  \pgfmathsetmacro\hobby@rho{%
-    (2 + \hobby@alpha)/(1 + (1 - (3 - sqrt(5))/2)%
- * cos(\hobby@thetazero r) + (3 - sqrt(5))/2 * cos(\hobby@phione r))}%
-  \pgfmathsetmacro\hobby@sigma{%
-    (2 - \hobby@alpha)/(1 + (1 - (3 - sqrt(5))/2)%
-  * cos(\hobby@phione r) +  (3 - sqrt(5))/2 * cos(\hobby@thetazero r))}%
+  \hobby@quick@ctrlpts{\hobby@thetazero}{\hobby@phione}{\hobby@qpoints}{\hobby@qpointa}{\hobby@dzero}{\hobby@omegazero}%
 %    \end{macrocode}
-% Now compute the control points.
+% Now call the call-back function 
 %    \begin{macrocode}
-  \hobby@qpoints
-  \pgf@xa=\pgf@x
-  \pgf@ya=\pgf@y
-  \pgfmathsetlength\pgf@xa{%
-    \pgf@xa + \hobby@dzero * \hobby@rho%
-  * cos((\hobby@thetazero + \hobby@omegazero) r)/3*\hobby@sf}%
-  \pgfmathsetlength\pgf@ya{%
-    \pgf@ya + \hobby@dzero * \hobby@rho%
-  * sin((\hobby@thetazero + \hobby@omegazero) r)/3*\hobby@sf}%
-  \hobby@qpointa
-  \pgf@xb=\pgf@x
-  \pgf@yb=\pgf@y
-  \pgfmathsetlength\pgf@xb{%
-    \pgf@xb - \hobby@dzero * \hobby@sigma%
-  * cos((-\hobby@phione + \hobby@omegazero) r)/3*\hobby@sf}%
-  \pgfmathsetlength\pgf@yb{%
-    \pgf@yb - \hobby@dzero * \hobby@sigma%
-  * sin((-\hobby@phione + \hobby@omegazero) r)/3*\hobby@sf}%
-%    \end{macrocode}
-% Now add the relevant part to the path.
-%    \begin{macrocode}
-  \hobby@qpointa
-  \edef\hobby@quick@path{\hobby@quick@path .. controls%
-  (\the\pgf@xa,\the\pgf@ya) and (\the\pgf@xb,\the\pgf@yb) .. (\the\pgf@x,\the\pgf@y) }%
+  \edef\hobby@temp{\noexpand\hobby@quick@curveto{\noexpand\pgfqpoint{\the\pgf@xa}{\the\pgf@ya}}{\noexpand\pgfqpoint{\the\pgf@xb}{\the\pgf@yb}}{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}}%
+\hobby@temp
 %    \end{macrocode}
 % Cycle the points round for the next iteration.
 %    \begin{macrocode}
   \let\hobby@qpoints=\hobby@qpointa
   #1
   \edef\hobby@qpointa{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+}
 %    \end{macrocode}
-% Test to see if we have more points.
-% If not, the next thing we see will be that \Verb+\relax+.
+% \end{function}
+%
+% \begin{function}
+% This is the additional code for the final run.
 %    \begin{macrocode}
-  \pgfutil@ifnextchar\relax{%
+\def\hobby@quick@computeend{%
 %    \end{macrocode}
-% No more points.
 % Compute the control points for the second part of the curve and add that to the path.
 %    \begin{macrocode}
+  \hobby@quick@ctrlpts{\hobby@thetaone}{\hobby@phitwo}{\hobby@qpoints}{\hobby@qpointa}{\hobby@done}{\hobby@omegaone}%
+%    \end{macrocode}
+% Now call the call-back function 
+%    \begin{macrocode}
+  \edef\hobby@temp{\noexpand\hobby@quick@curveto{\noexpand\pgfqpoint{\the\pgf@xa}{\the\pgf@ya}}{\noexpand\pgfqpoint{\the\pgf@xb}{\the\pgf@yb}}{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}}%
+\hobby@temp
+}%
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@quick@ctrlpts}
+% Compute the control points from the angles and points given.
+%    \begin{macrocode}
+\def\hobby@quick@ctrlpts#1#2#3#4#5#6{%
   \pgfmathsetmacro\hobby@alpha{%
-    sqrt(2) * (sin(\hobby@thetaone r) - 1/16 * sin(\hobby@phitwo r))%
-    * (sin(\hobby@phitwo r) - 1/16 * sin(\hobby@thetaone r))%
-    * (cos(\hobby@thetaone r) - cos(\hobby@phitwo r))}%
+    sqrt(2) * (sin(#1 r) - 1/16 * sin(#2 r))%
+* (sin(#2 r) - 1/16 * sin(#1 r))%
+ * (cos(#1 r) - cos(#2 r))}%
   \pgfmathsetmacro\hobby@rho{%
     (2 + \hobby@alpha)/(1 + (1 - (3 - sqrt(5))/2)%
-  * cos(\hobby@thetaone r) +  (3 - sqrt(5))/2 * cos(\hobby@phitwo r))}%
+ * cos(#1 r) + (3 - sqrt(5))/2 * cos(#2 r))}%
   \pgfmathsetmacro\hobby@sigma{%
     (2 - \hobby@alpha)/(1 + (1 - (3 - sqrt(5))/2)%
-  * cos(\hobby@phitwo r) +  (3 - sqrt(5))/2 * cos(\hobby@thetaone r))}%
-  \hobby@qpoints
+  * cos(#2 r) +  (3 - sqrt(5))/2 * cos(#1 r))}%
+  #3%
   \pgf@xa=\pgf@x
   \pgf@ya=\pgf@y
   \pgfmathsetlength\pgf@xa{%
-    \pgf@xa + \hobby@done * \hobby@rho%
-  * cos((\hobby@thetaone + \hobby@omegaone) r)/3*\hobby@sf}%
+    \pgf@xa + #5 * \hobby@rho%
+  * cos((#1 + #6) r)/3*\hobby@sf}%
   \pgfmathsetlength\pgf@ya{%
-    \pgf@ya + \hobby@done * \hobby@rho%
-  * sin((\hobby@thetaone + \hobby@omegaone) r)/3*\hobby@sf}%
-  \hobby@qpointa
+    \pgf@ya + #5 * \hobby@rho%
+  * sin((#1 + #6) r)/3*\hobby@sf}%
+  #4%
   \pgf@xb=\pgf@x
   \pgf@yb=\pgf@y
   \pgfmathsetlength\pgf@xb{%
-    \pgf@xb - \hobby@done * \hobby@sigma%
-  * cos((-\hobby@phitwo + \hobby@omegaone) r)/3*\hobby@sf}%
+    \pgf@xb - #5 * \hobby@sigma%
+  * cos((-#2 + #6) r)/3*\hobby@sf}%
   \pgfmathsetlength\pgf@yb{%
-    \pgf@yb - \hobby@done * \hobby@sigma%
-  * sin((-\hobby@phitwo + \hobby@omegaone) r)/3*\hobby@sf}%
-  \hobby@qpointa
-  \edef\hobby@quick@path{\hobby@quick@path .. controls%
-  (\the\pgf@xa,\the\pgf@ya) and (\the\pgf@xb,\the\pgf@yb) .. (\the\pgf@x,\the\pgf@y) }%
-}{%
+    \pgf@yb - #5 * \hobby@sigma%
+  * sin((-#2 + #6) r)/3*\hobby@sf}%
+  #4%
+}
+%    \end{macrocode}
+% \end{function}
+%
+%
+% \iffalse
+%</pgflibrary>
+% \fi
+%
+% \subsection{TikZ Library}
+%
+% \iffalse
+%<*tikzlibrary>
+% \fi
+% 
+%    \begin{macrocode}
+\usepgflibrary{hobby}
+\let\hobby@opts=\pgfutil@empty
+%    \end{macrocode}
+%
+% We set various TikZ keys.
+% These include the \Verb+to path+ constructor and all the various parameters that will eventually get passed to the path-generation code.
+%    \begin{macrocode}
+\def\hobby@point@options{}%
+\tikzset{
+  curve through/.style={
+    to path={
+      \pgfextra{
+        \expandafter\curvethrough\expandafter[\hobby@opts]{%
+          (\tikztostart) .. #1 .. (\tikztotarget)%
+        }
+      }
+    }
+  },
+  tension in/.code = {%
+    \expandafter\def\expandafter\hobby@point@options\expandafter%
+    {\hobby@point@options,tension in=#1}%
+  },
+  tension out/.code = {%
+    \expandafter\def\expandafter\hobby@point@options\expandafter%
+    {\hobby@point@options,tension out=#1}%
+  },
+  tension/.code = {%
+    \expandafter\def\expandafter\hobby@point@options\expandafter%
+    {\hobby@point@options,tension=#1}%
+  },
+  excess angle/.code = {%
+    \expandafter\def\expandafter\hobby@point@options\expandafter%
+    {\hobby@point@options,excess angle=#1}%
+  },
+  break/.code = {%
+    \expandafter\def\expandafter\hobby@point@options\expandafter%
+    {\hobby@point@options,break=#1}%
+  },
+  blank/.code = {%
+    \expandafter\def\expandafter\hobby@point@options\expandafter%
+    {\hobby@point@options,blank=#1}%
+  },
+  closed/.code = {%
+    \expandafter\def\expandafter\hobby@opts\expandafter{\hobby@opts%
+      closed=#1,disjoint=#1}%
+  },
+  closed/.default = true,
+  in angle/.code = {%
+    \pgfmathparse{#1*pi/180}%
+    \edef\@temp{ in angle=\pgfmathresult,}%
+    \expandafter\expandafter\expandafter%
+    \def%
+    \expandafter\expandafter\expandafter%
+    \hobby@opts%
+    \expandafter\expandafter\expandafter%
+    {\expandafter\hobby@opts\@temp}%
+  },
+  out angle/.code = {%
+    \pgfmathparse{#1*pi/180}%
+    \edef\@temp{ out angle=\pgfmathresult,}%
+    \expandafter\expandafter\expandafter%
+    \def%
+    \expandafter\expandafter\expandafter%
+    \hobby@opts%
+    \expandafter\expandafter\expandafter%
+    {\expandafter\hobby@opts\@temp}%
+  },
+  in curl/.code = {%
+    \expandafter\def\expandafter\hobby@opts\expandafter{\hobby@opts in curl=#1,}%
+  },
+  out curl/.code = {%
+    \expandafter\def\expandafter\hobby@opts\expandafter{\hobby@opts out curl=#1,}%
+  },
+  use Hobby shortcut/.code={%
+    \let\tikz@curveto@auto=\hobby@curveto@auto
+  },
+  use quick Hobby shortcut/.code={%
+    \let\tikz@curveto@auto=\hobby@qcurveto@auto
+  }
+}
+%    \end{macrocode}
+% \begin{function}{\curvethrough}
+% This is the parent command.
+% We initialise the path-generation code, set any parameters, and then hand over control to the point processing macro.
+%    \begin{macrocode}
+\newcommand\curvethrough[2][]{%
+  \hobbyinit\hobby@moveto\hobby@curveto\hobby@close
+  \hobbysetparams{#1}%
+  \hobby@processpts{#2}%
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@processpts}
+% This processes a list of points in the format \Verb+(0,0) .. (1,1)+.
+% Each point is scanned by TikZ and then added to the stack to be built into the path.
+% If there are any remaining points, we call ourself again with them.
+% Otherwise, we hand over control to the path-generation code.
+%    \begin{macrocode}
+\newcommand\hobby@processpts[1]{%
+  \pgfutil@in@{..}{#1}%
+  \ifpgfutil@in@%
+    \hobby@getonepoint #1 \relax
+    \let\hobby@next=\hobby@processpts
+  \else
+    \def\hobby@pt{#1}%
+    \def\hobby@rest{}%
+    \let\hobby@next=\hobbygenpath
+  \fi
+  \let\tikz@scan@point@options=\pgfutil@empty
+  \expandafter\tikz@scan@one@point\expandafter\pgfutil@firstofone\hobby@pt\relax
+  \pgfmathsetmacro\hobby@x{\the\pgf@x/1cm}%
+  \pgfmathsetmacro\hobby@y{\the\pgf@y/1cm}%
+  \def\hobby@point@options{}%
+  \expandafter\tikzset\expandafter{\tikz@scan@point@options}%
+  \expandafter\hobbyaddpoint\expandafter{\hobby@point@options,%
+    x = \hobby@x, y = \hobby@y}%
+  \expandafter\hobby@next\expandafter{\hobby@rest}%
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@onepoint}
+% This strips off the next point.
+%    \begin{macrocode}
+\def\hobby@getonepoint#1..#2\relax{%
+  \def\hobby@pt{#1}%
+  \def\hobby@rest{#2}%
+}
+%    \end{macrocode}
+% \end{function}
+%
+% There is a ``spare hook'' in the TikZ path processing code.
+% If TikZ encounters a path of the form \Verb+(0,0) .. (1,1)+ then it calls a macro \Verb+\tikz@curveto@auto+.
+% However, that macro is not defined in the TikZ code.
+% The following code provides a suitable definition.
+% To play nice, we don't install it by default but define a key (defined above) that installs it.
+% \begin{function}{\hobby@curveto@auto}
+% When we're called by TikZ, we initialise the path generation code and start adding points.
+% We want to be sure that we're only called once so we don't had control back to TikZ but use our own parser to process the rest of the curve until we reach a syntax that we don't understand.
+%    \begin{macrocode}
+\def\hobby@curveto@auto{%
+  \hobbyinit\hobby@moveto\hobby@curveto\hobby@close
+  \pgfmathsetmacro\hobby@x{\the\tikz@lastx/1cm}%
+  \pgfmathsetmacro\hobby@y{\the\tikz@lasty/1cm}%
+  \pgfutil@ifundefined{tikz@scan@point@options}{%
+    \hobbyaddpoint{x = \hobby@x, y = \hobby@y}%
+  }{%
+    \def\hobby@point@options{}%
+    \expandafter\tikzset\expandafter{\tikz@scan@point@options}%
+  \expandafter\hobbyaddpoint\expandafter{\hobby@point@options,%
+      x = \hobby@x, y = \hobby@y}%
+  }%
+  \let\tikz@scan@point@options=\pgfutil@empty
+  \tikz@scan@one@point\hobby@addfromtikz}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@addfromtikz}
+% This adds our current point to the stack.
+%    \begin{macrocode}
+\def\hobby@addfromtikz#1{%
+  #1%
+  \tikz@make@last@position{#1}%
+  \pgfmathsetmacro\hobby@x{\the\pgf@x/1cm}%
+  \pgfmathsetmacro\hobby@y{\the\pgf@y/1cm}%
+  \def\hobby@point@options{}%
+  \expandafter\tikzset\expandafter{\tikz@scan@point@options}%
+  \expandafter\hobbyaddpoint\expandafter{\hobby@point@options,%
+    x = \hobby@x, y = \hobby@y}%
+  \afterassignment\hobby@donext\let\@let@token=%
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@donext}
+% Now we look to see if the next character is a dot.
+% If not, we're done so generate the path.
+%    \begin{macrocode}
+\def\hobby@donext{%
+  \let\@next=\hobby@finish@auto%
+  \ifx\@let@token.%
+   \let\@next=\hobby@curveto@check
+  \else
+   \ifx\@let@token[%]
+    \let\@next=\hobby@parse@options
+   \fi
+  \fi
+  \@next}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@parse@options}
+%    \begin{macrocode}
+\def\hobby@parse@options#1]{%
+    \tikzset{#1}%
+    \afterassignment\hobby@donext\let\@let@token=%
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@curveto@check}
+% It was a dot, so look at what comes after.
+% It might be \Verb+.. c+ in which case we might be done.
+% If not, we assume we're still adding points.
+%    \begin{macrocode}
+\def\hobby@curveto@check.{%
+  \pgfutil@ifnextchar c%
+  {\hobby@maybefinish@auto}%
+  {\hobby@curveto@continue}}%
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@maybefinish@auto}
+% We got \Verb+.. c+.
+% It might be \Verb+.. controls+ in which case we're done.
+% It might be \Verb+.. cycle+ in which case we have a closed path, after which we're done.
+%    \begin{macrocode}
+\def\hobby@maybefinish@auto c{%
+  \pgfutil@ifnextchar o%
+  {\hobby@finish@auto . c}%
+  {\hobby@closeandfinish@auto}}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@closeandfinish@auto}
+% We got \Verb+.. cycle+ so eat it, flag the path as closed, and generate it.
+%    \begin{macrocode}
+\def\hobby@closeandfinish@auto ycle{%
+  \hobbysetparams{closed=true,disjoint=true}%
+  \let\@let@token=\pgfutil@empty
+  \hobby@finish@auto%
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@curveto@continue}
+% Scan next coordinate and repeat the cycle.
+%    \begin{macrocode}
+\def\hobby@curveto@continue{%
+  \let\tikz@scan@point@options=\pgfutil@empty
+  \tikz@scan@one@point\hobby@addfromtikz}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@finish@auto}
+% Generate the path and then hand control back to TikZ.
+%    \begin{macrocode}
+\def\hobby@finish@auto{%
+  \hobbygenpath
+  \expandafter\tikz@scan@next@command\@let@token%
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{quick curve through}
+% The \Verb+quick curve through+ is a \Verb+to path+ which does the ``quick'' version of Hobby's algorithm.
+% The syntax is as with the \Verb+curve through+: to pass the midpoints as the argument to the style.
+% We need to pass three points to the auxiliary macro.
+% These are passed as \Verb+\hobby@qpoints+, \Verb+\hobby@qpointa+, and the current point.
+% Then these get cycled round for the next triple.
+% The path gets built up and stored as \Verb+\hobby@quick@path+.
+% We also have to remember the angle computed for the next round.
+%    \begin{macrocode}
+\tikzset{
+  quick curve through/.style={%
+    to path={%
+      \pgfextra{%
+%    \end{macrocode}
+% Scan the starting point and store the coordinates in \Verb+\hobby@qpointa+
+%    \begin{macrocode}
+        \let\hobby@next@qbreak=\relax
+        \let\hobby@next@qblank=\relax
+      \tikz@scan@one@point\pgfutil@firstofone(\tikztostart)%
+        \tikz@make@last@position{\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+        \edef\hobby@qpoints{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+%    \end{macrocode}
+% Blank the path and auxiliary macros.
+%    \begin{macrocode}
+        \def\hobby@qpointa{}%
+        \def\hobby@quick@path{}%
+        \def\hobby@angle{}%
+        \let\hobby@quick@curveto=\hobby@quick@makepath
+%    \end{macrocode}
+% Now start parsing the rest of the coordinates.
+%    \begin{macrocode}
+        \tikz@scan@one@point\hobby@quickfirst #1 (\tikztotarget)\relax
+      }
+%    \end{macrocode}
+% Invoke the path
+%    \begin{macrocode}
+      \hobby@quick@path
+    }
+  },
+  quick hobby/blank curve/.is choice,
+  quick hobby/blank curve/true/.code={%
+    \gdef\hobby@next@qblank{%
+      \qhobby@blanktrue
+      \global\let\hobby@next@qblank=\relax
+    }%
+  },
+  quick hobby/blank curve/false/.code={%
+    \gdef\hobby@next@qblank{%
+      \qhobby@blankfalse
+      \global\let\hobby@next@qblank=\relax
+    }%
+  },
+  quick hobby/blank curve/once/.code={%
+    \gdef\hobby@next@qblank{%
+      \qhobby@blanktrue
+      \gdef\hobby@next@qblank{%
+        \qhobby@blankfalse
+        \global\let\hobby@next@qblank=\relax
+      }%
+    }%
+  },
+  quick hobby/blank curve/.default=true,
+  quick hobby/break curve/.is choice,
+  quick hobby/break curve/true/.code={%
+    \gdef\hobby@next@qbreak{%
+      \qhobby@breaktrue
+      \global\let\hobby@next@qbreak=\relax
+    }%
+  },
+  quick hobby/break curve/false/.code={%
+    \gdef\hobby@next@qbreak{%
+      \qhobby@breakfalse
+      \global\let\hobby@next@qbreak=\relax
+    }%
+  },
+  quick hobby/break curve/once/.code={%
+    \gdef\hobby@next@qbreak{%
+      \qhobby@breaktrue
+      \gdef\hobby@next@qbreak{%
+        \qhobby@breakfalse
+        \global\let\hobby@next@qbreak=\relax
+      }%
+    }%
+  },
+  quick hobby/break curve/.default=true,
+}
+\newif\ifqhobby@break
+\newif\ifqhobby@blank
+%    \end{macrocode}
+% \end{function}
+%
+% Add plot handlers
+%    \begin{macrocode}
+\tikzoption{hobby}[]{\let\tikz@plot@handler=\pgfplothandlerhobby}
+\tikzoption{quick hobby}[]{\let\tikz@plot@handler=\pgfplothandlerquickhobby}
+\tikzoption{closed hobby}[]{\let\tikz@plot@handler=\pgfplothandlerclosedhobby}
+%    \end{macrocode}
+%
+% \begin{function}{\hobby@quickfirst}
+% The first time around we just set the next point.
+%    \begin{macrocode}
+\def\hobby@quickfirst#1{%
+  #1%
+  \edef\hobby@qpointa{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+  \tikz@make@last@position{\hobby@qpointa}%
+%    \end{macrocode}
+% Now a check to ensure that we have more points.
+%    \begin{macrocode}
+  \pgfutil@ifnextchar\relax{%
+%    \end{macrocode}
+% Ooops, no more points.
+% That's not good.
+% Bail-out.
+%    \begin{macrocode}
+    \edef\hobby@quick@path{ -- (\the\pgf@x,\the\pgf@y)}%
+  }{%
+%    \end{macrocode}
+% Okay, have more points.
+% Phew.
+% Call the next round.
+%    \begin{macrocode}
+    \tikz@scan@one@point\hobby@quick}}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@quick}
+% This is our wrapper function that handles the loop.
+%    \begin{macrocode}
+\def\hobby@quick#1{%
+  \hobby@quick@compute{#1}%
+  \tikz@make@last@position{\hobby@qpointa}%
+  \pgfutil@ifnextchar\relax{%
+%    \end{macrocode}
+% End of loop
+%    \begin{macrocode}
+    \hobby@quick@computeend%
+  }{%
 %    \end{macrocode}
 % More to go, scan in the next coordinate and off we go again.
 %    \begin{macrocode}
 \tikz@scan@one@point\hobby@quick}}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@quick@makepath}
+% Path constructor for \Verb+to path+ use.
+%    \begin{macrocode}
+\def\hobby@quick@makepath#1#2#3{%
+  #1%
+  \pgf@xa=\pgf@x\relax
+  \pgf@ya=\pgf@y\relax
+  #2%
+  \pgf@xb=\pgf@x\relax
+  \pgf@yb=\pgf@y\relax
+  #3%
+  \ifqhobby@blank
+  \edef\hobby@quick@path{\hobby@quick@path (\the\pgf@x,\the\pgf@y)}%
+  \else
+  \edef\hobby@quick@path{\hobby@quick@path .. controls%
+  (\the\pgf@xa,\the\pgf@ya) and (\the\pgf@xb,\the\pgf@yb) .. (\the\pgf@x,\the\pgf@y) }%
+  \fi
+  \ifqhobby@break
+  \edef\hobby@quick@path{\hobby@quick@path +(0,0)}%
+  \fi
+  \hobby@next@qbreak
+  \hobby@next@qblank
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@qcurveto@auto}
+% Uses the ``quick'' method for the shortcut syntax.
+% As with the full method, we want to be sure that we're only called once so we don't had control back to TikZ but use our own parser to process the rest of the curve until we reach a syntax that we don't understand.
+%    \begin{macrocode}
+\def\hobby@qcurveto@auto{%
+  \let\hobby@next@qbreak=\relax
+  \let\hobby@next@qblank=\relax
+  \edef\hobby@qpoints{\noexpand\pgfqpoint{\the\tikz@lastx}{\the\tikz@lasty}}%
+  \def\hobby@qpointa{}%
+  \def\hobby@quick@path{}%
+  \def\hobby@angle{}%
+  \let\hobby@quick@curveto=\hobby@quick@makepathauto
+  \let\tikz@scan@point@options=\pgfutil@empty
+  \tikz@scan@one@point\hobby@qfirst@auto}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@qfirst@auto}
+%    \begin{macrocode}
+\def\hobby@qfirst@auto#1{%
+  #1%
+  \edef\hobby@qpointa{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+  \tikz@make@last@position{\hobby@qpointa}%
+  \afterassignment\hobby@qdonext\let\@let@token=%
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@quick@makepathauto}
+% Path constructor for shortcut method to use.
+%    \begin{macrocode}
+\def\hobby@quick@makepathauto#1#2#3{%
+  #1%
+  \pgf@xa=\pgf@x\relax
+  \pgf@ya=\pgf@y\relax
+  #2%
+  \pgf@xb=\pgf@x\relax
+  \pgf@yb=\pgf@y\relax
+  #3%
+  \ifqhobby@blank
+  \edef\hobby@temp{%
+    \noexpand\pgfpathmoveto{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+  }%
+  \hobby@temp
+  \else
+  \edef\hobby@temp{%
+    \noexpand\pgfpathcurveto{\noexpand\pgfqpoint{\the\pgf@xa}{\the\pgf@ya}}%
+    {\noexpand\pgfqpoint{\the\pgf@xb}{\the\pgf@yb}}%
+    {\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+  }%
+  \hobby@temp
+  \fi
+  \ifqhobby@break
+  #3%
+  \edef\hobby@temp{%
+    \noexpand\pgfpathmoveto{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+  }%
+  \hobby@temp
+  \fi
+  \hobby@next@qbreak
+  \hobby@next@qblank
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@qaddfromtikz}
+% This adds our current point to the stack.
+%    \begin{macrocode}
+\def\hobby@qaddfromtikz#1{%
+  \hobby@quick@compute{#1}%
+  \tikz@make@last@position{\hobby@qpointa}%
+  \afterassignment\hobby@qdonext\let\@let@token=%
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@donext}
+% Now we look to see if the next character is a dot.
+% If not, we're done so generate the path.
+%    \begin{macrocode}
+\def\hobby@qdonext{%
+  \let\@next=\hobby@qfinish@auto%
+  \ifx\@let@token.%
+   \let\@next=\hobby@qcurveto@check
+  \else
+   \ifx\@let@token[%]
+    \let\@next=\hobby@qparse@options
+   \fi
+  \fi
+  \@next}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@qparse@options}
+%    \begin{macrocode}
+\def\hobby@qparse@options#1]{%
+    \tikzset{#1}%
+    \afterassignment\hobby@qdonext\let\@let@token=%
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@qcurveto@check}
+% It was a dot, so look at what comes after.
+% It might be \Verb+.. c+ in which case we might be done.
+% If not, we assume we're still adding points.
+%    \begin{macrocode}
+\def\hobby@qcurveto@check.{%
+  \pgfutil@ifnextchar c%
+  {\hobby@qfinish@auto . }%
+  {\hobby@qcurveto@continue}}%
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@qcurveto@continue}
+% Scan next coordinate and repeat the cycle.
+%    \begin{macrocode}
+\def\hobby@qcurveto@continue{%
+  \let\tikz@scan@point@options=\pgfutil@empty
+  \tikz@scan@one@point\hobby@qaddfromtikz}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@qfinish@auto}
+% Generate the path and then hand control back to TikZ.
+%    \begin{macrocode}
+\def\hobby@qfinish@auto{%
+  \hobby@quick@computeend%
+  \expandafter\tikz@scan@next@command\@let@token%
+}
 %    \end{macrocode}
 % \end{function}
 %
@@ -1908,7 +2354,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     }
     \prg_stepwise_inline:nnnn {\l_array_base_int} {1} {\l_array_top_int} {
   \array_get:NnN #1 {##1} \l_array_tmp_tl
-  \exp_args:Nno #2 {##1} \l_array_tmp_tl
+  \exp_args:NnV #2 {##1} \l_array_tmp_tl
 }
 } {}
 }
@@ -1978,7 +2424,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %
 % For displaying arrays, we need some messages.
 %    \begin{macrocode}
-\msg_new:nnn { array } { show }
+\__msg_kernel_new:nnn { kernel } { show-array }
   {
     The~array~\token_to_str:N #1~
     \array_if_empty:NTF #1
@@ -1997,12 +2443,12 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \__msg_show_variable:Nnx
       #1
       { array }
-      { \l_array_show_tl }
+    { \l_array_show_tl }
   }
 
 \cs_new_protected:Npn \array_show_aux:nn #1#2
 {
-  \tl_if_eq:NNTF {#2} {\q_no_value} {}
+  \tl_if_eq:nnTF {#2} {\q_no_value} {}
   {
   \tl_put_right:No \l_array_show_tl {\__msg_show_item:nn {#1}{#2}}
   }

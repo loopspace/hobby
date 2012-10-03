@@ -4,11 +4,28 @@
 \usepackage{tikz}
 \usetikzlibrary{hobby}
 
+\usepackage[silent]{trace-pgfkeys}
 
-\pgfmathparse{rad(atan2(-1,0))}
-\show\pgfmathresult
+\tikzset{use Hobby shortcut}
 
 \begin{document}
+
+\tikz[hobby] \draw plot coordinates {(0,0) ([blank=true]1,1) (2,0) (3,1) (2,1) (10:2cm)};
+
+\tikz[hobby] \draw (0,0) .. (1,1) .. ([blank=true]2,0) .. (3,1) .. ([blank=true]2,1) .. (10:2cm);
+
+\tikz \draw (0,0) to[quick curve through={(1,1) (2,0) ([quick hobby/blank curve=once]3,1) (2,1)}] (10:2cm);
+
+\tikz \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
+
+\tikz[smooth] \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
+
+\tikz[hobby] \draw (1,0) -- plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
+
+\tikz[closed hobby] \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
+
+\tikz[quick hobby] \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
+
 \begin{tikzpicture}[scale=.5]
 \draw[scale=.1,line width=1mm,red] (0,0)
 .. controls (26.76463,-1.84543) and (51.4094,14.58441) .. (60,40)
@@ -166,7 +183,6 @@ We compute \(\phi_1 = -\psi_1 - \theta_1 = \frac{- \psi_1 d_0 + \theta_0 d_1}{2 
 \draw[green,line width=2pt] (0,0) to[quick curve through={(6,4) (4,9)  (1,7)}] (3,5);
 \end{tikzpicture}
 
-\end{document}
 
 \begin{tikzpicture}[c/.style={insert path={circle[radius=2pt]}}]
 \fill[green] (0,0) [c] (1,.5) [c] (0,0) [c] (3,.5) [c] (4,0) [c];
