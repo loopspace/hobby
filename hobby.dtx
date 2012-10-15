@@ -468,6 +468,12 @@ and the derived files            hobby.code.tex
 %    \end{macrocode}
 % \end{function}
 %
+% \begin{function}{\l_hobby_blank_int}
+%    \begin{macrocode}
+\int_new:N \l_hobby_blank_int
+%    \end{macrocode}
+% \end{function}
+%
 % A ``point'' is a key-value list setting the x-value, the y-value, and the tensions at that point.
 % Using keys makes it easier to pass points from the algorithm code to the calling code and vice versa without either knowing too much about the other.
 %    \begin{macrocode}
@@ -482,16 +488,24 @@ and the derived files            hobby.code.tex
   tension .meta:n = { tension~out=#1, tension~in=#1 },
   break .default:n = false,
   blank .default:n = false,
+  invert~blank .choice:,
+  invert~blank / true .code:n = {
+    \int_gset:Nn \l_hobby_blank_int {0}
+  },
+  invert~blank / false .code:n = {
+    \int_gset:Nn \l_hobby_blank_int {1}
+  },
+  invert~blank .default:n = true,
   tension~out .default:n = 1,
   tension~in .default:n = 1,
   excess~angle .default:n = 0,
-  in~angle .fp_set:N = \l_hobby_in_angle_fp,
-  out~angle .fp_set:N = \l_hobby_out_angle_fp,
-  in~curl .fp_set:N = \l_hobby_in_curl_fp,
-  out~curl .fp_set:N = \l_hobby_out_curl_fp,
-  closed .bool_set:N = \l_hobby_closed_bool,
+  in~angle .fp_gset:N = \l_hobby_in_angle_fp,
+  out~angle .fp_gset:N = \l_hobby_out_angle_fp,
+  in~curl .fp_gset:N = \l_hobby_in_curl_fp,
+  out~curl .fp_gset:N = \l_hobby_out_curl_fp,
+  closed .bool_gset:N = \l_hobby_closed_bool,
   closed .default:n = true,
-  disjoint .bool_set:N = \l_hobby_disjoint_bool,
+  disjoint .bool_gset:N = \l_hobby_disjoint_bool,
   disjoint .default:n = true,
   break~default .code:n = {
     \keys_define:nn { hobby / read in all } 
@@ -510,13 +524,13 @@ and the derived files            hobby.code.tex
 % There are certain other parameters that can be set for a given curve.
 %    \begin{macrocode}
 \keys_define:nn { hobby / read in params} {
-  in~angle .fp_set:N = \l_hobby_in_angle_fp,
-  out~angle .fp_set:N = \l_hobby_out_angle_fp,
-  in~curl .fp_set:N = \l_hobby_in_curl_fp,
-  out~curl .fp_set:N = \l_hobby_out_curl_fp,
-  closed .bool_set:N = \l_hobby_closed_bool,
+  in~angle .fp_gset:N = \l_hobby_in_angle_fp,
+  out~angle .fp_gset:N = \l_hobby_out_angle_fp,
+  in~curl .fp_gset:N = \l_hobby_in_curl_fp,
+  out~curl .fp_gset:N = \l_hobby_out_curl_fp,
+  closed .bool_gset:N = \l_hobby_closed_bool,
   closed .default:n = true,
-  disjoint .bool_set:N = \l_hobby_disjoint_bool,
+  disjoint .bool_gset:N = \l_hobby_disjoint_bool,
   disjoint .default:n = true,
   break~default .code:n = {
     \keys_define:nn { hobby / read in all } 
@@ -530,6 +544,14 @@ and the derived files            hobby.code.tex
       blank .default:n = #1
     }
   },
+  invert~blank .choice:,
+  invert~blank / true .code:n = {
+    \int_gset:Nn \l_hobby_blank_int {0}
+  },
+  invert~blank / false .code:n = {
+    \int_gset:Nn \l_hobby_blank_int {1}
+  },
+  invert~blank .default:n = true,
 }
 %    \end{macrocode}
 % \begin{function}{\hobby_distangle:n}
@@ -605,9 +627,10 @@ and the derived files            hobby.code.tex
     \hobby_append_point_copy_aux:Nn \l_hobby_tension_in_array {#1}
     \hobby_append_point_copy_aux:Nn \l_hobby_tension_out_array {#1}
     \hobby_append_point_copy_aux:Nn \l_hobby_excess_angle_array {#1}
+    \hobby_append_point_copy_aux:Nn \l_hobby_actions_array {#1}
   }
 \cs_new_protected:Npn \hobby_append_point_copy_aux:Nn #1#2
-  { \array_push:Nx #1 { \array_get:Nn #1 {#2} } }
+  { \array_gpush:Nx #1 { \array_get:Nn #1 {#2} } }
 %    \end{macrocode}
 % \end{function}
 %
@@ -1194,34 +1217,36 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \begin{macrocode}
 \NewDocumentCommand \hobbyinit {m m m} {
 \hobby_set_cmds:nnn#1#2#3
-\array_clear:N \l_hobby_points_array
-\array_clear:N \l_hobby_points_x_array
-\array_clear:N \l_hobby_points_y_array
-\array_clear:N \l_hobby_angles_array
-\array_clear:N \l_hobby_distances_array
-\array_clear:N \l_hobby_tension_out_array
-\array_clear:N \l_hobby_tension_in_array
-\array_clear:N \l_hobby_excess_angle_array
-\array_clear:N \l_hobby_matrix_a_array
-\array_clear:N \l_hobby_matrix_b_array
-\array_clear:N \l_hobby_matrix_c_array
-\array_clear:N \l_hobby_matrix_d_array
-\array_clear:N \l_hobby_vector_u_array
-\array_clear:N \l_hobby_psi_array
-\array_clear:N \l_hobby_theta_array
-\array_clear:N \l_hobby_phi_array
-\array_clear:N \l_hobby_sigma_array
-\array_clear:N \l_hobby_rho_array
-\array_clear:N \l_hobby_controla_array
-\array_clear:N \l_hobby_controlb_array
-\bool_set_false:N \l_hobby_closed_bool
-\bool_set_false:N \l_hobby_disjoint_bool
+\array_gclear:N \l_hobby_points_array
+\array_gclear:N \l_hobby_points_x_array
+\array_gclear:N \l_hobby_points_y_array
+\array_gclear:N \l_hobby_angles_array
+\array_gclear:N \l_hobby_actions_array
+\array_gclear:N \l_hobby_distances_array
+\array_gclear:N \l_hobby_tension_out_array
+\array_gclear:N \l_hobby_tension_in_array
+\array_gclear:N \l_hobby_excess_angle_array
+\array_gclear:N \l_hobby_matrix_a_array
+\array_gclear:N \l_hobby_matrix_b_array
+\array_gclear:N \l_hobby_matrix_c_array
+\array_gclear:N \l_hobby_matrix_d_array
+\array_gclear:N \l_hobby_vector_u_array
+\array_gclear:N \l_hobby_psi_array
+\array_gclear:N \l_hobby_theta_array
+\array_gclear:N \l_hobby_phi_array
+\array_gclear:N \l_hobby_sigma_array
+\array_gclear:N \l_hobby_rho_array
+\array_gclear:N \l_hobby_controla_array
+\array_gclear:N \l_hobby_controlb_array
+\bool_gset_false:N \l_hobby_closed_bool
+\bool_gset_false:N \l_hobby_disjoint_bool
 
-  \int_set:Nn \l_hobby_npoints_int {-1}
-  \fp_set_eq:NN \l_hobby_in_angle_fp \c_undefined_fp
-  \fp_set_eq:NN \l_hobby_out_angle_fp \c_undefined_fp
-  \fp_set_eq:NN \l_hobby_in_curl_fp \c_one_fp
-  \fp_set_eq:NN \l_hobby_out_curl_fp \c_one_fp
+  \int_gset:Nn \l_hobby_npoints_int {-1}
+  \int_gset:Nn \l_hobby_blank_int {1}
+  \fp_gset_eq:NN \l_hobby_in_angle_fp \c_undefined_fp
+  \fp_gset_eq:NN \l_hobby_out_angle_fp \c_undefined_fp
+  \fp_gset_eq:NN \l_hobby_in_curl_fp \c_one_fp
+  \fp_gset_eq:NN \l_hobby_out_curl_fp \c_one_fp
 }
 %    \end{macrocode}
 % \end{function}
@@ -1245,15 +1270,15 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \tl_if_eq:VnTF {\l_tmpb_tl} {true}
      {\tl_put_right:Nn \l_tmpa_tl {1}}
      {\tl_put_right:Nn \l_tmpa_tl {0}}
-    \array_push:Nx \l_hobby_actions_array {\l_tmpa_tl}
-    \array_push:Nx \l_hobby_tension_out_array {\fp_to_tl:N \l_hobby_tempc_fp}
-    \array_push:Nx \l_hobby_tension_in_array {\fp_to_tl:N \l_hobby_tempd_fp}
-    \array_push:Nx \l_hobby_excess_angle_array {\fp_to_tl:N \l_hobby_temps_fp}
-    \array_push:Nx \l_hobby_points_array {
+    \array_gpush:Nx \l_hobby_actions_array {\l_tmpa_tl}
+    \array_gpush:Nx \l_hobby_tension_out_array {\fp_to_tl:N \l_hobby_tempc_fp}
+    \array_gpush:Nx \l_hobby_tension_in_array {\fp_to_tl:N \l_hobby_tempd_fp}
+    \array_gpush:Nx \l_hobby_excess_angle_array {\fp_to_tl:N \l_hobby_temps_fp}
+    \array_gpush:Nx \l_hobby_points_array {
       x = \fp_use:N \l_hobby_tempa_fp,
       y = \fp_use:N \l_hobby_tempb_fp }
-    \array_push:Nx \l_hobby_points_x_array {\fp_to_tl:N \l_hobby_tempa_fp}
-    \array_push:Nx \l_hobby_points_y_array {\fp_to_tl:N \l_hobby_tempb_fp}
+    \array_gpush:Nx \l_hobby_points_x_array {\fp_to_tl:N \l_hobby_tempa_fp}
+    \array_gpush:Nx \l_hobby_points_y_array {\fp_to_tl:N \l_hobby_tempb_fp}
 }
 %    \end{macrocode}
 % \end{function}
@@ -1275,9 +1300,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % This is an auxiliary command that sets these macros.
 %    \begin{macrocode}
 \cs_new:Nn \hobby_set_cmds:nnn {
-  \cs_set_eq:NN \hobby_moveto:n #1
-  \cs_set_eq:NN \hobby_curveto:nnn #2
-  \cs_set_eq:NN \hobby_close:n #3
+  \cs_gset_eq:NN \hobby_moveto:n #1
+  \cs_gset_eq:NN \hobby_curveto:nnn #2
+  \cs_gset_eq:NN \hobby_close:n #3
 }
 %    \end{macrocode}
 % \end{function}
@@ -1296,12 +1321,14 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \array_get:NnN \l_hobby_controlb_array {##1} \l_tmpb_tl
     \array_get:NnN \l_hobby_points_array {##1} \l_tmpc_tl
     \array_get:NnN \l_hobby_actions_array {##1} \l_tmpd_tl
-    \tl_if_eq:xnTF {\tl_item:Nn \l_tmpd_tl {1}} {1} {
+    \int_compare:nNnTF {\tl_item:Nn \l_tmpd_tl {1}} = {\l_hobby_blank_int} {
+      \bool_gset_false:N \l_hobby_closed_bool
       \exp_args:No \hobby_moveto:n {\l_tmpc_tl}
     }{
       \exp_args:Nooo \hobby_curveto:nnn {\l_tmpa_tl} {\l_tmpb_tl} {\l_tmpc_tl}
     }
     \tl_if_eq:xnTF {\tl_item:Nn \l_tmpd_tl {2}} {1} {
+      \bool_gset_false:N \l_hobby_closed_bool
       \exp_args:No \hobby_moveto:n {\l_tmpc_tl}
     }{}
   }
@@ -1706,9 +1733,16 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   },
   closed/.code = {%
     \expandafter\def\expandafter\hobby@opts\expandafter{\hobby@opts%
-      closed=#1,disjoint=#1}%
+      closed=#1,disjoint=#1,}%
+  },
+  invert blank/.code = {%
+    \expandafter\def\expandafter\hobby@opts\expandafter{\hobby@opts%
+      invert blank=#1,}%
   },
   closed/.default = true,
+  blank/.default = true,
+  break/.default = true,
+  invert blank/.default = true,
   in angle/.code = {%
     \pgfmathparse{#1*pi/180}%
     \edef\@temp{ in angle=\pgfmathresult,}%
@@ -1811,10 +1845,13 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \hobbyaddpoint{x = \hobby@x, y = \hobby@y}%
   }{%
     \def\hobby@point@options{}%
+    \def\hobby@opts{}%
     \expandafter\tikzset\expandafter{\tikz@scan@point@options}%
+    \expandafter\hobbysetparams\expandafter{\hobby@opts}%
   \expandafter\hobbyaddpoint\expandafter{\hobby@point@options,%
       x = \hobby@x, y = \hobby@y}%
   }%
+  \hobby@init@tikz@commands
   \let\tikz@scan@point@options=\pgfutil@empty
   \tikz@scan@one@point\hobby@addfromtikz}
 %    \end{macrocode}
@@ -1832,11 +1869,114 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \expandafter\tikzset\expandafter{\tikz@scan@point@options}%
   \expandafter\hobbyaddpoint\expandafter{\hobby@point@options,%
     x = \hobby@x, y = \hobby@y}%
-  \afterassignment\hobby@donext\let\@let@token=%
+  \tikz@scan@next@command%
 }
 %    \end{macrocode}
 % \end{function}
 %
+% \begin{function}{\hobby@init@tikz@commands}
+%    \begin{macrocode}
+\def\hobby@init@tikz@commands{%
+  \hobby@init@tikz@modcmd\tikz@movetoabs
+  \hobby@init@tikz@modcmd\tikz@movetorel
+  \hobby@init@tikz@modcmd\tikz@lineto
+  \hobby@init@tikz@modcmd\tikz@rect
+  \hobby@init@tikz@modcmd\tikz@cchar
+  \hobby@init@tikz@modcmd\tikz@finish
+  \hobby@init@tikz@modcmd\tikz@arcA
+  \hobby@init@tikz@modcmd\tikz@e@char
+  \hobby@init@tikz@modcmd\tikz@g@char
+  \hobby@init@tikz@modcmd\tikz@schar
+  \hobby@init@tikz@modcmd\tikz@vh@lineto
+  \hobby@init@tikz@modcmd\tikz@pchar
+  \hobby@init@tikz@modcmd\tikz@to
+  \hobby@init@tikz@modcmd\pgf@stop
+  \hobby@init@tikz@modcmd\tikz@decoration
+  \expandafter\global\expandafter\let\csname   hobby@orig@\string\tikz@@close\endcsname=\tikz@@close%
+\gdef\tikz@@close{\hobby@closeandfinish\tikz@@close}%
+  \global\let\tikz@curveto@auto=\hobby@midcurveto@auto
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@restore@tikz@commands}
+%    \begin{macrocode}
+\def\hobby@restore@tikz@commands{%
+  \hobby@restore@tikz@modcmd\tikz@movetoabs
+  \hobby@restore@tikz@modcmd\tikz@movetorel
+  \hobby@restore@tikz@modcmd\tikz@lineto
+  \hobby@restore@tikz@modcmd\tikz@rect
+  \hobby@restore@tikz@modcmd\tikz@cchar
+  \hobby@restore@tikz@modcmd\tikz@finish
+  \hobby@restore@tikz@modcmd\tikz@arcA
+  \hobby@restore@tikz@modcmd\tikz@e@char
+  \hobby@restore@tikz@modcmd\tikz@g@char
+  \hobby@restore@tikz@modcmd\tikz@schar
+  \hobby@restore@tikz@modcmd\tikz@vh@lineto
+  \hobby@restore@tikz@modcmd\tikz@pchar
+  \hobby@restore@tikz@modcmd\tikz@to
+  \hobby@restore@tikz@modcmd\pgf@stop
+  \hobby@restore@tikz@modcmd\tikz@decoration
+  \hobby@restore@tikz@modcmd\tikz@@close
+  \global\let\tikz@curveto@auto=\hobby@curveto@auto
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@init@tikz@modcmd}
+%    \begin{macrocode}
+\def\hobby@init@tikz@modcmd#1{%
+    \expandafter\global\expandafter\let\csname hobby@orig@\string#1\endcsname=#1%
+    \gdef#1{\hobby@finish#1}%
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@restore@tikz@modcmd}
+%    \begin{macrocode}
+\def\hobby@restore@tikz@modcmd#1{%
+    \expandafter\global\expandafter\let\expandafter#1\csname hobby@orig@\string#1\endcsname%
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@midcurveto@auto}
+%    \begin{macrocode}
+\def\hobby@midcurveto@auto{%
+  \let\tikz@scan@point@options=\pgfutil@empty
+  \tikz@scan@one@point\hobby@addfromtikz%
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@finish}
+%    \begin{macrocode}
+\def\hobby@finish{%
+    \hobbygenpath
+    \hobby@restore@tikz@commands
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@closeandfinish}
+%    \begin{macrocode}
+\def\hobby@closeandfinish{%
+  \hobbysetparams{closed=true,disjoint=true}%
+  \hobbygenpath
+  \hobby@restore@tikz@commands
+}
+%    \end{macrocode}
+% \end{function}
+%
+%
+% \begin{function}{\hobby@scan@next@command}
+%    \begin{macrocode}
+\def\hobby@scan@next@command{%
+  \afterassignment\hobby@donext\let\@let@token=%
+}
+%    \end{macrocode}
+% \end{function}
+% 
 % \begin{function}{\hobby@donext}
 % Now we look to see if the next character is a dot.
 % If not, we're done so generate the path.
@@ -1848,6 +1988,10 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \else
    \ifx\@let@token[%]
     \let\@next=\hobby@parse@options
+    \else
+     \ifx\@let@token\foreach
+      \let\@next=\hobby@foreach
+     \fi
    \fi
   \fi
   \@next}
@@ -1858,7 +2002,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \begin{macrocode}
 \def\hobby@parse@options#1]{%
     \tikzset{#1}%
-    \afterassignment\hobby@donext\let\@let@token=%
+  \hobby@scan@next@command%
 }
 %    \end{macrocode}
 % \end{function}
@@ -1914,6 +2058,41 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \hobbygenpath
   \expandafter\tikz@scan@next@command\@let@token%
 }
+%    \end{macrocode}
+% \end{function}
+%
+%
+% \begin{function}{\hobby@foreach}
+%    \begin{macrocode}
+\def\hobby@foreach{%
+  \def\pgffor@beginhook{%
+    \tikz@lastx=\tikz@foreach@save@lastx%
+    \tikz@lasty=\tikz@foreach@save@lasty%
+    \tikz@lastxsaved=\tikz@foreach@save@lastxsaved%
+    \tikz@lastysaved=\tikz@foreach@save@lastysaved%
+    \let\tikz@moveto@waiting=\tikz@foreach@moveto@waiting
+    \setbox\tikz@figbox=\box\tikz@tempbox\expandafter\hobby@scan@next@command\pgfutil@firstofone}%
+  \def\pgffor@endhook{\pgfextra{%
+      \xdef\tikz@foreach@save@lastx{\the\tikz@lastx}%
+      \xdef\tikz@foreach@save@lasty{\the\tikz@lasty}%
+      \xdef\tikz@foreach@save@lastxsaved{\the\tikz@lastxsaved}%
+      \xdef\tikz@foreach@save@lastysaved{\the\tikz@lastysaved}%
+      \global\let\tikz@foreach@moveto@waiting=\tikz@moveto@waiting
+      \global\setbox\tikz@tempbox=\box\tikz@figbox\pgfutil@gobble}}%
+  \def\pgffor@afterhook{%
+    \tikz@lastx=\tikz@foreach@save@lastx%
+    \tikz@lasty=\tikz@foreach@save@lasty%
+    \tikz@lastxsaved=\tikz@foreach@save@lastxsaved%
+    \tikz@lastysaved=\tikz@foreach@save@lastysaved%
+    \let\tikz@moveto@waiting=\tikz@foreach@moveto@waiting
+    \setbox\tikz@figbox=\box\tikz@tempbox\hobby@scan@next@command}%
+  \global\setbox\tikz@tempbox=\box\tikz@figbox%
+  \xdef\tikz@foreach@save@lastx{\the\tikz@lastx}%
+  \xdef\tikz@foreach@save@lasty{\the\tikz@lasty}%
+  \xdef\tikz@foreach@save@lastxsaved{\the\tikz@lastxsaved}%
+  \xdef\tikz@foreach@save@lastysaved{\the\tikz@lastysaved}%
+    \global\let\tikz@foreach@moveto@waiting=\tikz@moveto@waiting
+  \foreach}
 %    \end{macrocode}
 % \end{function}
 %
@@ -2282,6 +2461,37 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \end{macrocode}
 % \end{function}
 %
+% \begin{function}{\array_gadjust_ends:Nn}
+% This ensures that the ``base'' and ``top'' are big enough to include the given index.
+% (Global version)
+%    \begin{macrocode}
+\cs_new:Npn \array_gadjust_ends:Nn #1#2 {
+  \prop_get:NnNTF #1 {base} \l_tmpa_tl
+  {
+    \int_compare:nNnTF {\l_tmpa_tl} > {#2}
+    {
+      \prop_gput:Nnx #1 {base} {\int_eval:n {#2}}
+    }
+    {}
+  }
+  {
+    \prop_gput:Nnx #1 {base} {\int_eval:n {#2}}
+  }
+  \prop_get:NnNTF #1 {top} \l_tmpa_tl
+  {
+    \int_compare:nNnTF {\l_tmpa_tl} < {#2}
+    {
+      \prop_gput:Nnx #1 {top} {\int_eval:n {#2}}
+    }
+    {}
+  }
+  {
+    \prop_gput:Nnx #1 {top} {\int_eval:n {#2}}
+  }
+}
+%    \end{macrocode}
+% \end{function}
+%
 % \begin{function}{\array_put:Nnn}
 % When adding a value to an array we have to adjust the ends.
 %    \begin{macrocode}
@@ -2290,6 +2500,18 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \array_adjust_ends:Nn #1{#2}
 }
 \cs_generate_variant:Nn \array_put:Nnn {Nnx}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\array_gput:Nnn}
+% When adding a value to an array we have to adjust the ends.
+% (Global version)
+%    \begin{macrocode}
+\cs_new:Npn \array_gput:Nnn #1#2#3 {
+  \exp_args:NNx \prop_gput:Nnn #1 {\int_eval:n {#2}} {#3}
+  \array_gadjust_ends:Nn #1{#2}
+}
+\cs_generate_variant:Nn \array_gput:Nnn {Nnx}
 %    \end{macrocode}
 % \end{function}
 %
@@ -2332,6 +2554,12 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % \begin{function}{\array_clear:N}
 %    \begin{macrocode}
 \cs_new_eq:NN \array_clear:N \prop_clear:N
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\array_gclear:N}
+%    \begin{macrocode}
+\cs_new_eq:NN \array_gclear:N \prop_gclear:N
 %    \end{macrocode}
 % \end{function}
 %
@@ -2475,6 +2703,24 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \end{macrocode}
 % \end{function}
 %
+% \begin{function}{\array_gpush:Nn}b
+%    \begin{macrocode}
+\cs_new_protected:Npn \array_gpush:Nn #1#2
+{
+  \prop_get:NnNTF #1 {top} \l_array_tmp_tl
+  {
+    \int_set:Nn \l_array_tmp_int {\l_array_tmp_tl}
+    \int_incr:N \l_array_tmp_int
+    \array_gput:Nnn #1 {\l_array_tmp_int} {#2}
+  }
+  {
+    \array_gput:Nnn #1 {\g_array_base_int} {#2}
+  }
+}
+\cs_generate_variant:Nn \array_gpush:Nn {Nx}
+%    \end{macrocode}
+% \end{function}
+%
 % \begin{function}{\array_unshift:Nn}
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_unshift:Nn #1#2
@@ -2493,6 +2739,24 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \end{macrocode}
 % \end{function}
 %
+% \begin{function}{\array_gunshift:Nn}
+%    \begin{macrocode}
+\cs_new_protected:Npn \array_gunshift:Nn #1#2
+{
+  \prop_get:NnNTF #1 {base} \l_array_tmp_tl
+  {
+    \int_set:Nn \l_array_tmp_int {\l_array_tmp_tl}
+    \int_decr:N \l_array_tmp_int
+    \array_gput:Nnn #1 {\l_array_tmp_int} {#2}
+  }
+  {
+    \array_gput:Nnn #1 {\g_array_base_int} {#2}
+  }
+}
+\cs_generate_variant:Nn \array_gunshift:Nn {Nx}
+%    \end{macrocode}
+% \end{function}
+%
 % \begin{function}{\array_pop:NN}
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_pop:NN #1#2
@@ -2504,6 +2768,17 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \end{macrocode}
 % \end{function}
 %
+% \begin{function}{\array_gpop:NN}
+%    \begin{macrocode}
+\cs_new_protected:Npn \array_gpop:NN #1#2
+{
+  \prop_get:NnN #1 {top} \l_array_tmp_tl
+  \array_get:NnN #1 {\l_array_tmp_tl} #2
+  \array_gdel:Nn #1 {\l_array_tmp_tl}
+}
+%    \end{macrocode}
+% \end{function}
+%
 % \begin{function}{\array_shift:NN}
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_shift:NN #1#2
@@ -2511,6 +2786,17 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \prop_get:NnN #1 {base} \l_array_tmp_tl
   \array_get:NnN #1 {\l_array_tmp_tl} #2
   \array_del:Nn #1 {\l_array_tmp_tl}
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\array_gshift:NN}
+%    \begin{macrocode}
+\cs_new_protected:Npn \array_gshift:NN #1#2
+{
+  \prop_get:NnN #1 {base} \l_array_tmp_tl
+  \array_get:NnN #1 {\l_array_tmp_tl} #2
+  \array_gdel:Nn #1 {\l_array_tmp_tl}
 }
 %    \end{macrocode}
 % \end{function}
@@ -2557,7 +2843,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_del:Nn #1#2
 {
-  \exp_args:NNx \prop_del:Nn #1 {\int_eval:n {#2}}
+  \exp_args:NNx \prop_pop:Nn #1 {\int_eval:n {#2}}
   \int_set:Nn \l_array_tmp_int {0}
   \array_map_inline:Nn #1 {
     \tl_if_eq:NNTF {##2} {\q_no_value} {}
@@ -2586,7 +2872,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   }{}
   \prop_get:NnN #1 {base} \l_array_tmp_tl
   \int_compare:nNnTF {#2} = {\l_array_tmp_tl} {
-p    \prop_get:NnN #1 {top} \l_array_tmp_tl
+    \prop_get:NnN #1 {top} \l_array_tmp_tl
     \int_set:Nn \l_array_tmp_int {\l_array_tmp_tl}
     \array_map_inline:Nn #1 {
     \tl_if_eq:NNTF {##2} {\q_no_value} {}
@@ -2597,6 +2883,56 @@ p    \prop_get:NnN #1 {top} \l_array_tmp_tl
     }
       }
     \prop_put:Nnx #1 {base} {\int_use:N \l_array_tmp_int}
+  }{}
+  }
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\array_gdel:Nn}
+%    \begin{macrocode}
+\cs_new_protected:Npn \array_gdel:Nn #1#2
+{
+  \exp_args:NNx \prop_gpop:Nn #1 {\int_eval:n {#2}}
+  \int_set:Nn \l_array_tmp_int {0}
+  \array_map_inline:Nn #1 {
+    \tl_if_eq:NNTF {##2} {\q_no_value} {}
+    {
+      \int_incr:N \l_array_tmp_int
+    }
+  }
+  \int_compare:nNnTF {\l_array_tmp_int} = {0}
+  {
+    \prop_gclear:N #1
+  }
+  {
+  \prop_get:NnN #1 {top} \l_array_tmp_tl
+  \int_compare:nNnTF {#2} = {\l_array_tmp_tl} {
+    \prop_get:NnN #1 {base} \l_array_tmp_tl
+    \int_set:Nn \l_array_tmp_int {\l_array_tmp_tl}
+    \array_map_inline:Nn #1 {
+    \tl_if_eq:NNTF {##2} {\q_no_value} {}
+    {
+      \int_compare:nNnTF {\l_array_tmp_int} < {##1} {
+        \int_set:Nn \l_array_tmp_int {##1}
+      }{}
+    }
+      }
+    \prop_gput:Nnx #1 {top} {\int_use:N \l_array_tmp_int}
+  }{}
+  \prop_get:NnN #1 {base} \l_array_tmp_tl
+  \int_compare:nNnTF {#2} = {\l_array_tmp_tl} {
+    \prop_get:NnN #1 {top} \l_array_tmp_tl
+    \int_set:Nn \l_array_tmp_int {\l_array_tmp_tl}
+    \array_map_inline:Nn #1 {
+    \tl_if_eq:NNTF {##2} {\q_no_value} {}
+    {
+      \int_compare:nNnTF {\l_array_tmp_int} > {##1} {
+        \int_set:Nn \l_array_tmp_int {##1}
+      }{}
+    }
+      }
+    \prop_gput:Nnx #1 {base} {\int_use:N \l_array_tmp_int}
   }{}
   }
 }
