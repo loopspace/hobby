@@ -1650,9 +1650,17 @@ p}
 %    \end{macrocode}
 % Cycle the points round for the next iteration.
 %    \begin{macrocode}
-  \let\hobby@qpoints=\hobby@qpointa
+  \global\let\hobby@qpoints=\hobby@qpointa
   #1
-  \edef\hobby@qpointa{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+  \xdef\hobby@qpointa{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+%    \end{macrocode}
+% Save needed values in global macros
+%    \begin{macrocode}
+  \global\let\hobby@angle=\hobby@angle
+  \global\let\hobby@phitwo=\hobby@phitwo
+  \global\let\hobby@thetaone=\hobby@thetaone
+\global\let\hobby@done=\hobby@done
+\global\let\hobby@omegaone=\hobby@omegaone
 }
 %    \end{macrocode}
 % \end{function}
@@ -1733,7 +1741,7 @@ p}
 \def\hobby@point@options{}%
 \tikzset{
   curve through/.style={
-    to pnath={
+    to path={
       \pgfextra{
         \expandafter\curvethrough\expandafter[\hobby@opts]{%
           (\tikztostart) .. #1 .. (\tikztotarget)%
@@ -1872,7 +1880,7 @@ p}
 % To play nice, we don't install it by default but define a key (defined above) that installs it.
 % \begin{function}{\hobby@curveto@auto}
 % When we're called by TikZ, we initialise the path generation code and start adding points.
-% We want to be sure that we're only called once so we don't had control back to TikZ but use our own parser to process the rest of the curve until we reach a syntax that we don't understand.
+% To ensure that the generation code is called, we add a lot of hooks to lots of TikZ commands.
 %    \begin{macrocode}
 \def\hobby@curveto@auto{%
   \hobbyinit\hobby@moveto\hobby@curveto\hobby@close
@@ -1929,8 +1937,6 @@ p}
   \hobby@init@tikz@modcmd\tikz@to
   \hobby@init@tikz@modcmd\pgf@stop
   \hobby@init@tikz@modcmd\tikz@decoration
-  \expandafter\global\expandafter\let\csname   hobby@orig@\string\tikz@@close\endcsname=\tikz@@close%
-\gdef\tikz@@close{\hobby@closeandfinish\tikz@@close}%
   \global\let\tikz@curveto@auto=\hobby@midcurveto@auto
 }
 %    \end{macrocode}
@@ -1954,7 +1960,6 @@ p}
   \hobby@restore@tikz@modcmd\tikz@to
   \hobby@restore@tikz@modcmd\pgf@stop
   \hobby@restore@tikz@modcmd\tikz@decoration
-  \hobby@restore@tikz@modcmd\tikz@@close
   \global\let\tikz@curveto@auto=\hobby@curveto@auto
 }
 %    \end{macrocode}
@@ -1991,17 +1996,6 @@ p}
 \def\hobby@finish{%
     \hobbygenusepath
     \hobby@restore@tikz@commands
-}
-%    \end{macrocode}
-% \end{function}
-%
-% \begin{function}{\hobby@closeandfinish}
-% We need some way to invoke this ...
-%    \begin{macrocode}
-\def\hobby@closeandfinish{%
-  \hobbysetparams{closed=true,disjoint=true}%
-  \hobbygenusepath
-  \hobby@restore@tikz@commands
 }
 %    \end{macrocode}
 % \end{function}
@@ -2109,7 +2103,7 @@ p}
 %    \begin{macrocode}
 \def\hobby@quickfirst#1{%
   #1%
-  \edef\hobby@qpointa{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+  \xdef\hobby@qpointa{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
   \tikz@make@last@position{\hobby@qpointa}%
 %    \end{macrocode}
 % Now a check to ensure that we have more points.
@@ -2120,7 +2114,7 @@ p}
 % That's not good.
 % Bail-out.
 %    \begin{macrocode}
-    \edef\hobby@quick@path{ -- (\the\pgf@x,\the\pgf@y)}%
+    \xdef\hobby@quick@path{ -- (\the\pgf@x,\the\pgf@y)}%
   }{%
 %    \end{macrocode}
 % Okay, have more points.
@@ -2162,13 +2156,13 @@ p}
   \pgf@yb=\pgf@y\relax
   #3%
   \ifqhobby@blank
-  \edef\hobby@quick@path{\hobby@quick@path (\the\pgf@x,\the\pgf@y)}%
+  \xdef\hobby@quick@path{\hobby@quick@path (\the\pgf@x,\the\pgf@y)}%
   \else
-  \edef\hobby@quick@path{\hobby@quick@path .. controls%
+  \xdef\hobby@quick@path{\hobby@quick@path .. controls%
   (\the\pgf@xa,\the\pgf@ya) and (\the\pgf@xb,\the\pgf@yb) .. (\the\pgf@x,\the\pgf@y) }%
   \fi
   \ifqhobby@break
-  \edef\hobby@quick@path{\hobby@quick@path +(0,0)}%
+  \xdef\hobby@quick@path{\hobby@quick@path +(0,0)}%
   \fi
   \hobby@next@qbreak
   \hobby@next@qblank
@@ -2178,18 +2172,26 @@ p}
 %
 % \begin{function}{\hobby@qcurveto@auto}
 % Uses the ``quick'' method for the shortcut syntax.
-% As with the full method, we want to be sure that we're only called once so we don't had control back to TikZ but use our own parser to process the rest of the curve until we reach a syntax that we don't understand.
 %    \begin{macrocode}
 \def\hobby@qcurveto@auto{%
-  \let\hobby@next@qbreak=\relax
-  \let\hobby@next@qblank=\relax
-  \edef\hobby@qpoints{\noexpand\pgfqpoint{\the\tikz@lastx}{\the\tikz@lasty}}%
-  \def\hobby@qpointa{}%
-  \def\hobby@quick@path{}%
-  \def\hobby@angle{}%
-  \let\hobby@quick@curveto=\hobby@quick@makepathauto
+  \global\let\hobby@next@qbreak=\relax
+  \global\let\hobby@next@qblank=\relax
+  \xdef\hobby@qpoints{\noexpand\pgfqpoint{\the\tikz@lastx}{\the\tikz@lasty}}%
+  \gdef\hobby@qpointa{}%
+  \gdef\hobby@quick@path{}%
+  \gdef\hobby@angle{}%
+  \global\let\hobby@quick@curveto=\hobby@quick@makepathauto
+  \hobby@qinit@tikz@commands
   \let\tikz@scan@point@options=\pgfutil@empty
   \tikz@scan@one@point\hobby@qfirst@auto}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@qmidcurveto@auto}
+%    \begin{macrocode}
+\def\hobby@qmidcurveto@auto{%
+  \let\tikz@scan@point@options=\pgfutil@empty
+  \tikz@scan@one@point\hobby@qaddfromtikz}
 %    \end{macrocode}
 % \end{function}
 %
@@ -2197,9 +2199,9 @@ p}
 %    \begin{macrocode}
 \def\hobby@qfirst@auto#1{%
   #1%
-  \edef\hobby@qpointa{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+  \xdef\hobby@qpointa{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
   \tikz@make@last@position{\hobby@qpointa}%
-  \afterassignment\hobby@qdonext\let\@let@token=%
+  \tikz@scan@next@command%
 }
 %    \end{macrocode}
 % \end{function}
@@ -2247,68 +2249,76 @@ p}
 \def\hobby@qaddfromtikz#1{%
   \hobby@quick@compute{#1}%
   \tikz@make@last@position{\hobby@qpointa}%
-  \afterassignment\hobby@qdonext\let\@let@token=%
+  \tikz@scan@next@command%
 }
 %    \end{macrocode}
 % \end{function}
 %
-% \begin{function}{\hobby@donext}
-% Now we look to see if the next character is a dot.
-% If not, we're done so generate the path.
+% \begin{function}{\hobby@qinit@tikz@commands}
 %    \begin{macrocode}
-\def\hobby@qdonext{%
-  \let\@next=\hobby@qfinish@auto%
-  \ifx\@let@token.%
-   \let\@next=\hobby@qcurveto@check
-  \else
-   \ifx\@let@token[%]
-    \let\@next=\hobby@qparse@options
-   \fi
-  \fi
-  \@next}
-%    \end{macrocode}
-% \end{function}
-%
-% \begin{function}{\hobby@qparse@options}
-%    \begin{macrocode}
-\def\hobby@qparse@options#1]{%
-    \tikzset{#1}%
-    \afterassignment\hobby@qdonext\let\@let@token=%
+\def\hobby@qinit@tikz@commands{%
+  \hobby@qinit@tikz@modcmd\tikz@movetoabs
+  \hobby@qinit@tikz@modcmd\tikz@movetorel
+  \hobby@qinit@tikz@modcmd\tikz@lineto
+  \hobby@qinit@tikz@modcmd\tikz@rect
+  \hobby@qinit@tikz@modcmd\tikz@cchar
+  \hobby@qinit@tikz@modcmd\tikz@finish
+  \hobby@qinit@tikz@modcmd\tikz@arcA
+  \hobby@qinit@tikz@modcmd\tikz@e@char
+  \hobby@qinit@tikz@modcmd\tikz@g@char
+  \hobby@qinit@tikz@modcmd\tikz@schar
+  \hobby@qinit@tikz@modcmd\tikz@vh@lineto
+  \hobby@qinit@tikz@modcmd\tikz@pchar
+  \hobby@qinit@tikz@modcmd\tikz@to
+  \hobby@qinit@tikz@modcmd\pgf@stop
+  \hobby@qinit@tikz@modcmd\tikz@decoration
+  \global\let\tikz@curveto@auto=\hobby@qmidcurveto@auto
 }
 %    \end{macrocode}
 % \end{function}
 %
-% \begin{function}{\hobby@qcurveto@check}
-% It was a dot, so look at what comes after.
-% It might be \Verb+.. c+ in which case we might be done.
-% If not, we assume we're still adding points.
+% \begin{function}{\hobby@restore@tikz@commands}
 %    \begin{macrocode}
-\def\hobby@qcurveto@check.{%
-  \pgfutil@ifnextchar c%
-  {\hobby@qfinish@auto . }%
-  {\hobby@qcurveto@continue}}%
-%    \end{macrocode}
-% \end{function}
-%
-% \begin{function}{\hobby@qcurveto@continue}
-% Scan next coordinate and repeat the cycle.
-%    \begin{macrocode}
-\def\hobby@qcurveto@continue{%
-  \let\tikz@scan@point@options=\pgfutil@empty
-  \tikz@scan@one@point\hobby@qaddfromtikz}
-%    \end{macrocode}
-% \end{function}
-%
-% \begin{function}{\hobby@qfinish@auto}
-% Generate the path and then hand control back to TikZ.
-%    \begin{macrocode}
-\def\hobby@qfinish@auto{%
-  \hobby@quick@computeend%
-  \expandafter\tikz@scan@next@command\@let@token%
+\def\hobby@qrestore@tikz@commands{%
+  \hobby@restore@tikz@modcmd\tikz@movetoabs
+  \hobby@restore@tikz@modcmd\tikz@movetorel
+  \hobby@restore@tikz@modcmd\tikz@lineto
+  \hobby@restore@tikz@modcmd\tikz@rect
+  \hobby@restore@tikz@modcmd\tikz@cchar
+  \hobby@restore@tikz@modcmd\tikz@finish
+  \hobby@restore@tikz@modcmd\tikz@arcA
+  \hobby@restore@tikz@modcmd\tikz@e@char
+  \hobby@restore@tikz@modcmd\tikz@g@char
+  \hobby@restore@tikz@modcmd\tikz@schar
+  \hobby@restore@tikz@modcmd\tikz@vh@lineto
+  \hobby@restore@tikz@modcmd\tikz@pchar
+  \hobby@restore@tikz@modcmd\tikz@to
+  \hobby@restore@tikz@modcmd\pgf@stop
+  \hobby@restore@tikz@modcmd\tikz@decoration
+  \hobby@restore@tikz@modcmd\tikz@@close
+  \global\let\tikz@curveto@auto=\hobby@qcurveto@auto
 }
 %    \end{macrocode}
 % \end{function}
 %
+% \begin{function}{\hobby@qinit@tikz@modcmd}
+%    \begin{macrocode}
+\def\hobby@qinit@tikz@modcmd#1{%
+    \expandafter\global\expandafter\let\csname hobby@orig@\string#1\endcsname=#1%
+    \gdef#1{\hobby@qfinish#1}%
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@qfinish}
+%    \begin{macrocode}
+\def\hobby@qfinish{%
+  \hobby@quick@computeend
+  \hobby@qrestore@tikz@commands
+}
+%    \end{macrocode}
+% \end{function}
+
 % \iffalse
 %</tikzlibrary>
 % \fi
