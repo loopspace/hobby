@@ -468,9 +468,9 @@ and the derived files            hobby.code.tex
 %    \end{macrocode}
 % \end{function}
 %
-% \begin{function}{\l_hobby_blank_int}
+% \begin{function}{\l_hobby_draw_int}
 %    \begin{macrocode}
-\int_new:N \l_hobby_blank_int
+\int_new:N \l_hobby_draw_int
 %    \end{macrocode}
 % \end{function}
 %
@@ -488,14 +488,14 @@ and the derived files            hobby.code.tex
   tension .meta:n = { tension~out=#1, tension~in=#1 },
   break .default:n = false,
   blank .default:n = false,
-  invert~blank .choice:,
-  invert~blank / true .code:n = {
-    \int_gset:Nn \l_hobby_blank_int {0}
+  invert~soft~blanks .choice:,
+  invert~soft~blanks / true .code:n = {
+    \int_gset:Nn \l_hobby_draw_int {0}
   },
-  invert~blank / false .code:n = {
-    \int_gset:Nn \l_hobby_blank_int {1}
+  invert~soft~blanks / false .code:n = {
+    \int_gset:Nn \l_hobby_draw_int {1}
   },
-  invert~blank .default:n = true,
+  invert~soft~blanks .default:n = true,
   tension~out .default:n = 1,
   tension~in .default:n = 1,
   excess~angle .default:n = 0,
@@ -544,14 +544,14 @@ and the derived files            hobby.code.tex
       blank .default:n = #1
     }
   },
-  invert~blank .choice:,
-  invert~blank / true .code:n = {
-    \int_gset:Nn \l_hobby_blank_int {0}
+  invert~soft~blanks .choice:,
+  invert~soft~blanks / true .code:n = {
+    \int_gset:Nn \l_hobby_draw_int {0}
   },
-  invert~blank / false .code:n = {
-    \int_gset:Nn \l_hobby_blank_int {1}
+  invert~soft~blanks / false .code:n = {
+    \int_gset:Nn \l_hobby_draw_int {1}
   },
-  invert~blank .default:n = true,
+  invert~soft~blanks .default:n = true,
 }
 %    \end{macrocode}
 % \begin{function}{\hobby_distangle:n}
@@ -700,7 +700,7 @@ and the derived files            hobby.code.tex
 %
 % Set \Verb+\l_hobby_npoints_int+ to the number of points (minus one).
 %    \begin{macrocode}
-\int_set:Nn \l_hobby_npoints_int {\array_length:N \l_hobby_points_y_array}
+\int_gset:Nn \l_hobby_npoints_int {\array_length:N \l_hobby_points_y_array}
 %    \end{macrocode}
 % 
 % Our first step is to go through the list of points and compute the distances and angles between successive points.
@@ -1124,7 +1124,7 @@ and the derived files            hobby.code.tex
 % Cheaply, of course.
 %    \begin{macrocode}
 \bool_if:NTF \l_hobby_closed_bool {
-  \int_decr:N \l_hobby_npoints_int
+  \int_gdecr:N \l_hobby_npoints_int
 }{
 %    \end{macrocode}
 % If \(\phi_n\) was not given, we compute it from \(\theta_{n-1}\).
@@ -1172,7 +1172,7 @@ and the derived files            hobby.code.tex
 %    \begin{macrocode}
 \prg_stepwise_inline:nnnn {0} {1} {\l_hobby_npoints_int - 1} {
 
-\array_put:Nnx \l_hobby_controla_array  {##1 + 1} {x = \fp_eval:n  {
+\array_gput:Nnx \l_hobby_controla_array  {##1 + 1} {x = \fp_eval:n  {
 (\array_get:Nn \l_hobby_points_x_array {##1})
 +
   (\array_get:Nn \l_hobby_distances_array {##1}) *
@@ -1194,7 +1194,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 }
 
 \prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int} {
-  \array_put:Nnx \l_hobby_controlb_array {##1} {
+  \array_gput:Nnx \l_hobby_controlb_array {##1} {
     x = \fp_eval:n {\array_get:Nn \l_hobby_points_x_array {##1}
 - (\array_get:Nn \l_hobby_distances_array  {##1 - 1})
 * (\array_get:Nn \l_hobby_sigma_array {##1})
@@ -1242,7 +1242,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 \bool_gset_false:N \l_hobby_disjoint_bool
 
   \int_gset:Nn \l_hobby_npoints_int {-1}
-  \int_gset:Nn \l_hobby_blank_int {1}
+  \int_gset:Nn \l_hobby_draw_int {1}
   \fp_gset_eq:NN \l_hobby_in_angle_fp \c_undefined_fp
   \fp_gset_eq:NN \l_hobby_out_angle_fp \c_undefined_fp
   \fp_gset_eq:NN \l_hobby_in_curl_fp \c_one_fp
@@ -1265,8 +1265,12 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
       #1
     }
     \tl_if_eq:VnTF {\l_tmpa_tl} {true}
-     {\tl_set:Nn \l_tmpa_tl {1}}
-     {\tl_set:Nn \l_tmpa_tl {0}}
+     {\tl_set:Nn \l_tmpa_tl {2}}
+     {
+       \tl_if_eq:VnTF {\l_tmpa_tl} {soft}
+       {\tl_set:Nn \l_tmpa_tl {0}}
+       {\tl_set:Nn \l_tmpa_tl {1}}
+     }
     \tl_if_eq:VnTF {\l_tmpb_tl} {true}
      {\tl_put_right:Nn \l_tmpa_tl {1}}
      {\tl_put_right:Nn \l_tmpa_tl {0}}
@@ -1306,12 +1310,42 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 }
 %    \end{macrocode}
 % \end{function}
+%
 % \begin{function}{\hobbygenpath}
-% This is the user (well, sort of) command that generates and uses the curve.
+% This is the user (well, sort of) command that generates the curve.
 %    \begin{macrocode}
-\tl_new:N \l_tmpc_tl
 \NewDocumentCommand \hobbygenpath { } {
   \hobby_genpath:
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobbyusepath}
+% This is the user (well, sort of) command that uses the last generated curve.
+%    \begin{macrocode}
+\NewDocumentCommand \hobbyusepath { m } {
+  \hobbysetparams{#1}
+  \hobby_use_path:
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobbygenusepath}
+% This is the user (well, sort of) command that generates a curve and uses it.
+%    \begin{macrocode}
+\NewDocumentCommand \hobbygenusepath { } {
+  \hobby_genpath:
+  \hobby_use_path:
+p}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby_use_path:}
+% This is the command that uses the curve.
+% As the curve data is stored globally, the same data can be reused by calling this function more than once without calling the generating function.
+%    \begin{macrocode}
+\tl_new:N \l_tmpc_tl
+\cs_new:Nn \hobby_use_path: {
   \bool_if:NT \l_hobby_disjoint_bool {
     \array_get:NnN \l_hobby_points_array {0} \l_tmpa_tl
     \exp_args:No \hobby_moveto:n {\l_tmpa_tl}
@@ -1321,11 +1355,11 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \array_get:NnN \l_hobby_controlb_array {##1} \l_tmpb_tl
     \array_get:NnN \l_hobby_points_array {##1} \l_tmpc_tl
     \array_get:NnN \l_hobby_actions_array {##1} \l_tmpd_tl
-    \int_compare:nNnTF {\tl_item:Nn \l_tmpd_tl {1}} = {\l_hobby_blank_int} {
+    \int_compare:nNnTF {\tl_item:Nn \l_tmpd_tl {1}} = {\l_hobby_draw_int} {
+      \exp_args:Nooo \hobby_curveto:nnn {\l_tmpa_tl} {\l_tmpb_tl} {\l_tmpc_tl}
+    }{
       \bool_gset_false:N \l_hobby_closed_bool
       \exp_args:No \hobby_moveto:n {\l_tmpc_tl}
-    }{
-      \exp_args:Nooo \hobby_curveto:nnn {\l_tmpa_tl} {\l_tmpb_tl} {\l_tmpc_tl}
     }
     \tl_if_eq:xnTF {\tl_item:Nn \l_tmpd_tl {2}} {1} {
       \bool_gset_false:N \l_hobby_closed_bool
@@ -1413,7 +1447,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \hobbyinit\hobby@moveto\hobby@curveto\hobby@close
     \global\let\pgf@plotstreampoint=\pgf@plot@hobby@firstpt
     \global\let\pgf@plotstreamspecial=\pgfutil@gobble
-    \global\let\pgf@plotstreamend=\hobbygenpath
+    \global\let\pgf@plotstreamend=\hobbygenusepath
     \let\tikz@scan@point@options=\pgfutil@empty
   }
 }
@@ -1429,7 +1463,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \hobbysetparams{closed=true,disjoint=true}%
     \global\let\pgf@plotstreampoint=\pgf@plot@hobby@firstpt
     \global\let\pgf@plotstreamspecial=\pgfutil@gobble
-    \global\let\pgf@plotstreamend=\hobbygenpath
+    \global\let\pgf@plotstreamend=\hobbygenusepath
   }
 }
 %    \end{macrocode}
@@ -1699,7 +1733,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 \def\hobby@point@options{}%
 \tikzset{
   curve through/.style={
-    to path={
+    to pnath={
       \pgfextra{
         \expandafter\curvethrough\expandafter[\hobby@opts]{%
           (\tikztostart) .. #1 .. (\tikztotarget)%
@@ -1774,6 +1808,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   },
   use quick Hobby shortcut/.code={%
     \let\tikz@curveto@auto=\hobby@qcurveto@auto
+  },
+  use previous hobby path/.code={%
+    \pgfextra{\hobbyusepath{#1}}
   }
 }
 %    \end{macrocode}
@@ -1803,7 +1840,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \else
     \def\hobby@pt{#1}%
     \def\hobby@rest{}%
-    \let\hobby@next=\hobbygenpath
+    \let\hobby@next=\hobbygenusepath
   \fi
   \let\tikz@scan@point@options=\pgfutil@empty
   \expandafter\tikz@scan@one@point\expandafter\pgfutil@firstofone\hobby@pt\relax
@@ -1952,147 +1989,20 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % \begin{function}{\hobby@finish}
 %    \begin{macrocode}
 \def\hobby@finish{%
-    \hobbygenpath
+    \hobbygenusepath
     \hobby@restore@tikz@commands
 }
 %    \end{macrocode}
 % \end{function}
 %
 % \begin{function}{\hobby@closeandfinish}
+% We need some way to invoke this ...
 %    \begin{macrocode}
 \def\hobby@closeandfinish{%
   \hobbysetparams{closed=true,disjoint=true}%
-  \hobbygenpath
+  \hobbygenusepath
   \hobby@restore@tikz@commands
 }
-%    \end{macrocode}
-% \end{function}
-%
-%
-% \begin{function}{\hobby@scan@next@command}
-%    \begin{macrocode}
-\def\hobby@scan@next@command{%
-  \afterassignment\hobby@donext\let\@let@token=%
-}
-%    \end{macrocode}
-% \end{function}
-% 
-% \begin{function}{\hobby@donext}
-% Now we look to see if the next character is a dot.
-% If not, we're done so generate the path.
-%    \begin{macrocode}
-\def\hobby@donext{%
-  \let\@next=\hobby@finish@auto%
-  \ifx\@let@token.%
-   \let\@next=\hobby@curveto@check
-  \else
-   \ifx\@let@token[%]
-    \let\@next=\hobby@parse@options
-    \else
-     \ifx\@let@token\foreach
-      \let\@next=\hobby@foreach
-     \fi
-   \fi
-  \fi
-  \@next}
-%    \end{macrocode}
-% \end{function}
-%
-% \begin{function}{\hobby@parse@options}
-%    \begin{macrocode}
-\def\hobby@parse@options#1]{%
-    \tikzset{#1}%
-  \hobby@scan@next@command%
-}
-%    \end{macrocode}
-% \end{function}
-%
-% \begin{function}{\hobby@curveto@check}
-% It was a dot, so look at what comes after.
-% It might be \Verb+.. c+ in which case we might be done.
-% If not, we assume we're still adding points.
-%    \begin{macrocode}
-\def\hobby@curveto@check.{%
-  \pgfutil@ifnextchar c%
-  {\hobby@maybefinish@auto}%
-  {\hobby@curveto@continue}}%
-%    \end{macrocode}
-% \end{function}
-%
-% \begin{function}{\hobby@maybefinish@auto}
-% We got \Verb+.. c+.
-% It might be \Verb+.. controls+ in which case we're done.
-% It might be \Verb+.. cycle+ in which case we have a closed path, after which we're done.
-%    \begin{macrocode}
-\def\hobby@maybefinish@auto c{%
-  \pgfutil@ifnextchar o%
-  {\hobby@finish@auto . c}%
-  {\hobby@closeandfinish@auto}}
-%    \end{macrocode}
-% \end{function}
-%
-% \begin{function}{\hobby@closeandfinish@auto}
-% We got \Verb+.. cycle+ so eat it, flag the path as closed, and generate it.
-%    \begin{macrocode}
-\def\hobby@closeandfinish@auto ycle{%
-  \hobbysetparams{closed=true,disjoint=true}%
-  \let\@let@token=\pgfutil@empty
-  \hobby@finish@auto%
-}
-%    \end{macrocode}
-% \end{function}
-%
-% \begin{function}{\hobby@curveto@continue}
-% Scan next coordinate and repeat the cycle.
-%    \begin{macrocode}
-\def\hobby@curveto@continue{%
-  \let\tikz@scan@point@options=\pgfutil@empty
-  \tikz@scan@one@point\hobby@addfromtikz}
-%    \end{macrocode}
-% \end{function}
-%
-% \begin{function}{\hobby@finish@auto}
-% Generate the path and then hand control back to TikZ.
-%    \begin{macrocode}
-\def\hobby@finish@auto{%
-  \hobbygenpath
-  \expandafter\tikz@scan@next@command\@let@token%
-}
-%    \end{macrocode}
-% \end{function}
-%
-%
-% \begin{function}{\hobby@foreach}
-%    \begin{macrocode}
-\def\hobby@foreach{%
-  \def\pgffor@beginhook{%
-    \tikz@lastx=\tikz@foreach@save@lastx%
-    \tikz@lasty=\tikz@foreach@save@lasty%
-    \tikz@lastxsaved=\tikz@foreach@save@lastxsaved%
-    \tikz@lastysaved=\tikz@foreach@save@lastysaved%
-    \let\tikz@moveto@waiting=\tikz@foreach@moveto@waiting
-    \setbox\tikz@figbox=\box\tikz@tempbox\expandafter\hobby@scan@next@command\pgfutil@firstofone}%
-  \def\pgffor@endhook{\pgfextra{%
-      \xdef\tikz@foreach@save@lastx{\the\tikz@lastx}%
-      \xdef\tikz@foreach@save@lasty{\the\tikz@lasty}%
-      \xdef\tikz@foreach@save@lastxsaved{\the\tikz@lastxsaved}%
-      \xdef\tikz@foreach@save@lastysaved{\the\tikz@lastysaved}%
-      \global\let\tikz@foreach@moveto@waiting=\tikz@moveto@waiting
-      \global\setbox\tikz@tempbox=\box\tikz@figbox\pgfutil@gobble}}%
-  \def\pgffor@afterhook{%
-    \tikz@lastx=\tikz@foreach@save@lastx%
-    \tikz@lasty=\tikz@foreach@save@lasty%
-    \tikz@lastxsaved=\tikz@foreach@save@lastxsaved%
-    \tikz@lastysaved=\tikz@foreach@save@lastysaved%
-    \let\tikz@moveto@waiting=\tikz@foreach@moveto@waiting
-    \setbox\tikz@figbox=\box\tikz@tempbox\hobby@scan@next@command}%
-  \global\setbox\tikz@tempbox=\box\tikz@figbox%
-  \xdef\tikz@foreach@save@lastx{\the\tikz@lastx}%
-  \xdef\tikz@foreach@save@lasty{\the\tikz@lasty}%
-  \xdef\tikz@foreach@save@lastxsaved{\the\tikz@lastxsaved}%
-  \xdef\tikz@foreach@save@lastysaved{\the\tikz@lastysaved}%
-    \global\let\tikz@foreach@moveto@waiting=\tikz@moveto@waiting
-  \foreach}
 %    \end{macrocode}
 % \end{function}
 %
