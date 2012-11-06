@@ -634,7 +634,7 @@ and the derived files            hobby.code.tex
 %    \end{macrocode}
 % \end{function}
 %
-% \begin{function}{\hobby_genpath:}
+% \begin{function}{\hobby_gen_path:}
 % This is the curve generation function.
 % We assume at the start that we have an array containing all the points that the curve must go through, and the various curve parameters have been initialised.
 % So these must be set up by a wrapper function which then calls this one.
@@ -654,7 +654,7 @@ and the derived files            hobby.code.tex
 % \end{enumerate}
 %
 %    \begin{macrocode}
-\cs_new:Nn \hobby_genpath:
+\cs_new:Nn \hobby_gen_path:
 {
 %    \end{macrocode}
 % For much of the time, we can pretend that a closed path is the same as an open path.
@@ -702,10 +702,99 @@ and the derived files            hobby.code.tex
 %    \begin{macrocode}
 \int_gset:Nn \l_hobby_npoints_int {\array_length:N \l_hobby_points_y_array}
 %    \end{macrocode}
+% At this point, we need to decide what to do.
+% This will depend on whether we have any intermediate points.
+%    \begin{macrocode}
+\int_compare:nNnTF {\l_hobby_npoints_int} = {0} {
+%    \end{macrocode}
+% Only one point, do nothing
+%    \begin{macrocode}
+}
+{
+  \int_compare:nNnTF {\l_hobby_npoints_int} = {1} {
+%    \end{macrocode}
+% Only two points, skip processing.
+% Just need to set the incoming and outgoing angles
+%    \begin{macrocode}
+\hobby_distangle:n {0}
+\fp_if_undefined:NF \l_hobby_out_angle_fp
+{
+  \fp_set:Nn \l_hobby_tempa_fp { \l_hobby_out_angle_fp
+    - \array_get:Nn \l_hobby_angles_array {0} }
+%    \end{macrocode}
+% We want to ensure that these angles lie in the range \((-\pi,\pi]\).
+% So if the angle is bigger than \(\pi\), we subtract \(2 \pi\).
+% (It shouldn't be that we can get bigger than \(3 \pi\) - check this)
+%    \begin{macrocode}
+    \fp_compare:nT {\l_hobby_tempa_fp > \c_pi_fp }
+    {
+      \fp_sub:Nn \l_hobby_tempa_fp {2 * \c_pi_fp}
+    }
+%    \end{macrocode}
+% Similarly, we check to see if the angle is less than \(-\pi\).
+%    \begin{macrocode}
+    \fp_compare:nT {\l_hobby_tempa_fp < -\c_pi_fp }
+    {
+      \fp_add:Nn \l_hobby_tempa_fp {2 * \c_pi_fp}
+    }
+  \array_put:Nnx \l_hobby_theta_array {0} {\fp_to_tl:N \l_hobby_tempa_fp}
+    \fp_if_undefined:NT \l_hobby_in_angle_fp
+    {
+      \fp_mul:Nn \l_hobby_tempa_fp {-1}
+      \array_put:Nnx \l_hobby_phi_array {1}{ \fp_to_tl:N \l_hobby_tempa_fp}
+    }
+   }
+\fp_if_undefined:NTF \l_hobby_in_angle_fp
+{
+  \fp_if_undefined:NT \l_hobby_out_angle_fp
+  {
+    \array_put:Nnx \l_hobby_phi_array {1} {0}
+    \array_put:Nnx \l_hobby_theta_array {0} {0}
+  }
+}
+{
+  \fp_set:Nn \l_hobby_tempa_fp { - \l_hobby_in_angle_fp + \c_pi_fp
++ (\array_get:Nn \l_hobby_angles_array {0})}
+  \fp_compare:nT {\l_hobby_tempa_fp > \c_pi_fp }
+  {
+    \fp_sub:Nn \l_hobby_tempa_fp {2 * \c_pi_fp}
+  }
+  \fp_compare:nT {\l_hobby_tempa_fp < -\c_pi_fp }
+  {
+    \fp_add:Nn \l_hobby_tempa_fp {2 * \c_pi_fp}
+  }
+
+  \array_put:Nnx \l_hobby_phi_array {1}
+  {\fp_to_tl:N \l_hobby_tempa_fp}
+  \fp_if_undefined:NT \l_hobby_out_angle_fp
+    {
+      \fp_mul:Nn \l_hobby_tempa_fp {-1}
+      \array_put:Nnx \l_hobby_theta_array {0}{ \fp_to_tl:N \l_hobby_tempa_fp}
+    }
+}
+
+  }
+  {
+%    \end{macrocode}
+% Got enough points, go on with processing
+%    \begin{macrocode}
+    \hobby_compute_path:
+  }
+  \hobby_build_path:
+}
+}
+%    \end{macrocode}
+% \end{function}
 % 
+%
+% \begin{function}{\hobby_compute_path:}
+% This is the path builder where we have enough points to run the algorithm.
+%    \begin{macrocode}
+\cs_new:Nn \hobby_compute_path:
+{
+%    \end{macrocode}
 % Our first step is to go through the list of points and compute the distances and angles between successive points.
 % Thus \(d_i\) is the distance from \(z_i\) to \(z_{i+1}\) and the angle is the angle of the line from \(z_i\) to \(z_{i+1}\).
-
 %    \begin{macrocode}
 \prg_stepwise_function:nnnN {0} {1} {\l_hobby_npoints_int - 1} \hobby_distangle:n
 %    \end{macrocode}
@@ -1148,8 +1237,17 @@ and the derived files            hobby.code.tex
 }}
 }
 }
+}
 %    \end{macrocode}
+% \end{function}
 %
+%
+% \begin{function}{\hobby_build_path:}
+% Once we've computed the angles, we build the actual path.
+%    \begin{macrocode}
+\cs_new:Nn \hobby_build_path:
+{
+%    \end{macrocode}
 % Next task is to compute the \(\rho_i\) and \(\sigma_i\).
 %    \begin{macrocode}
 \prg_stepwise_inline:nnnn {0} {1} {\l_hobby_npoints_int - 1} {
@@ -1171,7 +1269,6 @@ and the derived files            hobby.code.tex
 % Lastly, we generate the coordinates of the control points.
 %    \begin{macrocode}
 \prg_stepwise_inline:nnnn {0} {1} {\l_hobby_npoints_int - 1} {
-
 \array_gput:Nnx \l_hobby_controla_array  {##1 + 1} {x = \fp_eval:n  {
 (\array_get:Nn \l_hobby_points_x_array {##1})
 +
@@ -1192,7 +1289,6 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 }
 }
 }
-
 \prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int} {
   \array_gput:Nnx \l_hobby_controlb_array {##1} {
     x = \fp_eval:n {\array_get:Nn \l_hobby_points_x_array {##1}
@@ -1216,37 +1312,8 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % Initialise the settings for Hobby's algorithm
 %    \begin{macrocode}
 \NewDocumentCommand \hobbyinit {m m m} {
-\hobby_set_cmds:nnn#1#2#3
-\array_gclear:N \l_hobby_points_array
-\array_gclear:N \l_hobby_points_x_array
-\array_gclear:N \l_hobby_points_y_array
-\array_gclear:N \l_hobby_angles_array
-\array_gclear:N \l_hobby_actions_array
-\array_gclear:N \l_hobby_distances_array
-\array_gclear:N \l_hobby_tension_out_array
-\array_gclear:N \l_hobby_tension_in_array
-\array_gclear:N \l_hobby_excess_angle_array
-\array_gclear:N \l_hobby_matrix_a_array
-\array_gclear:N \l_hobby_matrix_b_array
-\array_gclear:N \l_hobby_matrix_c_array
-\array_gclear:N \l_hobby_matrix_d_array
-\array_gclear:N \l_hobby_vector_u_array
-\array_gclear:N \l_hobby_psi_array
-\array_gclear:N \l_hobby_theta_array
-\array_gclear:N \l_hobby_phi_array
-\array_gclear:N \l_hobby_sigma_array
-\array_gclear:N \l_hobby_rho_array
-\array_gclear:N \l_hobby_controla_array
-\array_gclear:N \l_hobby_controlb_array
-\bool_gset_false:N \l_hobby_closed_bool
-\bool_gset_false:N \l_hobby_disjoint_bool
-
-  \int_gset:Nn \l_hobby_npoints_int {-1}
-  \int_gset:Nn \l_hobby_draw_int {1}
-  \fp_gset_eq:NN \l_hobby_in_angle_fp \c_undefined_fp
-  \fp_gset_eq:NN \l_hobby_out_angle_fp \c_undefined_fp
-  \fp_gset_eq:NN \l_hobby_in_curl_fp \c_one_fp
-  \fp_gset_eq:NN \l_hobby_out_curl_fp \c_one_fp
+  \hobby_set_cmds:nnn#1#2#3
+  \hobby_clear_path:
 }
 %    \end{macrocode}
 % \end{function}
@@ -1315,7 +1382,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % This is the user (well, sort of) command that generates the curve.
 %    \begin{macrocode}
 \NewDocumentCommand \hobbygenpath { } {
-  \hobby_genpath:
+  \array_if_empty:NF \l_hobby_points_array {
+    \hobby_gen_path:
+  }
 }
 %    \end{macrocode}
 % \end{function}
@@ -1334,9 +1403,20 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % This is the user (well, sort of) command that generates a curve and uses it.
 %    \begin{macrocode}
 \NewDocumentCommand \hobbygenusepath { } {
-  \hobby_genpath:
-  \hobby_use_path:
-p}
+  \array_if_empty:NF \l_hobby_points_array {
+    \hobby_gen_path:
+    \hobby_use_path:
+  }
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobbyclearpath}
+% This is the user (well, sort of) command that generates a curve and uses it.
+%    \begin{macrocode}
+\NewDocumentCommand \hobbyclearpath { } {
+  \hobby_clear_path:
+}
 %    \end{macrocode}
 % \end{function}
 %
@@ -1370,6 +1450,44 @@ p}
     \array_get:NnN \l_hobby_points_array {0} \l_tmpa_tl
     \exp_args:No \hobby_close:n {\l_tmpa_tl}
     }
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby_clear_path:}
+%    \begin{macrocode}
+\cs_new:Nn \hobby_clear_path:
+{
+\array_gclear:N \l_hobby_points_array
+\array_gclear:N \l_hobby_points_x_array
+\array_gclear:N \l_hobby_points_y_array
+\array_gclear:N \l_hobby_angles_array
+\array_gclear:N \l_hobby_actions_array
+\array_gclear:N \l_hobby_distances_array
+\array_gclear:N \l_hobby_tension_out_array
+\array_gclear:N \l_hobby_tension_in_array
+\array_gclear:N \l_hobby_excess_angle_array
+\array_gclear:N \l_hobby_matrix_a_array
+\array_gclear:N \l_hobby_matrix_b_array
+\array_gclear:N \l_hobby_matrix_c_array
+\array_gclear:N \l_hobby_matrix_d_array
+\array_gclear:N \l_hobby_vector_u_array
+\array_gclear:N \l_hobby_psi_array
+\array_gclear:N \l_hobby_theta_array
+\array_gclear:N \l_hobby_phi_array
+\array_gclear:N \l_hobby_sigma_array
+\array_gclear:N \l_hobby_rho_array
+\array_gclear:N \l_hobby_controla_array
+\array_gclear:N \l_hobby_controlb_array
+\bool_gset_false:N \l_hobby_closed_bool
+\bool_gset_false:N \l_hobby_disjoint_bool
+
+  \int_gset:Nn \l_hobby_npoints_int {-1}
+  \int_gset:Nn \l_hobby_draw_int {1}
+  \fp_gset_eq:NN \l_hobby_in_angle_fp \c_undefined_fp
+  \fp_gset_eq:NN \l_hobby_out_angle_fp \c_undefined_fp
+  \fp_gset_eq:NN \l_hobby_in_curl_fp \c_one_fp
+  \fp_gset_eq:NN \l_hobby_out_curl_fp \c_one_fp
 }
 %    \end{macrocode}
 % \end{function}
@@ -1733,6 +1851,7 @@ p}
 %    \begin{macrocode}
 \usepgflibrary{hobby}
 \let\hobby@opts=\pgfutil@empty
+\let\hobby@action=\pgfutil@empty
 %    \end{macrocode}
 %
 % We set various TikZ keys.
@@ -1819,6 +1938,12 @@ p}
   },
   use previous hobby path/.code={%
     \pgfextra{\hobbyusepath{#1}}
+  },
+  hobby action/.code={%
+    \expandafter\def\expandafter\hobby@action\expandafter{\hobby@action#1}%
+  },
+  hobby finish/.style={%
+    hobby action=\hobby@finish%
   }
 }
 %    \end{macrocode}
@@ -1911,9 +2036,13 @@ p}
   \pgfmathsetmacro\hobby@x{\the\pgf@x/1cm}%
   \pgfmathsetmacro\hobby@y{\the\pgf@y/1cm}%
   \def\hobby@point@options{}%
+  \def\hobby@opts{}%
+  \def\hobby@action{}%
   \expandafter\tikzset\expandafter{\tikz@scan@point@options}%
+  \expandafter\hobbysetparams\expandafter{\hobby@opts}%
   \expandafter\hobbyaddpoint\expandafter{\hobby@point@options,%
     x = \hobby@x, y = \hobby@y}%
+  \hobby@action
   \tikz@scan@next@command%
 }
 %    \end{macrocode}
@@ -2461,7 +2590,14 @@ p}
 %
 % \begin{function}{\array_if_empty:NTF}
 %    \begin{macrocode}
-\cs_new_eq:NN \array_if_empty:NTF \prop_if_empty:NTF
+\prg_new_conditional:Npnn \array_if_empty:N #1 { p, T, F, TF }
+{
+  \if_meaning:w #1 \c_empty_prop
+    \prg_return_true:
+  \else:
+    \prg_return_false:
+  \fi:
+}
 %    \end{macrocode}
 % \end{function}
 %
