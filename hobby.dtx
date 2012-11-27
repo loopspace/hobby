@@ -740,7 +740,7 @@ and the derived files            hobby.code.tex
   \array_put:Nnx \l_hobby_theta_array {0} {\fp_to_tl:N \l_hobby_tempa_fp}
     \fp_if_undefined:NT \l_hobby_in_angle_fp
     {
-      \fp_mul:Nn \l_hobby_tempa_fp {-1}
+%^^A      \fp_mul:Nn \l_hobby_tempa_fp {-1}
       \array_put:Nnx \l_hobby_phi_array {1}{ \fp_to_tl:N \l_hobby_tempa_fp}
     }
    }
@@ -768,7 +768,7 @@ and the derived files            hobby.code.tex
   {\fp_to_tl:N \l_hobby_tempa_fp}
   \fp_if_undefined:NT \l_hobby_out_angle_fp
     {
-      \fp_mul:Nn \l_hobby_tempa_fp {-1}
+%^^A      \fp_mul:Nn \l_hobby_tempa_fp {-1}
       \array_put:Nnx \l_hobby_theta_array {0}{ \fp_to_tl:N \l_hobby_tempa_fp}
     }
 }
@@ -1399,6 +1399,37 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \end{macrocode}
 % \end{function}
 %
+% \begin{function}{\hobbysavepath}
+% This is the user (well, sort of) command that uses the last generated curve.
+%    \begin{macrocode}
+\NewDocumentCommand \hobbysavepath { m } {
+  \hobby_save_path:n {#1}
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobbyrestorepath}
+% This is the user (well, sort of) command that uses the last generated curve.
+%    \begin{macrocode}
+\NewDocumentCommand \hobbyrestorepath { m } {
+  \tl_if_exist:cT {g_hobby_#1_path} {
+    \tl_use:c {g_hobby_#1_path}
+  }
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobbyshowpath}
+% This is the user (well, sort of) command that uses the last generated curve.
+%    \begin{macrocode}
+\NewDocumentCommand \hobbyshowpath { m } {
+  \tl_if_exist:cT {g_hobby_#1_path} {
+    \tl_show:c {g_hobby_#1_path}
+  }
+}
+%    \end{macrocode}
+% \end{function}
+%
 % \begin{function}{\hobbygenusepath}
 % This is the user (well, sort of) command that generates a curve and uses it.
 %    \begin{macrocode}
@@ -1450,6 +1481,55 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \array_get:NnN \l_hobby_points_array {0} \l_tmpa_tl
     \exp_args:No \hobby_close:n {\l_tmpa_tl}
     }
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby_save_path:n}
+% This command saves all the data needed to reinvoke the curve in a global token list that can be used to restore it afterwards.
+%    \begin{macrocode}
+\cs_new:Nn \hobby_save_path:n {
+  \tl_clear:N \l_tmpa_tl
+  \tl_put_right:Nn \l_tmpa_tl {\int_gset:Nn \l_hobby_npoints_int}
+  \tl_put_right:Nx \l_tmpa_tl {{\int_use:N \l_hobby_npoints_int}}
+  \bool_if:NTF \l_hobby_disjoint_bool {
+    \tl_put_right:Nn \l_tmpa_tl {\bool_gset_true:N}
+  }{
+    \tl_put_right:Nn \l_tmpa_tl {\bool_gset_false:N}
+  }
+  \tl_put_right:Nn \l_tmpa_tl {\l_hobby_disjoint_bool}
+  \bool_if:NTF \l_hobby_closed_bool {
+    \tl_put_right:Nn \l_tmpa_tl {\bool_gset_true:N}
+  }{
+    \tl_put_right:Nn \l_tmpa_tl {\bool_gset_false:N}
+  }
+  \tl_put_right:Nn \l_tmpa_tl {\l_hobby_closed_bool}
+  \tl_put_right:Nn \l_tmpa_tl {\array_gclear:N \l_hobby_points_array}
+  \array_map_inline:Nn \l_hobby_points_array {
+    \tl_put_right:Nn \l_tmpa_tl {
+      \array_gput:Nnn \l_hobby_points_array {##1} {##2}
+    }
+  }
+  \tl_put_right:Nn \l_tmpa_tl {\array_gclear:N \l_hobby_actions_array}
+  \array_map_inline:Nn \l_hobby_actions_array {
+    \tl_put_right:Nn \l_tmpa_tl {
+      \array_gput:Nnn \l_hobby_actions_array {##1} {##2}
+    }
+  }
+  \tl_put_right:Nn \l_tmpa_tl {\array_gclear:N \l_hobby_controla_array}
+  \array_map_inline:Nn \l_hobby_controla_array {
+    \tl_put_right:Nn \l_tmpa_tl {
+      \array_gput:Nnn \l_hobby_controla_array {##1} {##2}
+    }
+  }
+  \tl_put_right:Nn \l_tmpa_tl {\array_gclear:N \l_hobby_controlb_array}
+  \array_map_inline:Nn \l_hobby_controlb_array {
+    \tl_put_right:Nn \l_tmpa_tl {
+      \array_gput:Nnn \l_hobby_controlb_array {##1} {##2}
+    }
+  }
+  \tl_gclear_new:c {g_hobby_#1_path}
+  \tl_gset_eq:cN {g_hobby_#1_path} \l_tmpa_tl
 }
 %    \end{macrocode}
 % \end{function}
@@ -1850,8 +1930,10 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % 
 %    \begin{macrocode}
 \usepgflibrary{hobby}
-\let\hobby@opts=\pgfutil@empty
+\let\hobby@this@opts=\pgfutil@empty
+\let\hobby@next@opts=\pgfutil@empty
 \let\hobby@action=\pgfutil@empty
+\let\hobby@path@name=\pgfutil@empty
 %    \end{macrocode}
 %
 % We set various TikZ keys.
@@ -1862,43 +1944,60 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   curve through/.style={
     to path={
       \pgfextra{
-        \expandafter\curvethrough\expandafter[\hobby@opts]{%
+        \expandafter\curvethrough\expandafter[\hobby@this@opts]{%
           (\tikztostart) .. #1 .. (\tikztotarget)%
         }
       }
     }
   },
   tension in/.code = {%
-    \expandafter\def\expandafter\hobby@point@options\expandafter%
+    \expandafter\gdef\expandafter\hobby@point@options\expandafter%
     {\hobby@point@options,tension in=#1}%
   },
   tension out/.code = {%
-    \expandafter\def\expandafter\hobby@point@options\expandafter%
+    \expandafter\gdef\expandafter\hobby@point@options\expandafter%
     {\hobby@point@options,tension out=#1}%
   },
   tension/.code = {%
-    \expandafter\def\expandafter\hobby@point@options\expandafter%
+    \expandafter\gdef\expandafter\hobby@point@options\expandafter%
     {\hobby@point@options,tension=#1}%
   },
   excess angle/.code = {%
-    \expandafter\def\expandafter\hobby@point@options\expandafter%
+    \expandafter\gdef\expandafter\hobby@point@options\expandafter%
     {\hobby@point@options,excess angle=#1}%
   },
   break/.code = {%
-    \expandafter\def\expandafter\hobby@point@options\expandafter%
+    \expandafter\gdef\expandafter\hobby@point@options\expandafter%
     {\hobby@point@options,break=#1}%
   },
   blank/.code = {%
-    \expandafter\def\expandafter\hobby@point@options\expandafter%
+    \expandafter\gdef\expandafter\hobby@point@options\expandafter%
     {\hobby@point@options,blank=#1}%
   },
-  closed/.code = {%
-    \expandafter\def\expandafter\hobby@opts\expandafter{\hobby@opts%
-      closed=#1,disjoint=#1,}%
+  designated Hobby path/.initial={this},
+  clear next Hobby path options/.code={%
+    \gdef\hobby@next@opts{}%
   },
-  invert blank/.code = {%
-    \expandafter\def\expandafter\hobby@opts\expandafter{\hobby@opts%
-      invert blank=#1,}%
+  clear this Hobby path options/.code={%
+    \gdef\hobby@this@opts{}%
+  },
+  clear Hobby path options/.style={%
+    clear \pgfkeysvalueof{/tikz/designated Hobby path} Hobby path options
+  },
+  add option to this Hobby path/.code={%
+    \expandafter\gdef\expandafter\hobby@this@opts\expandafter{\hobby@this@opts#1,}%
+  },
+  add option to next Hobby path/.code={%
+    \expandafter\gdef\expandafter\hobby@next@opts\expandafter{\hobby@next@opts#1,}%
+  },
+  add option to Hobby path/.style={%
+    add option to \pgfkeysvalueof{/tikz/designated Hobby path} Hobby path={#1}%
+  },
+  closed/.style = {%
+    add option to Hobby path={closed=#1,disjoint=#1}%
+  },
+  invert blank/.style = {%
+    add option to Hobby path={invert blank=#1}%
   },
   closed/.default = true,
   blank/.default = true,
@@ -1906,29 +2005,19 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   invert blank/.default = true,
   in angle/.code = {%
     \pgfmathparse{#1*pi/180}%
-    \edef\@temp{ in angle=\pgfmathresult,}%
-    \expandafter\expandafter\expandafter%
-    \def%
-    \expandafter\expandafter\expandafter%
-    \hobby@opts%
-    \expandafter\expandafter\expandafter%
-    {\expandafter\hobby@opts\@temp}%
+    \edef\@temp{in angle=\pgfmathresult,}%
+    \pgfkeysalso{add option to Hobby path/.expand once=\@temp}%
   },
   out angle/.code = {%
     \pgfmathparse{#1*pi/180}%
-    \edef\@temp{ out angle=\pgfmathresult,}%
-    \expandafter\expandafter\expandafter%
-    \def%
-    \expandafter\expandafter\expandafter%
-    \hobby@opts%
-    \expandafter\expandafter\expandafter%
-    {\expandafter\hobby@opts\@temp}%
+    \edef\@temp{out angle=\pgfmathresult,}%
+    \pgfkeysalso{add option to Hobby path/.expand once=\@temp}%
   },
-  in curl/.code = {%
-    \expandafter\def\expandafter\hobby@opts\expandafter{\hobby@opts in curl=#1,}%
+  in curl/.style = {%
+    add option to Hobby path={in curl=#1}%
   },
   out curl/.code = {%
-    \expandafter\def\expandafter\hobby@opts\expandafter{\hobby@opts out curl=#1,}%
+    add option to Hobby path={out curl=#1}%
   },
   use Hobby shortcut/.code={%
     \let\tikz@curveto@auto=\hobby@curveto@auto
@@ -1936,14 +2025,34 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   use quick Hobby shortcut/.code={%
     \let\tikz@curveto@auto=\hobby@qcurveto@auto
   },
-  use previous hobby path/.code={%
+  use previous Hobby path/.code={%
     \pgfextra{\hobbyusepath{#1}}
   },
-  hobby action/.code={%
-    \expandafter\def\expandafter\hobby@action\expandafter{\hobby@action#1}%
+  use previous Hobby path/.default={},%
+  save Hobby path/.code={%
+    \xdef\hobby@path@name{#1}%
   },
-  hobby finish/.style={%
-    hobby action=\hobby@finish%
+  Hobby path name/.initial={},
+  restore Hobby path/.code={%
+    \pgfextra{%
+      \hobbyinit\hobby@moveto\hobby@curveto\hobby@close
+      \hobbyrestorepath{#1}}
+  },
+  restore and use Hobby path/.code 2 args={%
+    \pgfextra{%
+      \hobbyinit\hobby@moveto\hobby@curveto\hobby@close
+      \hobbyrestorepath{#1}%
+      \hobbyusepath{#2}%
+    }
+  },
+  show Hobby path/.code={%
+    \pgfextra{\hobbyshowpath{#1}}
+  },
+  Hobby action/.code={%
+    \expandafter\gdef\expandafter\hobby@action\expandafter{\hobby@action#1}%
+  },
+  Hobby finish/.style={%
+    Hobby action=\hobby@finish%
   }
 }
 %    \end{macrocode}
@@ -1975,12 +2084,12 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \def\hobby@rest{}%
     \let\hobby@next=\hobbygenusepath
   \fi
+  \def\hobby@point@options{}%
   \let\tikz@scan@point@options=\pgfutil@empty
   \expandafter\tikz@scan@one@point\expandafter\pgfutil@firstofone\hobby@pt\relax
   \pgfmathsetmacro\hobby@x{\the\pgf@x/1cm}%
   \pgfmathsetmacro\hobby@y{\the\pgf@y/1cm}%
-  \def\hobby@point@options{}%
-  \expandafter\tikzset\expandafter{\tikz@scan@point@options}%
+%  \expandafter\tikzset\expandafter{\tikz@scan@point@options}%
   \expandafter\hobbyaddpoint\expandafter{\hobby@point@options,%
     x = \hobby@x, y = \hobby@y}%
   \expandafter\hobby@next\expandafter{\hobby@rest}%
@@ -2011,18 +2120,15 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \hobbyinit\hobby@moveto\hobby@curveto\hobby@close
   \pgfmathsetmacro\hobby@x{\the\tikz@lastx/1cm}%
   \pgfmathsetmacro\hobby@y{\the\tikz@lasty/1cm}%
-  \pgfutil@ifundefined{tikz@scan@point@options}{%
-    \hobbyaddpoint{x = \hobby@x, y = \hobby@y}%
-  }{%
-    \def\hobby@point@options{}%
-    \def\hobby@opts{}%
-    \expandafter\tikzset\expandafter{\tikz@scan@point@options}%
-    \expandafter\hobbysetparams\expandafter{\hobby@opts}%
+  \expandafter\hobbysetparams\expandafter{\hobby@next@opts}%
   \expandafter\hobbyaddpoint\expandafter{\hobby@point@options,%
       x = \hobby@x, y = \hobby@y}%
-  }%
   \hobby@init@tikz@commands
   \let\tikz@scan@point@options=\pgfutil@empty
+  \global\let\hobby@action=\pgfutil@empty
+  \global\let\hobby@this@opts=\pgfutil@empty
+  \global\let\hobby@next@opts=\pgfutil@empty
+  \global\let\hobby@point@options=\pgfutil@empty
   \tikz@scan@one@point\hobby@addfromtikz}
 %    \end{macrocode}
 % \end{function}
@@ -2035,14 +2141,13 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \tikz@make@last@position{#1}%
   \pgfmathsetmacro\hobby@x{\the\pgf@x/1cm}%
   \pgfmathsetmacro\hobby@y{\the\pgf@y/1cm}%
-  \def\hobby@point@options{}%
-  \def\hobby@opts{}%
-  \def\hobby@action{}%
-  \expandafter\tikzset\expandafter{\tikz@scan@point@options}%
-  \expandafter\hobbysetparams\expandafter{\hobby@opts}%
+  \expandafter\hobbysetparams\expandafter{\hobby@this@opts}%
   \expandafter\hobbyaddpoint\expandafter{\hobby@point@options,%
     x = \hobby@x, y = \hobby@y}%
   \hobby@action
+  \global\let\hobby@this@opts=\pgfutil@empty
+  \global\let\hobby@action=\pgfutil@empty
+  \global\let\hobby@point@options=\pgfutil@empty
   \tikz@scan@next@command%
 }
 %    \end{macrocode}
@@ -2115,6 +2220,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \begin{macrocode}
 \def\hobby@midcurveto@auto{%
   \let\tikz@scan@point@options=\pgfutil@empty
+  \global\let\hobby@action=\pgfutil@empty
+  \global\let\hobby@this@opts=\pgfutil@empty
+  \global\let\hobby@point@options=\pgfutil@empty
   \tikz@scan@one@point\hobby@addfromtikz%
 }
 %    \end{macrocode}
@@ -2124,7 +2232,12 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \begin{macrocode}
 \def\hobby@finish{%
     \hobbygenusepath
-    \hobby@restore@tikz@commands
+  \ifx\hobby@path@name\pgfutil@empty
+  \else
+  \hobbysavepath{\hobby@path@name}%
+  \fi
+  \global\let\hobby@path@name=\pgfutil@empty
+  \hobby@restore@tikz@commands
 }
 %    \end{macrocode}
 % \end{function}
@@ -2312,6 +2425,8 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \global\let\hobby@quick@curveto=\hobby@quick@makepathauto
   \hobby@qinit@tikz@commands
   \let\tikz@scan@point@options=\pgfutil@empty
+  \global\let\hobby@action=\pgfutil@empty
+  \global\let\hobby@point@options=\pgfutil@empty
   \tikz@scan@one@point\hobby@qfirst@auto}
 %    \end{macrocode}
 % \end{function}
@@ -2320,6 +2435,8 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \begin{macrocode}
 \def\hobby@qmidcurveto@auto{%
   \let\tikz@scan@point@options=\pgfutil@empty
+  \global\let\hobby@action=\pgfutil@empty
+  \global\let\hobby@point@options=\pgfutil@empty
   \tikz@scan@one@point\hobby@qaddfromtikz}
 %    \end{macrocode}
 % \end{function}
@@ -2679,12 +2796,12 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_map_inline:Nn #1#2
   {
-    \int_gincr:N \g_prg_map_int
-    \cs_gset:cpn { array_map_inline_ \int_use:N \g_prg_map_int :nn }
+    \int_gincr:N \g__prg_map_int
+    \cs_gset:cpn { array_map_inline_ \int_use:N \g__prg_map_int :nn }
       ##1##2 {#2}
     \exp_args:NNc \array_map_function:NN #1
-      { array_map_inline_ \int_use:N \g_prg_map_int :nn }
-    \prg_break_point:n { \int_gdecr:N \g_prg_map_int }
+      { array_map_inline_ \int_use:N \g__prg_map_int :nn }
+    \__prg_break_point:Nn \array_map_break: { \int_gdecr:N \g__prg_map_int }
   }
 \cs_generate_variant:Nn \array_map_inline:Nn { c }
 %    \end{macrocode}
@@ -2695,14 +2812,23 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_reverse_map_inline:Nn #1#2
   {
-    \int_gincr:N \g_prg_map_int
-    \cs_gset:cpn { array_map_inline_ \int_use:N \g_prg_map_int :nn }
+    \int_gincr:N \g__prg_map_int
+    \cs_gset:cpn { array_map_inline_ \int_use:N \g__prg_map_int :nn }
       ##1##2 {#2}
     \exp_args:NNc \array_reverse_map_function:NN #1
-      { array_map_inline_ \int_use:N \g_prg_map_int :nn }
-    \prg_break_point:n { \int_gdecr:N \g_prg_map_int }
+      { array_map_inline_ \int_use:N \g__prg_map_int :nn }
+    \__prg_break_point:Nn \array_map_break: { \int_gdecr:N \g__prg_map_int }
   }
 \cs_generate_variant:Nn \array_reverse_map_inline:Nn { c }
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\array_map_break:}
+%    \begin{macrocode}
+\cs_new_nopar:Npn \array_map_break:
+  { \__prg_map_break:Nn \array_map_break: { } }
+\cs_new_nopar:Npn \array_map_break:n
+  { \__prg_map_break:Nn \array_map_break: }
 %    \end{macrocode}
 % \end{function}
 %
@@ -2724,11 +2850,12 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   {
     \tl_clear:N \l_array_show_tl
     \array_map_function:NN #1 \array_show_aux:nn
-    \__msg_show_variable:Nnx
+    \__msg_show_variable:Nno
       #1
       { array }
     { \l_array_show_tl }
   }
+\cs_generate_variant:Nn \__msg_show_variable:Nnn { Nno }
 
 \cs_new_protected:Npn \array_show_aux:nn #1#2
 {
