@@ -1,7 +1,9 @@
 \immediate\write18{tex hobby.dtx}
 \documentclass{article}
+\usepackage{amsmath}
 \usepackage{pgfplots}
 \usetikzlibrary{hobby}
+\usepackage[silent]{trace-pgfkeys}
 
 \newif\ifhobbyinpath
 \tikzset{
@@ -20,6 +22,11 @@
 
 \begin{document}
 
+\begin{tikzpicture}[use Hobby shortcut]
+\draw[scale=-2,inner color=white,outer color=gray!5] ([closed]0.5,0.1) .. (0.7,0.28) .. (0.5,1) .. (0.3,0.28) .. (0.5,0.1);
+\end{tikzpicture}
+
+\newpage
 
 \begin{tikzpicture}[use Hobby shortcut]
 \draw[help lines] (-5,-5) grid (5,5);
@@ -40,12 +47,12 @@
 \draw[thick] (-5,2) .. (-3,3) .. (-1,1) .. (0,-1.3) .. %
 ([tangent=0]1,-2) .. ([tangent=45]2,-1.5) .. (3,-2) .. (5,-4);
 \end{tikzpicture}
-\end{document}
+
+\newpage
 
 \begin{tikzpicture}
 \draw[use Hobby shortcut] (0,0) .. ([tangent=45]1,1) .. (2,0) .. (3,1) .. (4,0);
 \end{tikzpicture}
-\end{document}
 
 \begin{tikzpicture}
 \draw[line width=3mm,red,use Hobby shortcut,save Hobby path={saved}] (0,0) .. ([blank=soft]1,1) .. (2,0);
@@ -58,32 +65,26 @@
 \tikzset{show Hobby path={left}}
 \draw[blue,show Hobby path={left},restore and use Hobby path={left}{disjoint,invert soft blanks}];
 \end{tikzpicture}
-\end{document}
 
-\begin{document}
+\newpage
 \begin{tikzpicture}
 \begin{axis}
 \addplot +[smooth] {rnd};
 \addplot +[hobby] {rnd};
 \end{axis}
 \end{tikzpicture}
-\end{document}
 
-\documentclass{article}
-\usepackage{amsmath}
-\usepackage{tikz}
-\usetikzlibrary{hobby}
+\newpage
 
-\usepackage[silent]{trace-pgfkeys}
+
 
 %\tikzset{use quick Hobby shortcut}
-
-\begin{document}
 
 \begin{tikzpicture}
 \draw[use Hobby shortcut] (0,0) .. (1,1) .. (2,1);
 \end{tikzpicture}
-\end{document}
+
+\newpage
 
 \tikz[smooth] \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
 
@@ -92,7 +93,8 @@
 \tikz[closed hobby] \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
 
 \tikz[quick hobby] \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
-\end{document}
+
+\newpage
 
 \begin{tikzpicture}[use Hobby shortcut]
 \draw ([out angle=10]0,0) .. ([in angle=90]1,1);

@@ -796,13 +796,13 @@ and the derived files            hobby.code.tex
 % Our first step is to go through the list of points and compute the distances and angles between successive points.
 % Thus \(d_i\) is the distance from \(z_i\) to \(z_{i+1}\) and the angle is the angle of the line from \(z_i\) to \(z_{i+1}\).
 %    \begin{macrocode}
-\prg_stepwise_function:nnnN {0} {1} {\l_hobby_npoints_int - 1} \hobby_distangle:n
+\int_step_function:nnnN {0} {1} {\l_hobby_npoints_int - 1} \hobby_distangle:n
 %    \end{macrocode}
 %
 % For the majority of the code, we're only really interested in the differences of the angles.
 % So for each internal point we compute the differences in the angles.
 %    \begin{macrocode}
-  \prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int - 1} {
+  \int_step_inline:nnnn {1} {1} {\l_hobby_npoints_int - 1} {
     \fp_set:Nx \l_hobby_tempa_fp {
     \array_get:Nn \l_hobby_angles_array {##1}
     - \array_get:Nn \l_hobby_angles_array {##1 - 1}}
@@ -849,7 +849,7 @@ and the derived files            hobby.code.tex
 % We start with the subdiagonal.
 % This is indexed from \(1\) to \(n-1\).
 %    \begin{macrocode}
-  \prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int - 1} {
+  \int_step_inline:nnnn {1} {1} {\l_hobby_npoints_int - 1} {
     \array_put:Nnx \l_hobby_matrix_a_array {##1} {\fp_to_tl:n {
        \array_get:Nn \l_hobby_tension_in_array {##1}^2
       * \array_get:Nn \l_hobby_distances_array {##1}
@@ -861,7 +861,7 @@ and the derived files            hobby.code.tex
 % Next, we attack main diagonal.
 % We might need to adjust the first and last terms, but we'll do that in a minute.
 %    \begin{macrocode}
-  \prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int - 1} {
+  \int_step_inline:nnnn {1} {1} {\l_hobby_npoints_int - 1} {
 
   \array_put:Nnx \l_hobby_matrix_b_array {##1} {\fp_to_tl:n
 {(3 * (\array_get:Nn \l_hobby_tension_in_array {##1 + 1}) - 1) * 
@@ -879,7 +879,7 @@ and the derived files            hobby.code.tex
 %
 % Next, the superdiagonal.
 %    \begin{macrocode}
-  \prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int - 2} {
+  \int_step_inline:nnnn {1} {1} {\l_hobby_npoints_int - 2} {
 
   \array_put:Nnx \l_hobby_matrix_c_array {##1} {\fp_to_tl:n
 {(\array_get:Nn \l_hobby_tension_in_array {##1})^2
@@ -892,7 +892,7 @@ and the derived files            hobby.code.tex
 %
 % Lastly (before the adjustments), the target vector.
 %    \begin{macrocode}
-  \prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int - 2} {
+  \int_step_inline:nnnn {1} {1} {\l_hobby_npoints_int - 2} {
 
   \array_put:Nnx \l_hobby_matrix_d_array {##1} {\fp_to_tl:n
 {
@@ -948,7 +948,7 @@ and the derived files            hobby.code.tex
 %    \begin{macrocode}
   \array_put:Nnn \l_hobby_vector_u_array {0} {1}
 \array_put:Nnn \l_hobby_vector_u_array {\l_hobby_npoints_int - 1} {1}
-  \prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int - 2} {
+  \int_step_inline:nnnn {1} {1} {\l_hobby_npoints_int - 2} {
   \array_put:Nnn \l_hobby_vector_u_array {##1} {0}
   }
 %    \end{macrocode}
@@ -1087,7 +1087,7 @@ and the derived files            hobby.code.tex
 % Now we have the tridiagonal matrix in place, we implement the solution.
 % We start with the forward eliminations.
 %    \begin{macrocode}
-\prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int - 1} {
+\int_step_inline:nnnn {1} {1} {\l_hobby_npoints_int - 1} {
 
   \array_put:Nnx \l_hobby_matrix_b_array {##1} {\fp_to_tl:n {
   (\array_get:Nn \l_hobby_matrix_b_array {##1 - 1})
@@ -1147,7 +1147,7 @@ and the derived files            hobby.code.tex
 %    \end{macrocode}
 % Now we iterate over the vectors, doing the remaining back substitutions.
 %    \begin{macrocode}
-\prg_stepwise_inline:nnnn {\l_hobby_npoints_int - 2} {-1} {0} {
+\int_step_inline:nnnn {\l_hobby_npoints_int - 2} {-1} {0} {
 
   \array_put:Nnx \l_hobby_theta_array {##1} {\fp_to_tl:n {
 ( (\array_get:Nn \l_hobby_matrix_d_array {##1})
@@ -1160,7 +1160,7 @@ and the derived files            hobby.code.tex
 %    \end{macrocode}
 % On a closed path, we also need to work out \(M^{-1} u\).
 %    \begin{macrocode}
-\prg_stepwise_inline:nnnn {\l_hobby_npoints_int - 2} {-1} {0} {
+\int_step_inline:nnnn {\l_hobby_npoints_int - 2} {-1} {0} {
   \array_put:Nnx \l_hobby_vector_u_array {##1} {\fp_to_tl:n
 {
     ((\array_get:Nn \l_hobby_vector_u_array {##1})
@@ -1185,7 +1185,7 @@ and the derived files            hobby.code.tex
 + 1
 )}
 
-\prg_stepwise_inline:nnnn {0} {1} {\l_hobby_npoints_int - 1} {
+\int_step_inline:nnnn {0} {1} {\l_hobby_npoints_int - 1} {
 
   \array_put:Nnx \l_hobby_theta_array {##1} {\fp_to_tl:n {
   (\array_get:Nn \l_hobby_theta_array {##1})
@@ -1199,7 +1199,7 @@ and the derived files            hobby.code.tex
 % Now that we have computed the \(\theta_i\)s, we can quickly compute the \(\phi_i\)s.
 %
 %    \begin{macrocode}
-\prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int - 1} {
+\int_step_inline:nnnn {1} {1} {\l_hobby_npoints_int - 1} {
 
     \array_put:Nnx \l_hobby_phi_array {##1} {\fp_to_tl:n {
       - (\array_get:Nn \l_hobby_psi_array {##1})
@@ -1250,7 +1250,7 @@ and the derived files            hobby.code.tex
 %    \end{macrocode}
 % Next task is to compute the \(\rho_i\) and \(\sigma_i\).
 %    \begin{macrocode}
-\prg_stepwise_inline:nnnn {0} {1} {\l_hobby_npoints_int - 1} {
+\int_step_inline:nnnn {0} {1} {\l_hobby_npoints_int - 1} {
 
   \fp_set:Nn \l_hobby_tempa_fp {\array_get:Nn \l_hobby_theta_array {##1}}
 
@@ -1268,7 +1268,7 @@ and the derived files            hobby.code.tex
 %    \end{macrocode}
 % Lastly, we generate the coordinates of the control points.
 %    \begin{macrocode}
-\prg_stepwise_inline:nnnn {0} {1} {\l_hobby_npoints_int - 1} {
+\int_step_inline:nnnn {0} {1} {\l_hobby_npoints_int - 1} {
 \array_gput:Nnx \l_hobby_controla_array  {##1 + 1} {x = \fp_eval:n  {
 (\array_get:Nn \l_hobby_points_x_array {##1})
 +
@@ -1289,7 +1289,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 }
 }
 }
-\prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int} {
+\int_step_inline:nnnn {1} {1} {\l_hobby_npoints_int} {
   \array_gput:Nnx \l_hobby_controlb_array {##1} {
     x = \fp_eval:n {\array_get:Nn \l_hobby_points_x_array {##1}
 - (\array_get:Nn \l_hobby_distances_array  {##1 - 1})
@@ -1461,7 +1461,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \array_get:NnN \l_hobby_points_array {0} \l_tmpa_tl
     \exp_args:No \hobby_moveto:n {\l_tmpa_tl}
   }
-  \prg_stepwise_inline:nnnn {1} {1} {\l_hobby_npoints_int} {
+  \int_step_inline:nnnn {1} {1} {\l_hobby_npoints_int} {
     \array_get:NnN \l_hobby_controla_array {##1} \l_tmpa_tl
     \array_get:NnN \l_hobby_controlb_array {##1} \l_tmpb_tl
     \array_get:NnN \l_hobby_points_array {##1} \l_tmpc_tl
@@ -1974,7 +1974,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \expandafter\gdef\expandafter\hobby@point@options\expandafter%
     {\hobby@point@options,blank=#1}%
   },
-  designated Hobby path/.initial={this},
+  designated Hobby path/.initial={next},
   clear next Hobby path options/.code={%
     \gdef\hobby@next@opts{}%
   },
@@ -2124,6 +2124,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \expandafter\hobbyaddpoint\expandafter{\hobby@point@options,%
       x = \hobby@x, y = \hobby@y}%
   \hobby@init@tikz@commands
+  \tikzset{designated Hobby path=this}%
   \let\tikz@scan@point@options=\pgfutil@empty
   \global\let\hobby@action=\pgfutil@empty
   \global\let\hobby@this@opts=\pgfutil@empty
@@ -2231,7 +2232,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % \begin{function}{\hobby@finish}
 %    \begin{macrocode}
 \def\hobby@finish{%
-    \hobbygenusepath
+  \hobbygenusepath
   \ifx\hobby@path@name\pgfutil@empty
   \else
   \hobbysavepath{\hobby@path@name}%
@@ -2753,7 +2754,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     }{
       \int_set:Nn \l_array_top_int {0}
     }
-    \prg_stepwise_inline:nnnn {\l_array_base_int} {1} {\l_array_top_int} {
+    \int_step_inline:nnnn {\l_array_base_int} {1} {\l_array_top_int} {
   \array_get:NnN #1 {##1} \l_array_tmp_tl
   \exp_args:NnV #2 {##1} \l_array_tmp_tl
 }
@@ -2780,7 +2781,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     }{
       \int_set:Nn \l_array_top_int {0}
     }
-    \prg_stepwise_inline:nnnn {\l_array_top_int} {-1} {\l_array_base_int} {
+    \int_step_inline:nnnn {\l_array_top_int} {-1} {\l_array_base_int} {
   \array_get:NnN #1 {##1} \l_array_tmp_tl
   \exp_args:Nno #2 {##1} \l_array_tmp_tl
 }
