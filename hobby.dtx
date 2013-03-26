@@ -1389,6 +1389,45 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \end{macrocode}
 % \end{function}
 %
+% \begin{function}{\hobbygenifnecpath}
+% If the named path doesn't exist, it is generated and named.
+% If it does exist, we restore it.
+% Either way, we save it to the aux file.
+%    \begin{macrocode}
+\NewDocumentCommand \hobbygenifnecpath { m } {
+  \tl_if_exist:cTF {g_hobby_#1_path}
+  {
+    \tl_use:c {g_hobby_#1_path}
+  }
+  {
+    \hobby_gen_path:
+  }
+  \hobby_save_path:n {#1}
+  \hobby_save_path_to_aux:x {#1}
+}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobbygenifnecusepath}
+% If the named path doesn't exist, it is generated and named.
+% If it does exist, we restore it.
+% Either way, we save it to the aux file.
+%    \begin{macrocode}
+\NewDocumentCommand \hobbygenuseifnecpath { m } {
+  \tl_if_exist:cTF {g_hobby_#1_path}
+  {
+    \tl_use:c {g_hobby_#1_path}
+  }
+  {
+    \hobby_gen_path:
+  }
+  \hobby_save_path:n {#1}
+  \hobby_save_path_to_aux:x {#1}
+  \hobby_use_path:
+}
+%    \end{macrocode}
+% \end{function}
+%
 % \begin{function}{\hobbyusepath}
 % This is the user (well, sort of) command that uses the last generated curve.
 %    \begin{macrocode}
@@ -1534,6 +1573,40 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \end{macrocode}
 % \end{function}
 %
+% \begin{function}{\hobby_save_path_to_aux:n}
+%    \begin{macrocode}
+\int_set:Nn \l_tmpa_int {\char_value_catcode:n {`@}}
+\char_set_catcode_letter:N @
+\cs_new:Npn \hobby_save_path_to_aux:n #1 {
+  \bool_if:nT {
+    \tl_if_exist_p:c {g_hobby_#1_path}
+    &&
+    ! \tl_if_exist_p:c {g_hobby_#1_path_saved}
+  }
+  {
+    \tl_clear:N \l_tmpa_tl
+    \tl_put_right:Nn \l_tmpa_tl {
+      \ExplSyntaxOn
+      \tl_gclear_new:c {g_hobby_#1_path}
+      \tl_gput_right:cn {g_hobby_#1_path}
+    }
+    \tl_put_right:Nx \l_tmpa_tl {
+      {\tl_to_str:c {g_hobby_#1_path}}
+    }
+    \tl_put_right:Nn \l_tmpa_tl {
+      \ExplSyntaxOff
+    }
+    \protected@write\@auxout{}{
+      \tl_to_str:N \l_tmpa_tl
+    }
+    \tl_new:c {g_hobby_#1_path_saved}
+  }
+}
+\char_set_catcode:nn {`@} {\l_tmpa_int}
+\cs_generate_variant:Nn \hobby_save_path_to_aux:n {x}
+%    \end{macrocode}
+% \end{function}
+%
 % \begin{function}{\hobby_clear_path:}
 %    \begin{macrocode}
 \cs_new:Nn \hobby_clear_path:
@@ -1596,9 +1669,10 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   /pgf/hobby/.is family,
   /pgf/hobby/.cd,
   x/.code={\pgf@x=#1cm},
-  y/.code={\pgf@y=#1cm},
+  y/.code={\pgf@y=#1cm}
 }
 %    \end{macrocode}
+%
 % \begin{function}{\hobby@curveto}
 % This is passed to the path-generation code to translate the path into a PGF path.
 %    \begin{macrocode}
@@ -1645,7 +1719,22 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \hobbyinit\hobby@moveto\hobby@curveto\hobby@close
     \global\let\pgf@plotstreampoint=\pgf@plot@hobby@firstpt
     \global\let\pgf@plotstreamspecial=\pgfutil@gobble
-    \global\let\pgf@plotstreamend=\hobbygenusepath
+    \gdef\pgf@plotstreamend{%
+      \ifhobby@externalise
+       \ifx\hobby@path@name\pgfutil@empty
+        \hobbygenusepath
+       \else
+        \hobbygenuseifnecpath{\hobby@path@name}%
+       \fi
+      \else
+       \hobbygenusepath
+      \fi
+      \ifx\hobby@path@name\pgfutil@empty
+      \else
+       \hobbysavepath{\hobby@path@name}%
+      \fi
+      \global\let\hobby@path@name=\pgfutil@empty
+    }%
     \let\tikz@scan@point@options=\pgfutil@empty
   }
 }
@@ -1661,7 +1750,22 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \hobbysetparams{closed=true,disjoint=true}%
     \global\let\pgf@plotstreampoint=\pgf@plot@hobby@firstpt
     \global\let\pgf@plotstreamspecial=\pgfutil@gobble
-    \global\let\pgf@plotstreamend=\hobbygenusepath
+    \gdef\pgf@plotstreamend{%
+      \ifhobby@externalise
+       \ifx\hobby@path@name\pgfutil@empty
+        \hobbygenusepath
+       \else
+        \hobbygenuseifnecpath{\hobby@path@name}%
+       \fi
+      \else
+       \hobbygenusepath
+      \fi
+      \ifx\hobby@path@name\pgfutil@empty
+      \else
+       \hobbysavepath{\hobby@path@name}%
+      \fi
+      \global\let\hobby@path@name=\pgfutil@empty
+    }%
   }
 }
 %    \end{macrocode}
@@ -1934,6 +2038,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 \let\hobby@next@opts=\pgfutil@empty
 \let\hobby@action=\pgfutil@empty
 \let\hobby@path@name=\pgfutil@empty
+\newif\ifhobby@externalise
 %    \end{macrocode}
 %
 % We set various TikZ keys.
@@ -1944,7 +2049,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   curve through/.style={
     to path={
       \pgfextra{
-        \expandafter\curvethrough\expandafter[\hobby@this@opts]{%
+        \expandafter\curvethrough\expandafter[\hobby@next@opts]{%
           (\tikztostart) .. #1 .. (\tikztotarget)%
         }
       }
@@ -2020,10 +2125,12 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     add option to Hobby path={out curl=#1}%
   },
   use Hobby shortcut/.code={%
-    \let\tikz@curveto@auto=\hobby@curveto@auto
+    \let\tikz@curveto@auto=\hobby@curveto@override
+    \global\let\hobby@curveto@delegate=\hobby@curveto@auto
   },
   use quick Hobby shortcut/.code={%
-    \let\tikz@curveto@auto=\hobby@qcurveto@auto
+    \let\tikz@curveto@auto=\hobby@curveto@override
+    \global\let\hobby@curveto@delegate=\hobby@qcurveto@auto
   },
   use previous Hobby path/.code={%
     \pgfextra{\hobbyusepath{#1}}
@@ -2032,7 +2139,6 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   save Hobby path/.code={%
     \xdef\hobby@path@name{#1}%
   },
-  Hobby path name/.initial={},
   restore Hobby path/.code={%
     \pgfextra{%
       \hobbyinit\hobby@moveto\hobby@curveto\hobby@close
@@ -2053,7 +2159,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   },
   Hobby finish/.style={%
     Hobby action=\hobby@finish%
-  }
+  },
+  Hobby externalise/.is if=hobby@externalise,
+  Hobby externalize/.is if=hobby@externalise
 }
 %    \end{macrocode}
 % \begin{function}{\curvethrough}
@@ -2063,47 +2171,60 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 \newcommand\curvethrough[2][]{%
   \hobbyinit\hobby@moveto\hobby@curveto\hobby@close
   \hobbysetparams{#1}%
-  \hobby@processpts{#2}%
+  \tikzset{designated Hobby path=this}%
+  \global\let\hobby@this@opts=\pgfutil@empty
+  \global\let\hobby@next@opts=\pgfutil@empty
+  \let\tikz@scan@point@options=\pgfutil@empty
+  \def\hobby@point@options{}%
+  \tikz@scan@one@point\hobby@processpt #2 \relax%
 }
 %    \end{macrocode}
 % \end{function}
 %
-% \begin{function}{\hobby@processpts}
-% This processes a list of points in the format \Verb+(0,0) .. (1,1)+.
+% \begin{function}{\hobby@processpt}
+% This processes a list of points in the format \Verb+(0,0) [..] (1,1)+.
 % Each point is scanned by TikZ and then added to the stack to be built into the path.
 % If there are any remaining points, we call ourself again with them.
 % Otherwise, we hand over control to the path-generation code.
 %    \begin{macrocode}
-\newcommand\hobby@processpts[1]{%
-  \pgfutil@in@{..}{#1}%
-  \ifpgfutil@in@%
-    \hobby@getonepoint #1 \relax
-    \let\hobby@next=\hobby@processpts
-  \else
-    \def\hobby@pt{#1}%
-    \def\hobby@rest{}%
-    \let\hobby@next=\hobbygenusepath
-  \fi
-  \def\hobby@point@options{}%
-  \let\tikz@scan@point@options=\pgfutil@empty
-  \expandafter\tikz@scan@one@point\expandafter\pgfutil@firstofone\hobby@pt\relax
+\newcommand\hobby@processpt[1]{%
+  #1%
   \pgfmathsetmacro\hobby@x{\the\pgf@x/1cm}%
   \pgfmathsetmacro\hobby@y{\the\pgf@y/1cm}%
-%  \expandafter\tikzset\expandafter{\tikz@scan@point@options}%
   \expandafter\hobbyaddpoint\expandafter{\hobby@point@options,%
     x = \hobby@x, y = \hobby@y}%
-  \expandafter\hobby@next\expandafter{\hobby@rest}%
-}
+  \def\hobby@point@options{}%
+  \let\tikz@scan@point@options=\pgfutil@empty
+  \pgfutil@ifnextchar\relax{%
+    \expandafter\hobbysetparams\expandafter{\hobby@this@opts}%
+  \ifhobby@externalise
+    \ifx\hobby@path@name\pgfutil@empty
+      \hobbygenusepath
+    \else
+      \hobbygenuseifnecpath{\hobby@path@name}%
+    \fi
+  \else
+    \hobbygenusepath
+  \fi
+  \ifx\hobby@path@name\pgfutil@empty
+  \else
+    \hobbysavepath{\hobby@path@name}%
+  \fi
+  \global\let\hobby@path@name=\pgfutil@empty
+  }{%
+    \pgfutil@ifnextchar.{%
+      \hobby@swallowdots}{%
+      \tikz@scan@one@point\hobby@processpt}}}
 %    \end{macrocode}
 % \end{function}
 %
-% \begin{function}{\hobby@onepoint}
-% This strips off the next point.
+% \begin{function}{\hobby@swallowdots}
+% Remove dots from the input stream.
 %    \begin{macrocode}
-\def\hobby@getonepoint#1..#2\relax{%
-  \def\hobby@pt{#1}%
-  \def\hobby@rest{#2}%
-}
+\def\hobby@swallowdots.{%
+  \pgfutil@ifnextchar.{%
+    \hobby@swallowdots}{%
+    \tikz@scan@one@point\hobby@processpt}}
 %    \end{macrocode}
 % \end{function}
 %
@@ -2112,6 +2233,14 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % However, that macro is not defined in the TikZ code.
 % The following code provides a suitable definition.
 % To play nice, we don't install it by default but define a key (defined above) that installs it.
+%
+% \begin{function}{\hobby@curveto@override}
+%    \begin{macrocode}
+\def\hobby@curveto@override{%
+  \hobby@curveto@delegate}
+%    \end{macrocode}
+% \end{function}
+%
 % \begin{function}{\hobby@curveto@auto}
 % When we're called by TikZ, we initialise the path generation code and start adding points.
 % To ensure that the generation code is called, we add a lot of hooks to lots of TikZ commands.
@@ -2172,7 +2301,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \hobby@init@tikz@modcmd\tikz@to
   \hobby@init@tikz@modcmd\pgf@stop
   \hobby@init@tikz@modcmd\tikz@decoration
-  \global\let\tikz@curveto@auto=\hobby@midcurveto@auto
+  \global\let\hobby@curveto@delegate=\hobby@midcurveto@auto
 }
 %    \end{macrocode}
 % \end{function}
@@ -2195,7 +2324,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \hobby@restore@tikz@modcmd\tikz@to
   \hobby@restore@tikz@modcmd\pgf@stop
   \hobby@restore@tikz@modcmd\tikz@decoration
-  \global\let\tikz@curveto@auto=\hobby@curveto@auto
+  \global\let\hobby@curveto@delegate=\hobby@curveto@auto
 }
 %    \end{macrocode}
 % \end{function}
@@ -2232,10 +2361,18 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % \begin{function}{\hobby@finish}
 %    \begin{macrocode}
 \def\hobby@finish{%
-  \hobbygenusepath
+  \ifhobby@externalise
+    \ifx\hobby@path@name\pgfutil@empty
+      \hobbygenusepath
+    \else
+      \hobbygenuseifnecpath{\hobby@path@name}%
+    \fi
+  \else
+    \hobbygenusepath
+  \fi
   \ifx\hobby@path@name\pgfutil@empty
   \else
-  \hobbysavepath{\hobby@path@name}%
+    \hobbysavepath{\hobby@path@name}%
   \fi
   \global\let\hobby@path@name=\pgfutil@empty
   \hobby@restore@tikz@commands
@@ -2363,7 +2500,20 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % Okay, have more points.
 % Phew.
 % Call the next round.
+% If we have dots, swallow them.
 %    \begin{macrocode}
+    \pgfutil@ifnextchar.{%
+      \hobby@qswallowdots}{%
+    \tikz@scan@one@point\hobby@quick}}}
+%    \end{macrocode}
+% \end{function}
+%
+% \begin{function}{\hobby@qswallowdots}
+% Remove dots from the input stream.
+%    \begin{macrocode}
+\def\hobby@qswallowdots.{%
+  \pgfutil@ifnextchar.{%
+    \hobby@qswallowdots}{%
     \tikz@scan@one@point\hobby@quick}}
 %    \end{macrocode}
 % \end{function}
@@ -2383,7 +2533,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \end{macrocode}
 % More to go, scan in the next coordinate and off we go again.
 %    \begin{macrocode}
-\tikz@scan@one@point\hobby@quick}}
+    \pgfutil@ifnextchar.{%
+      \hobby@qswallowdots}{%
+      \tikz@scan@one@point\hobby@quick}}}
 %    \end{macrocode}
 % \end{function}
 %
@@ -2519,12 +2671,12 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \hobby@qinit@tikz@modcmd\tikz@to
   \hobby@qinit@tikz@modcmd\pgf@stop
   \hobby@qinit@tikz@modcmd\tikz@decoration
-  \global\let\tikz@curveto@auto=\hobby@qmidcurveto@auto
+  \global\let\hobby@curveto@delegate=\hobby@qmidcurveto@auto
 }
 %    \end{macrocode}
 % \end{function}
 %
-% \begin{function}{\hobby@restore@tikz@commands}
+% \begin{function}{\hobby@qrestore@tikz@commands}
 %    \begin{macrocode}
 \def\hobby@qrestore@tikz@commands{%
   \hobby@restore@tikz@modcmd\tikz@movetoabs
@@ -2543,7 +2695,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \hobby@restore@tikz@modcmd\pgf@stop
   \hobby@restore@tikz@modcmd\tikz@decoration
   \hobby@restore@tikz@modcmd\tikz@@close
-  \global\let\tikz@curveto@auto=\hobby@qcurveto@auto
+  \global\let\hobby@curveto@delegate=\hobby@qcurveto@auto
 }
 %    \end{macrocode}
 % \end{function}
