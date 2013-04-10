@@ -35,6 +35,13 @@
 
 \begin{document}
 
+%\pgfmathsetseed{2}
+
+\begin{tikzpicture}
+\draw[use Hobby shortcut] ([closed]0:rnd+2) \foreach \ang in {0,20,...,350} { .. (\ang:rnd+2) };
+\end{tikzpicture}
+
+
 \begin{tikzpicture}
 \draw[line width=3mm,red,use Hobby shortcut,save Hobby path={saved}] (0,0) .. ([blank=soft]1,1) .. (2,0);
 \draw[ultra thick,yellow,restore and use Hobby path={saved}{disjoint,invert soft blanks}];
