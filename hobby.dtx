@@ -110,7 +110,7 @@ and the derived files            hobby.code.tex
 %</driver>
 % \fi
 %
-% \CheckSum{1767}
+% \CheckSum{3002}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -181,21 +181,21 @@ and the derived files            hobby.code.tex
 %
 % Now we define our objects for use in generating the path.
 %
-% \begin{function}{\l_hobby_closed_bool}
+% \begin{macro}{\l_hobby_closed_bool}
 % \Verb+\l_hobby_closed_bool+ is \Verb+true+ if the path is closed.
 %    \begin{macrocode}
 \bool_new:N \l_hobby_closed_bool
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_disjoint_bool}
+% \begin{macro}{\l_hobby_disjoint_bool}
 % \Verb+\l_hobby_disjoint_bool+ is \Verb+true+ if the path should start with a \Verb+moveto+ command.
 %    \begin{macrocode}
 \bool_new:N \l_hobby_disjoint_bool
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_points_array}
+% \begin{macro}{\l_hobby_points_array}
 % \Verb+\l_hobby_points_array+ is an array holding the specified points on the path.
 % In the \LaTeX3 code, a ``point'' is a token list of the form \Verb+x = <number>, y = <number>+.
 % This gives us the greatest flexibility in passing points back and forth between the \LaTeX3 code and any calling code.
@@ -204,100 +204,100 @@ and the derived files            hobby.code.tex
 %    \begin{macrocode}
 \array_new:N \l_hobby_points_array
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_points_x_array}
+% \begin{macro}{\l_hobby_points_x_array}
 % \Verb+\l_hobby_points_x_array+ is an array holding the \(x\)--{}coordinates of the specified points.
 %    \begin{macrocode}
 \array_new:N \l_hobby_points_x_array
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_points_y_array}
+% \begin{macro}{\l_hobby_points_y_array}
 % \Verb+\l_hobby_points_y_array+ is an array holding the \(y\)--{}coordinates of the specified points.
 %    \begin{macrocode}
 \array_new:N \l_hobby_points_y_array
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_actions_array}
+% \begin{macro}{\l_hobby_actions_array}
 % \Verb+\l_hobby_actions_array+ is an array holding the (encoded) action to be taken out on the segment of the path ending at that point.
 %    \begin{macrocode}
 \array_new:N \l_hobby_actions_array
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_angles_array}
+% \begin{macro}{\l_hobby_angles_array}
 % \Verb+\l_hobby_angles_array+ is an array holding the angles of the lines between the points.
 % Specifically, the angle indexed by \(k\) is the angle in radians of the line from \(z_k\) to \(z_{k+1}\).
 %    \begin{macrocode}
 \array_new:N \l_hobby_angles_array
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_distances_array}
+% \begin{macro}{\l_hobby_distances_array}
 % \Verb+\l_hobby_distances_array+ is an array holding the distances between the points.
 % Specifically, the distance indexed by \(k\), which we will write as \(d_k\), is the length of the line from \(z_k\) to \(z_{k+1}\).
 %    \begin{macrocode}
 \array_new:N \l_hobby_distances_array
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_tension_out_array}
+% \begin{macro}{\l_hobby_tension_out_array}
 % \Verb+\l_hobby_tension_out_array+ is an array holding the tension for the path as it leaves each point.
 % This is a parameter that controls how much the curve ``flexes'' as it leaves the point.
 % In the following, this will be written \(\tau_k\).
 %    \begin{macrocode}
 \array_new:N \l_hobby_tension_out_array
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_tension_in_array}
+% \begin{macro}{\l_hobby_tension_in_array}
 % \Verb+\l_hobby_tension_in_array+ is an array holding the tension for the path as it arrives at each point.
 % This is a parameter that controls how much the curve ``flexes'' as it gets to the point.
 % In the following, this will be written \(\overline{\tau}_k\).
 %    \begin{macrocode}
 \array_new:N \l_hobby_tension_in_array
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_matrix_a_array}
+% \begin{macro}{\l_hobby_matrix_a_array}
 % \Verb+\l_hobby_matrix_a_array+ is an array holding the subdiagonal of the linear system that has to be solved to find the angles of the control points.
 % In the following, this will be denoted by \(A_i\).
 % The first index is \(1\).
 %    \begin{macrocode}
 \array_new:N \l_hobby_matrix_a_array
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_matrix_b_array}
+% \begin{macro}{\l_hobby_matrix_b_array}
 % \Verb+\l_hobby_matrix_b_array+ is an array holding the diagonal of the linear system that has to be solved to find the angles of the control points.
 % In the following, this will be denoted by \(B_i\).
 % The first index is \(0\).
 %    \begin{macrocode}
 \array_new:N \l_hobby_matrix_b_array
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_matrix_c_array}
+% \begin{macro}{\l_hobby_matrix_c_array}
 % \Verb+\l_hobby_matrix_c_array+ is an array holding the superdiagonal of the linear system that has to be solved to find the angles of the control points.
 % In the following, this will be denoted by \(C_i\).
 % The first index is \(0\).
 %    \begin{macrocode}
 \array_new:N \l_hobby_matrix_c_array
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_matrix_d_array}
+% \begin{macro}{\l_hobby_matrix_d_array}
 % \Verb+\l_hobby_matrix_d_array+ is an array holding the target vector of the linear system that has to be solved to find the angles of the control points.
 % In the following, this will be denoted by \(D_i\).
 % The first index is \(1\).
 %    \begin{macrocode}
 \array_new:N \l_hobby_matrix_d_array
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_vector_u_array}
+% \begin{macro}{\l_hobby_vector_u_array}
 % \Verb+\l_hobby_vector_u_array+ is an array holding the perturbation of the linear system for closed paths.
 % The coefficient matrix for an \emph{open} path is tridiagonal and that means that Gaussian elimination runs faster than expected (\(O(n)\) instead of \(O(n^3)\)).
 % The matrix for a closed path is not tridiagonal but is not far off.
@@ -308,138 +308,138 @@ and the derived files            hobby.code.tex
 %    \begin{macrocode}
 \array_new:N \l_hobby_vector_u_array
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_excess_angle_array}
+% \begin{macro}{\l_hobby_excess_angle_array}
 % \Verb+\l_hobby_excess_angle_array+ is an array that allows the user to say that the algorithm should add a multiple of \(2 \pi\) to the angle differences.
 % This is because these angles are wrapped to the interval \((-\pi,\pi]\) but the wrapping might go wrong near the end points due to computation accuracy.
 % The first index is \(1\).
 %    \begin{macrocode}
 \array_new:N \l_hobby_excess_angle_array
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_psi_array}
+% \begin{macro}{\l_hobby_psi_array}
 % \Verb+\l_hobby_psi_array+ is an array holding the difference of the angles of the lines entering and exiting a point.
 % That is, \(\psi_k\) is the angle between the lines joining \(z_k\) to \(z_{k-1}\) and \(z_{k+1}\).
 % The first index is \(1\).
 %    \begin{macrocode}
 \array_new:N \l_hobby_psi_array
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_theta_array}
+% \begin{macro}{\l_hobby_theta_array}
 % \Verb+\l_hobby_theta_array+ is an array holding the angles of the outgoing control points for the generated path.
 % These are measured relative to the line joining the point to the next point on the path.
 % The first index is \(0\).
 %    \begin{macrocode}
 \array_new:N \l_hobby_theta_array
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_phi_array}
+% \begin{macro}{\l_hobby_phi_array}
 % \Verb+\l_hobby_phi_array+ is an array holding the angles of the incoming control points for the generated path.
 % These are measured relative to the line joining the point to the previous point on the path.
 % The first index is \(1\).
 %    \begin{macrocode}
 \array_new:N \l_hobby_phi_array
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_sigma_array}
+% \begin{macro}{\l_hobby_sigma_array}
 % \Verb+\l_hobby_sigma_array+ is an array holding the lengths of the outgoing control points for the generated path.
 % The units are such that the length of the line to the next specified point is one unit.
 %    \begin{macrocode}
 \array_new:N \l_hobby_sigma_array
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_rho_array}
+% \begin{macro}{\l_hobby_rho_array}
 % \Verb+\l_hobby_rho_array+ is an array holding the lengths of the incoming control points for the generated path.
 % The units are such that the length of the line to the previous specified point is one unit.
 %    \begin{macrocode}
 \array_new:N \l_hobby_rho_array
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_controla_array}
+% \begin{macro}{\l_hobby_controla_array}
 % \Verb+\l_hobby_controla_array+ is an array holding the coordinates of the first control points on the curves.
 % The format is the same as for \Verb+\l_hobby_points_array+.
 %    \begin{macrocode}
 \array_new:N \l_hobby_controla_array
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_controlb_array}
+% \begin{macro}{\l_hobby_controlb_array}
 % \Verb+\l_hobby_controlb_array+ is an array holding the coordinates of the second control points on the curves.
 % The format is the same as for \Verb+\l_hobby_points_array+.
 %    \begin{macrocode}
 \array_new:N \l_hobby_controlb_array
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_matrix_v_fp}
+% \begin{macro}{\l_hobby_matrix_v_fp}
 % \Verb+\l_hobby_matrix_v_fp+ is a number which is used when doing the perturbation of the solution of the linear system for a closed curve.
 % There is actually a vector, \(v\), that this corresponds to but that vector only has one component that needs computation.
 %    \begin{macrocode}
 \fp_new:N \l_hobby_matrix_v_fp
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_tempa_fp}
+% \begin{macro}{\l_hobby_tempa_fp}
 % \Verb+\l_hobby_tempa_fp+ is a temporary variable of type \Verb+fp+.
 %    \begin{macrocode}
 \fp_new:N \l_hobby_tempa_fp
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_tempb_fp}
+% \begin{macro}{\l_hobby_tempb_fp}
 % \Verb+\l_hobby_tempb_fp+ is a temporary variable of type \Verb+fp+.
 %    \begin{macrocode}
 \fp_new:N \l_hobby_tempb_fp
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_tempc_fp}
+% \begin{macro}{\l_hobby_tempc_fp}
 % \Verb+\l_hobby_tempc_fp+ is a temporary variable of type \Verb+fp+.
 %    \begin{macrocode}
 \fp_new:N \l_hobby_tempc_fp
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_tempd_fp}
+% \begin{macro}{\l_hobby_tempd_fp}
 % \Verb+\l_hobby_tempd_fp+ is a temporary variable of type \Verb+fp+.
 %    \begin{macrocode}
 \fp_new:N \l_hobby_tempd_fp
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_temps_fp}
+% \begin{macro}{\l_hobby_temps_fp}
 % \Verb+\l_hobby_temps_fp+ is a temporary variable of type \Verb+fp+.
 %    \begin{macrocode}
 \fp_new:N \l_hobby_temps_fp
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_in_curl_fp}
+% \begin{macro}{\l_hobby_in_curl_fp}
 % \Verb+\l_hobby_in_curl_fp+ is the ``curl'' at the end of an open path.
 % This is used if the angle at the end is not specified.
 %    \begin{macrocode}
 \fp_new:N \l_hobby_in_curl_fp
 \fp_set:Nn \l_hobby_in_curl_fp {1}
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_out_curl_fp}
+% \begin{macro}{\l_hobby_out_curl_fp}
 % \Verb+\l_hobby_out_curl_fp+ is the ``curl'' at the start of an open path.
 % This is used if the angle at the start is not specified.
 %    \begin{macrocode}
 \fp_new:N \l_hobby_out_curl_fp
 \fp_set:Nn \l_hobby_out_curl_fp {1}
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_in_angle_fp}
+% \begin{macro}{\l_hobby_in_angle_fp}
 % \Verb+\l_hobby_in_angle_fp+ is the angle at the end of an open path.
 % If this is not specified, it will be computed automatically.
 % It is set to \Verb+\c_undefined_fp+ to allow easy detection of when it has been specified.
@@ -447,9 +447,9 @@ and the derived files            hobby.code.tex
 \fp_new:N \l_hobby_in_angle_fp
 \fp_set_eq:NN \l_hobby_in_angle_fp \c_undefined_fp
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_out_angle_fp}
+% \begin{macro}{\l_hobby_out_angle_fp}
 % \Verb+\l_hobby_out_angle_fp+ is the angle at the start of an open path.
 % If this is not specified, it will be computed automatically.
 % It is set to \Verb+\c_undefined_fp+ to allow easy detection of when it has been specified.
@@ -457,22 +457,22 @@ and the derived files            hobby.code.tex
 \fp_new:N \l_hobby_out_angle_fp
 \fp_set_eq:NN \l_hobby_out_angle_fp \c_undefined_fp
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_npoints_int}
+% \begin{macro}{\l_hobby_npoints_int}
 % \Verb+\l_hobby_npoints_int+ is one less than the number of points on the curve.
 % As our list of points starts at \(0\), this is the index of the last point.
 % In the algorithm for a closed curve, some points are repeated whereupon this is incremented so that it is always the index of the last point. 
 %    \begin{macrocode}
 \int_new:N \l_hobby_npoints_int
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\l_hobby_draw_int}
+% \begin{macro}{\l_hobby_draw_int}
 %    \begin{macrocode}
 \int_new:N \l_hobby_draw_int
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
 % A ``point'' is a key-value list setting the x-value, the y-value, and the tensions at that point.
 % Using keys makes it easier to pass points from the algorithm code to the calling code and vice versa without either knowing too much about the other.
@@ -554,7 +554,7 @@ and the derived files            hobby.code.tex
   invert~soft~blanks .default:n = true,
 }
 %    \end{macrocode}
-% \begin{function}{\hobby_distangle:n}
+% \begin{macro}{\hobby_distangle:n}
 % Computes the distance and angle between successive points.
 % The argument given is the index of the current point.
 % Assumptions: the points are in \Verb+\l_hobby_points_x_array+ and \Verb+\l_hobby_points_y_array+ and the index of the last point is \Verb+\l_hobby_npoints_int+.
@@ -575,10 +575,10 @@ and the derived files            hobby.code.tex
   \array_push:Nx \l_hobby_distances_array {\fp_to_tl:N \l_hobby_tempd_fp}
   }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
 %
-% \begin{function}{\fp_atantwo:NNN}
+% \begin{macro}{\fp_atantwo:NNN}
 % Computes the angle of the point specified by the latter two arguments, storing the answer in the first.
 % The inverse tangent function is not yet implemented in \LaTeX3 so for now we use the \Verb+pgfmath+ function.
 % When this is implemented in \LaTeX3 this should be replaced.
@@ -588,9 +588,9 @@ and the derived files            hobby.code.tex
   \exp_args:NNo \fp_set:Nn #1 {\pgfmathresult}
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\fp_veclen:NVV}
+% \begin{macro}{\fp_veclen:NVV}
 % Computes the length of the vector specified by the latter two arguments, storing the answer in the first.
 %    \begin{macrocode}
 \cs_new:Nn \fp_veclen:Nnn {
@@ -598,9 +598,9 @@ and the derived files            hobby.code.tex
 }
 \cs_generate_variant:Nn \fp_veclen:Nnn {NVV}
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby_ctrllen:Nnn}
+% \begin{macro}{\hobby_ctrllen:Nnn}
 % Computes the length of the control point vector from the two angles, storing the answer in the first argument given.
 %    \begin{macrocode}
 \cs_new:Nn \hobby_ctrllen:Nnn {
@@ -612,9 +612,9 @@ and the derived files            hobby.code.tex
 }
 \cs_generate_variant:Nn \hobby_ctrllen:Nnn {NVV}
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby_append_point_copy:n}
+% \begin{macro}{\hobby_append_point_copy:n}
 %   This function adds a copy of the point (numbered by its argument) to the end of the list of points, copying all the relevant data  (coordinates, tension, etc.).
 %
 % Originally from Bruno Le Foch on TeX-SX.
@@ -632,9 +632,9 @@ and the derived files            hobby.code.tex
 \cs_new_protected:Npn \hobby_append_point_copy_aux:Nn #1#2
   { \array_gpush:Nx #1 { \array_get:Nn #1 {#2} } }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby_gen_path:}
+% \begin{macro}{\hobby_gen_path:}
 % This is the curve generation function.
 % We assume at the start that we have an array containing all the points that the curve must go through, and the various curve parameters have been initialised.
 % So these must be set up by a wrapper function which then calls this one.
@@ -784,10 +784,10 @@ and the derived files            hobby.code.tex
 }
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 % 
 %
-% \begin{function}{\hobby_compute_path:}
+% \begin{macro}{\hobby_compute_path:}
 % This is the path builder where we have enough points to run the algorithm.
 %    \begin{macrocode}
 \cs_new:Nn \hobby_compute_path:
@@ -1239,10 +1239,10 @@ and the derived files            hobby.code.tex
 }
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
 %
-% \begin{function}{\hobby_build_path:}
+% \begin{macro}{\hobby_build_path:}
 % Once we've computed the angles, we build the actual path.
 %    \begin{macrocode}
 \cs_new:Nn \hobby_build_path:
@@ -1306,9 +1306,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
  }
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobbyinit}
+% \begin{macro}{\hobbyinit}
 % Initialise the settings for Hobby's algorithm
 %    \begin{macrocode}
 \NewDocumentCommand \hobbyinit {m m m} {
@@ -1316,9 +1316,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \hobby_clear_path:
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobbyaddpoint}
+% \begin{macro}{\hobbyaddpoint}
 % This adds a point, possibly with tensions, to the current stack.
 %    \begin{macrocode}
 \NewDocumentCommand \hobbyaddpoint { m } {
@@ -1352,9 +1352,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \array_gpush:Nx \l_hobby_points_y_array {\fp_to_tl:N \l_hobby_tempb_fp}
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobbysetparams}
+% \begin{macro}{\hobbysetparams}
 % This sets the parameters for the curve.
 %    \begin{macrocode}
 \NewDocumentCommand \hobbysetparams { m } {
@@ -1364,9 +1364,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   }
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby_set_cmds:nnn}
+% \begin{macro}{\hobby_set_cmds:nnn}
 % The path-generation code doesn't know what to actually do with the path so the initialisation code will set some macros to do that.
 % This is an auxiliary command that sets these macros.
 %    \begin{macrocode}
@@ -1376,9 +1376,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \cs_gset_eq:NN \hobby_close:n #3
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobbygenpath}
+% \begin{macro}{\hobbygenpath}
 % This is the user (well, sort of) command that generates the curve.
 %    \begin{macrocode}
 \NewDocumentCommand \hobbygenpath { } {
@@ -1387,9 +1387,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   }
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobbygenifnecpath}
+% \begin{macro}{\hobbygenifnecpath}
 % If the named path doesn't exist, it is generated and named.
 % If it does exist, we restore it.
 % Either way, we save it to the aux file.
@@ -1406,9 +1406,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \hobby_save_path_to_aux:x {#1}
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobbygenifnecusepath}
+% \begin{macro}{\hobbygenifnecusepath}
 % If the named path doesn't exist, it is generated and named.
 % If it does exist, we restore it.
 % Either way, we save it to the aux file.
@@ -1426,9 +1426,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \hobby_use_path:
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobbyusepath}
+% \begin{macro}{\hobbyusepath}
 % This is the user (well, sort of) command that uses the last generated curve.
 %    \begin{macrocode}
 \NewDocumentCommand \hobbyusepath { m } {
@@ -1436,18 +1436,18 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \hobby_use_path:
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobbysavepath}
+% \begin{macro}{\hobbysavepath}
 % This is the user (well, sort of) command that uses the last generated curve.
 %    \begin{macrocode}
 \NewDocumentCommand \hobbysavepath { m } {
   \hobby_save_path:n {#1}
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobbyrestorepath}
+% \begin{macro}{\hobbyrestorepath}
 % This is the user (well, sort of) command that uses the last generated curve.
 %    \begin{macrocode}
 \NewDocumentCommand \hobbyrestorepath { m } {
@@ -1456,9 +1456,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   }
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobbyshowpath}
+% \begin{macro}{\hobbyshowpath}
 % This is the user (well, sort of) command that uses the last generated curve.
 %    \begin{macrocode}
 \NewDocumentCommand \hobbyshowpath { m } {
@@ -1467,9 +1467,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   }
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobbygenusepath}
+% \begin{macro}{\hobbygenusepath}
 % This is the user (well, sort of) command that generates a curve and uses it.
 %    \begin{macrocode}
 \NewDocumentCommand \hobbygenusepath { } {
@@ -1479,18 +1479,18 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   }
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobbyclearpath}
+% \begin{macro}{\hobbyclearpath}
 % This is the user (well, sort of) command that generates a curve and uses it.
 %    \begin{macrocode}
 \NewDocumentCommand \hobbyclearpath { } {
   \hobby_clear_path:
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby_use_path:}
+% \begin{macro}{\hobby_use_path:}
 % This is the command that uses the curve.
 % As the curve data is stored globally, the same data can be reused by calling this function more than once without calling the generating function.
 %    \begin{macrocode}
@@ -1522,9 +1522,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     }
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby_save_path:n}
+% \begin{macro}{\hobby_save_path:n}
 % This command saves all the data needed to reinvoke the curve in a global token list that can be used to restore it afterwards.
 %    \begin{macrocode}
 \cs_new:Nn \hobby_save_path:n {
@@ -1571,9 +1571,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \tl_gset_eq:cN {g_hobby_#1_path} \l_tmpa_tl
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby_save_path_to_aux:n}
+% \begin{macro}{\hobby_save_path_to_aux:n}
 %    \begin{macrocode}
 \int_set:Nn \l_tmpa_int {\char_value_catcode:n {`@}}
 \char_set_catcode_letter:N @
@@ -1605,9 +1605,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 \char_set_catcode:nn {`@} {\l_tmpa_int}
 \cs_generate_variant:Nn \hobby_save_path_to_aux:n {x}
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby_clear_path:}
+% \begin{macro}{\hobby_clear_path:}
 %    \begin{macrocode}
 \cs_new:Nn \hobby_clear_path:
 {
@@ -1643,7 +1643,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \fp_gset_eq:NN \l_hobby_out_curl_fp \c_one_fp
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %    \begin{macrocode}
 \ExplSyntaxOff
 %    \end{macrocode}
@@ -1673,45 +1673,45 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 }
 %    \end{macrocode}
 %
-% \begin{function}{\hobby@curveto}
+% \begin{macro}{\hobby@curveto}
 % This is passed to the path-generation code to translate the path into a PGF path.
 %    \begin{macrocode}
 \def\hobby@curveto#1#2#3{%
   \pgfpathcurveto{\hobby@topgf{#1}}{\hobby@topgf{#2}}{\hobby@topgf{#3}}%
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@moveto}
+% \begin{macro}{\hobby@moveto}
 % This is passed to the path-generation code to translate the path into a PGF path.
 %    \begin{macrocode}
 \def\hobby@moveto#1{%
   \pgfpathmoveto{\hobby@topgf{#1}}%
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@topgf}
+% \begin{macro}{\hobby@topgf}
 % Translates a \LaTeX3 point to a PGF point.
 %    \begin{macrocode}
 \def\hobby@topgf#1{%
     \pgfqkeys{/pgf/hobby}{#1}%
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@close}
+% \begin{macro}{\hobby@close}
 % Closes a path.
 %    \begin{macrocode}
 \def\hobby@close#1{%
   \pgfpathclose
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
 % Plot handlers
 %
-% \begin{function}{\pgfplothanderhobby}
+% \begin{macro}{\pgfplothanderhobby}
 % Basic plot handler; uses full algorithm but therefore expensive
 %    \begin{macrocode}
 \def\pgfplothandlerhobby{%
@@ -1739,9 +1739,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   }
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\pgfplothandlerclosedhobby}
+% \begin{macro}{\pgfplothandlerclosedhobby}
 % Same as above but produces a closed curve
 %    \begin{macrocode}
 \def\pgfplothandlerclosedhobby{%
@@ -1769,9 +1769,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   }
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\pgf@plot@hobby@firstpt}
+% \begin{macro}{\pgf@plot@hobby@firstpt}
 % First point, move or line as appropriate and then start the algorithm.
 %    \begin{macrocode}
 \def\pgf@plot@hobby@firstpt#1{%
@@ -1780,9 +1780,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \global\let\pgf@plotstreampoint=\pgf@plot@hobby@handler
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\pgf@plot@hobby@handler}
+% \begin{macro}{\pgf@plot@hobby@handler}
 % Add points to the array for the algorithm to work on.
 %    \begin{macrocode}
 \def\pgf@plot@hobby@handler#1{%
@@ -1792,9 +1792,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \hobbyaddpoint{x = \hobby@x, y = \hobby@y}%
   }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\pgfplothandlerquickhobby}
+% \begin{macro}{\pgfplothandlerquickhobby}
 % Uses the ``quick'' algorithm.
 %    \begin{macrocode}
 \def\pgfplothandlerquickhobby{%
@@ -1806,9 +1806,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   }
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\pgf@plot@qhobby@firstpt}
+% \begin{macro}{\pgf@plot@qhobby@firstpt}
 % Carry out first action (move or line) and save point.
 %    \begin{macrocode}
 \def\pgf@plot@qhobby@firstpt#1{%
@@ -1820,9 +1820,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \global\let\pgf@plotstreampoint=\pgf@plot@qhobby@secondpt
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\pgf@plot@qhobby@secondpt}
+% \begin{macro}{\pgf@plot@qhobby@secondpt}
 % Also need to save second point.
 %    \begin{macrocode}
 \def\pgf@plot@qhobby@secondpt#1{%
@@ -1831,9 +1831,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \global\let\pgf@plotstreampoint=\pgf@plot@qhobby@handler
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\pgf@plot@qhobby@handler}
+% \begin{macro}{\pgf@plot@qhobby@handler}
 % Wrapper around the computation macro that saves the variables globally.
 %    \begin{macrocode}
 \def\pgf@plot@qhobby@handler#1{%
@@ -1851,26 +1851,26 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \global\let\hobby@omegaone=\hobby@omegaone
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\pgf@plot@qhobby@end}
+% \begin{macro}{\pgf@plot@qhobby@end}
 %    Wrapper around the finalisation step.
 %    \begin{macrocode}
 \def\pgf@plot@qhobby@end{%
   \hobby@quick@computeend
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@sf}
+% \begin{macro}{\hobby@sf}
 % Working with points leads to computations out of range so we scale to get them into the computable arena.
 %    \begin{macrocode}
 \pgfmathsetmacro\hobby@sf{10cm}
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
 %
-% \begin{function}{\hobby@quick@compute}
+% \begin{macro}{\hobby@quick@compute}
 % This is the macro that does all the work of computing the control points.
 % The argument is the current point, \Verb+\hobby@qpointa+ is the middle point, and \Verb+\hobby@qpoints+ is the first point.
 %    \begin{macrocode}
@@ -1965,9 +1965,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 \global\let\hobby@omegaone=\hobby@omegaone
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}
+% \begin{macro}{\hobby@wuick@computeend}
 % This is the additional code for the final run.
 %    \begin{macrocode}
 \def\hobby@quick@computeend{%
@@ -1982,9 +1982,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 \hobby@temp
 }%
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@quick@ctrlpts}
+% \begin{macro}{\hobby@quick@ctrlpts}
 % Compute the control points from the angles and points given.
 %    \begin{macrocode}
 \def\hobby@quick@ctrlpts#1#2#3#4#5#6{%
@@ -2019,7 +2019,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   #4%
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
 %
 % \iffalse
@@ -2164,7 +2164,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   Hobby externalize/.is if=hobby@externalise
 }
 %    \end{macrocode}
-% \begin{function}{\curvethrough}
+% \begin{macro}{\curvethrough}
 % This is the parent command.
 % We initialise the path-generation code, set any parameters, and then hand over control to the point processing macro.
 %    \begin{macrocode}
@@ -2179,9 +2179,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \tikz@scan@one@point\hobby@processpt #2 \relax%
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@processpt}
+% \begin{macro}{\hobby@processpt}
 % This processes a list of points in the format \Verb+(0,0) [..] (1,1)+.
 % Each point is scanned by TikZ and then added to the stack to be built into the path.
 % If there are any remaining points, we call ourself again with them.
@@ -2216,9 +2216,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
       \hobby@swallowdots}{%
       \tikz@scan@one@point\hobby@processpt}}}
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@swallowdots}
+% \begin{macro}{\hobby@swallowdots}
 % Remove dots from the input stream.
 %    \begin{macrocode}
 \def\hobby@swallowdots.{%
@@ -2226,7 +2226,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \hobby@swallowdots}{%
     \tikz@scan@one@point\hobby@processpt}}
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
 % There is a ``spare hook'' in the TikZ path processing code.
 % If TikZ encounters a path of the form \Verb+(0,0) .. (1,1)+ then it calls a macro \Verb+\tikz@curveto@auto+.
@@ -2234,14 +2234,14 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % The following code provides a suitable definition.
 % To play nice, we don't install it by default but define a key (defined above) that installs it.
 %
-% \begin{function}{\hobby@curveto@override}
+% \begin{macro}{\hobby@curveto@override}
 %    \begin{macrocode}
 \def\hobby@curveto@override{%
   \hobby@curveto@delegate}
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@curveto@auto}
+% \begin{macro}{\hobby@curveto@auto}
 % When we're called by TikZ, we initialise the path generation code and start adding points.
 % To ensure that the generation code is called, we add a lot of hooks to lots of TikZ commands.
 %    \begin{macrocode}
@@ -2261,9 +2261,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \global\let\hobby@point@options=\pgfutil@empty
   \tikz@scan@one@point\hobby@addfromtikz}
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@addfromtikz}
+% \begin{macro}{\hobby@addfromtikz}
 % This adds our current point to the stack.
 %    \begin{macrocode}
 \def\hobby@addfromtikz#1{%
@@ -2281,9 +2281,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \tikz@scan@next@command%
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@init@tikz@commands}
+% \begin{macro}{\hobby@init@tikz@commands}
 %    \begin{macrocode}
 \def\hobby@init@tikz@commands{%
   \hobby@init@tikz@modcmd\tikz@movetoabs
@@ -2304,9 +2304,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \global\let\hobby@curveto@delegate=\hobby@midcurveto@auto
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@restore@tikz@commands}
+% \begin{macro}{\hobby@restore@tikz@commands}
 %    \begin{macrocode}
 \def\hobby@restore@tikz@commands{%
   \hobby@restore@tikz@modcmd\tikz@movetoabs
@@ -2327,26 +2327,26 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \global\let\hobby@curveto@delegate=\hobby@curveto@auto
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@init@tikz@modcmd}
+% \begin{macro}{\hobby@init@tikz@modcmd}
 %    \begin{macrocode}
 \def\hobby@init@tikz@modcmd#1{%
     \expandafter\global\expandafter\let\csname hobby@orig@\string#1\endcsname=#1%
     \gdef#1{\hobby@finish#1}%
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@restore@tikz@modcmd}
+% \begin{macro}{\hobby@restore@tikz@modcmd}
 %    \begin{macrocode}
 \def\hobby@restore@tikz@modcmd#1{%
     \expandafter\global\expandafter\let\expandafter#1\csname hobby@orig@\string#1\endcsname%
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@midcurveto@auto}
+% \begin{macro}{\hobby@midcurveto@auto}
 %    \begin{macrocode}
 \def\hobby@midcurveto@auto{%
   \let\tikz@scan@point@options=\pgfutil@empty
@@ -2356,9 +2356,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \tikz@scan@one@point\hobby@addfromtikz%
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@finish}
+% \begin{macro}{\hobby@finish}
 %    \begin{macrocode}
 \def\hobby@finish{%
   \ifhobby@externalise
@@ -2378,9 +2378,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \hobby@restore@tikz@commands
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{quick curve through}
+% \begin{macro}{quick curve through}
 % The \Verb+quick curve through+ is a \Verb+to path+ which does the ``quick'' version of Hobby's algorithm.
 % The syntax is as with the \Verb+curve through+: to pass the midpoints as the argument to the style.
 % We need to pass three points to the auxiliary macro.
@@ -2469,7 +2469,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 \newif\ifqhobby@break
 \newif\ifqhobby@blank
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
 % Add plot handlers
 %    \begin{macrocode}
@@ -2478,7 +2478,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 \tikzoption{closed hobby}[]{\let\tikz@plot@handler=\pgfplothandlerclosedhobby}
 %    \end{macrocode}
 %
-% \begin{function}{\hobby@quickfirst}
+% \begin{macro}{\hobby@quickfirst}
 % The first time around we just set the next point.
 %    \begin{macrocode}
 \def\hobby@quickfirst#1{%
@@ -2506,9 +2506,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
       \hobby@qswallowdots}{%
     \tikz@scan@one@point\hobby@quick}}}
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@qswallowdots}
+% \begin{macro}{\hobby@qswallowdots}
 % Remove dots from the input stream.
 %    \begin{macrocode}
 \def\hobby@qswallowdots.{%
@@ -2516,9 +2516,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \hobby@qswallowdots}{%
     \tikz@scan@one@point\hobby@quick}}
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@quick}
+% \begin{macro}{\hobby@quick}
 % This is our wrapper function that handles the loop.
 %    \begin{macrocode}
 \def\hobby@quick#1{%
@@ -2537,9 +2537,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
       \hobby@qswallowdots}{%
       \tikz@scan@one@point\hobby@quick}}}
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@quick@makepath}
+% \begin{macro}{\hobby@quick@makepath}
 % Path constructor for \Verb+to path+ use.
 %    \begin{macrocode}
 \def\hobby@quick@makepath#1#2#3{%
@@ -2563,9 +2563,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \hobby@next@qblank
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@qcurveto@auto}
+% \begin{macro}{\hobby@qcurveto@auto}
 % Uses the ``quick'' method for the shortcut syntax.
 %    \begin{macrocode}
 \def\hobby@qcurveto@auto{%
@@ -2582,9 +2582,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \global\let\hobby@point@options=\pgfutil@empty
   \tikz@scan@one@point\hobby@qfirst@auto}
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@qmidcurveto@auto}
+% \begin{macro}{\hobby@qmidcurveto@auto}
 %    \begin{macrocode}
 \def\hobby@qmidcurveto@auto{%
   \let\tikz@scan@point@options=\pgfutil@empty
@@ -2592,9 +2592,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \global\let\hobby@point@options=\pgfutil@empty
   \tikz@scan@one@point\hobby@qaddfromtikz}
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@qfirst@auto}
+% \begin{macro}{\hobby@qfirst@auto}
 %    \begin{macrocode}
 \def\hobby@qfirst@auto#1{%
   #1%
@@ -2603,9 +2603,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \tikz@scan@next@command%
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@quick@makepathauto}
+% \begin{macro}{\hobby@quick@makepathauto}
 % Path constructor for shortcut method to use.
 %    \begin{macrocode}
 \def\hobby@quick@makepathauto#1#2#3{%
@@ -2640,9 +2640,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \hobby@next@qblank
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@qaddfromtikz}
+% \begin{macro}{\hobby@qaddfromtikz}
 % This adds our current point to the stack.
 %    \begin{macrocode}
 \def\hobby@qaddfromtikz#1{%
@@ -2651,9 +2651,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \tikz@scan@next@command%
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@qinit@tikz@commands}
+% \begin{macro}{\hobby@qinit@tikz@commands}
 %    \begin{macrocode}
 \def\hobby@qinit@tikz@commands{%
   \hobby@qinit@tikz@modcmd\tikz@movetoabs
@@ -2674,9 +2674,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \global\let\hobby@curveto@delegate=\hobby@qmidcurveto@auto
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@qrestore@tikz@commands}
+% \begin{macro}{\hobby@qrestore@tikz@commands}
 %    \begin{macrocode}
 \def\hobby@qrestore@tikz@commands{%
   \hobby@restore@tikz@modcmd\tikz@movetoabs
@@ -2698,25 +2698,25 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \global\let\hobby@curveto@delegate=\hobby@qcurveto@auto
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@qinit@tikz@modcmd}
+% \begin{macro}{\hobby@qinit@tikz@modcmd}
 %    \begin{macrocode}
 \def\hobby@qinit@tikz@modcmd#1{%
     \expandafter\global\expandafter\let\csname hobby@orig@\string#1\endcsname=#1%
     \gdef#1{\hobby@qfinish#1}%
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\hobby@qfinish}
+% \begin{macro}{\hobby@qfinish}
 %    \begin{macrocode}
 \def\hobby@qfinish{%
   \hobby@quick@computeend
   \hobby@qrestore@tikz@commands
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 
 % \iffalse
 %</tikzlibrary>
@@ -2750,7 +2750,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 \int_new:N \g_array_base_int
 \int_set:Nn \g_array_base_int {0}
 %    \end{macrocode}
-% \begin{function}{\array_adjust_ends:Nn}
+% \begin{macro}{\array_adjust_ends:Nn}
 % This ensures that the ``base'' and ``top'' are big enough to include the given index.
 %    \begin{macrocode}
 \cs_new:Npn \array_adjust_ends:Nn #1#2 {
@@ -2778,9 +2778,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   }
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_gadjust_ends:Nn}
+% \begin{macro}{\array_gadjust_ends:Nn}
 % This ensures that the ``base'' and ``top'' are big enough to include the given index.
 % (Global version)
 %    \begin{macrocode}
@@ -2809,9 +2809,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   }
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_put:Nnn}
+% \begin{macro}{\array_put:Nnn}
 % When adding a value to an array we have to adjust the ends.
 %    \begin{macrocode}
 \cs_new:Npn \array_put:Nnn #1#2#3 {
@@ -2820,9 +2820,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 }
 \cs_generate_variant:Nn \array_put:Nnn {Nnx}
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_gput:Nnn}
+% \begin{macro}{\array_gput:Nnn}
 % When adding a value to an array we have to adjust the ends.
 % (Global version)
 %    \begin{macrocode}
@@ -2832,33 +2832,33 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 }
 \cs_generate_variant:Nn \array_gput:Nnn {Nnx}
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_get:NnN}
+% \begin{macro}{\array_get:NnN}
 %    \begin{macrocode}
 \cs_new:Npn \array_get:NnN #1#2#3 {
   \exp_args:NNx \prop_get:NnN #1 {\int_eval:n {#2}} #3
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}[EXP]{\array_get:Nn}
+% \begin{macro}[EXP]{\array_get:Nn}
 %    \begin{macrocode}
 \cs_new:Npn \array_get:Nn #1#2 {
   \exp_args:NNf \prop_get:Nn #1 { \int_eval:n {#2} }
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_get:NnNTF}
+% \begin{macro}{\array_get:NnNTF}
 %    \begin{macrocode}
 \cs_new:Npn \array_get:NnNTF #1#2#3#4#5 {
   \exp_args:NNx \prop_get:NnNTF #1 {\int_eval:n {#2}} #3 {#4}{#5}
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_if_empty:NTF}
+% \begin{macro}{\array_if_empty:NTF}
 %    \begin{macrocode}
 \prg_new_conditional:Npnn \array_if_empty:N #1 { p, T, F, TF }
 {
@@ -2869,27 +2869,27 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \fi:
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_new:N}
+% \begin{macro}{\array_new:N}
 %    \begin{macrocode}
 \cs_new_eq:NN \array_new:N \prop_new:N
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_clear:N}
+% \begin{macro}{\array_clear:N}
 %    \begin{macrocode}
 \cs_new_eq:NN \array_clear:N \prop_clear:N
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_gclear:N}
+% \begin{macro}{\array_gclear:N}
 %    \begin{macrocode}
 \cs_new_eq:NN \array_gclear:N \prop_gclear:N
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_map_function}
+% \begin{macro}{\array_map_function}
 % When stepping through an array, we want to iterate in order so a simple wrapper to \Verb+\prop_map_function+ is not enough.
 % This maps through every value from the base to the top so the function should be prepared to deal with a \Verb+\q_no_value+.
 %    \begin{macrocode}
@@ -2915,9 +2915,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 \cs_generate_variant:Nn \array_map_function:NN {     Nc }
 \cs_generate_variant:Nn \array_map_function:NN { c , cc }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_reverse_map_function}
+% \begin{macro}{\array_reverse_map_function}
 % This steps through the array in reverse order.
 %    \begin{macrocode}
 \cs_new:Npn \array_reverse_map_function:NN #1#2
@@ -2942,9 +2942,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 \cs_generate_variant:Nn \array_reverse_map_function:NN {     Nc }
 \cs_generate_variant:Nn \array_reverse_map_function:NN { c , cc }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_map_inline:Nn}
+% \begin{macro}{\array_map_inline:Nn}
 % Inline version of the above.
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_map_inline:Nn #1#2
@@ -2958,9 +2958,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   }
 \cs_generate_variant:Nn \array_map_inline:Nn { c }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_reverse_map_inline:Nn}
+% \begin{macro}{\array_reverse_map_inline:Nn}
 % Inline version of the above.
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_reverse_map_inline:Nn #1#2
@@ -2974,16 +2974,16 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   }
 \cs_generate_variant:Nn \array_reverse_map_inline:Nn { c }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_map_break:}
+% \begin{macro}{\array_map_break:}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \array_map_break:
   { \__prg_map_break:Nn \array_map_break: { } }
 \cs_new_nopar:Npn \array_map_break:n
   { \__prg_map_break:Nn \array_map_break: }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
 % For displaying arrays, we need some messages.
 %    \begin{macrocode}
@@ -2996,7 +2996,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   }
 %    \end{macrocode}
 %
-% \begin{function}{\array_show:N}
+% \begin{macro}{\array_show:N}
 % Mapping through an array isn't expandable so we have to set a token list to its contents first before passing it to the message handler.
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_show:N #1
@@ -3019,9 +3019,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 }
 \cs_generate_variant:Nn \array_show:N { c }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_push:Nn}
+% \begin{macro}{\array_push:Nn}
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_push:Nn #1#2
 {
@@ -3037,9 +3037,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 }
 \cs_generate_variant:Nn \array_push:Nn {Nx}
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_gpush:Nn}b
+% \begin{macro}{\array_gpush:Nn}b
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_gpush:Nn #1#2
 {
@@ -3055,9 +3055,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 }
 \cs_generate_variant:Nn \array_gpush:Nn {Nx}
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_unshift:Nn}
+% \begin{macro}{\array_unshift:Nn}
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_unshift:Nn #1#2
 {
@@ -3073,9 +3073,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 }
 \cs_generate_variant:Nn \array_unshift:Nn {Nx}
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_gunshift:Nn}
+% \begin{macro}{\array_gunshift:Nn}
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_gunshift:Nn #1#2
 {
@@ -3091,9 +3091,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 }
 \cs_generate_variant:Nn \array_gunshift:Nn {Nx}
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_pop:NN}
+% \begin{macro}{\array_pop:NN}
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_pop:NN #1#2
 {
@@ -3102,9 +3102,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \array_del:Nn #1 {\l_array_tmp_tl}
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_gpop:NN}
+% \begin{macro}{\array_gpop:NN}
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_gpop:NN #1#2
 {
@@ -3113,9 +3113,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \array_gdel:Nn #1 {\l_array_tmp_tl}
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_shift:NN}
+% \begin{macro}{\array_shift:NN}
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_shift:NN #1#2
 {
@@ -3124,9 +3124,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \array_del:Nn #1 {\l_array_tmp_tl}
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_gshift:NN}
+% \begin{macro}{\array_gshift:NN}
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_gshift:NN #1#2
 {
@@ -3135,9 +3135,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \array_gdel:Nn #1 {\l_array_tmp_tl}
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_top:NN}
+% \begin{macro}{\array_top:NN}
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_top:NN #1#2
 {
@@ -3145,9 +3145,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \array_get:NnN #1 {\l_array_tmp_tl} #2
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_base:NN}
+% \begin{macro}{\array_base:NN}
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_base:NN #1#2
 {
@@ -3155,27 +3155,27 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \array_get:NnN #1 {\l_array_tmp_tl} #2
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_top:N}
+% \begin{macro}{\array_top:N}
 %    \begin{macrocode}
 \cs_new:Npn \array_top:N #1
 {
   \array_get:Nn #1 {\prop_get:Nn #1 {top}}
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_base:N}
+% \begin{macro}{\array_base:N}
 %    \begin{macrocode}
 \cs_new:Npn \array_base:N #1
 {
   \array_get:Nn #1 {\prop_get:Nn #1 {base}}
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_del:Nn}
+% \begin{macro}{\array_del:Nn}
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_del:Nn #1#2
 {
@@ -3223,9 +3223,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   }
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_gdel:Nn}
+% \begin{macro}{\array_gdel:Nn}
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_gdel:Nn #1#2
 {
@@ -3273,16 +3273,16 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   }
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %
-% \begin{function}{\array_length:N}
+% \begin{macro}{\array_length:N}
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_length:N #1
 {
   \int_eval:n {\prop_get:Nn #1 {top} - \prop_get:Nn #1 {base}}
 }
 %    \end{macrocode}
-% \end{function}
+% \end{macro}
 %    \begin{macrocode}
 \ExplSyntaxOff
 %    \end{macrocode}

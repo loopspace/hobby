@@ -8,10 +8,32 @@
 \usepackage{amsmath}
 \usepackage{fancyvrb}
 \usetikzlibrary{hobby,decorations.pathreplacing}
-\usepackage[margin=3cm]{geometry}
+\usepackage{listings}
+\lstloadlanguages{[LaTeX]TeX}
+\lstset{breakatwhitespace=true,breaklines=true,language=TeX}
+
 \EnableCrossrefs
 \CodelineIndex
 \RecordChanges
+
+\newenvironment{example}
+  {\VerbatimEnvironment
+   \begin{VerbatimOut}{example.out}}
+  {\end{VerbatimOut}
+   \begin{center}
+   \setlength{\parindent}{0pt}
+   \fbox{\begin{minipage}{.9\linewidth}
+     \lstset{breakatwhitespace=true,breaklines=true,language=TeX,basicstyle=\small}
+     \lstinputlisting[]{example.out}
+   \end{minipage}}
+   \fbox{\begin{minipage}{.9\linewidth}
+     \centering
+     \input{example.out}
+   \end{minipage}}
+\end{center}
+}
+
+
 
 \tikzset{
   show curve controls/.style={
@@ -36,6 +58,7 @@
 \providecommand*{\url}{\texttt}
 \title{The \textsf{Hobby} package}
 \author{Andrew Stacey \\ \url{stacey@math.ntnu.no}}
+\date{v1.2 from 2013/04/12}
 \begin{document}
 \maketitle
 
@@ -131,42 +154,27 @@ The key \Verb+curve through={<points>}+ installs a \Verb+to path+ which draws a 
 The points should be specified as a list which can be optionally separated by dots.
 The purpose of allowing the dots is to make it simpler to switch between the \Verb+to path+ method and the \Verb+shortcut+ method (described in Section~\ref{sec:shortcut}).
 However, note that the two methods are not completely synonymous due to how one can specify options so care must still be taken when switching.
-%%
-\begin{verbatim}
-\begin{tikzpicture}
-\draw (0,0) to[curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
-\end{tikzpicture}
-\end{verbatim}
-\begin{center}
-\begin{tikzpicture}[scale=.5]
-\draw (0,0) to[curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
-\end{tikzpicture}
-\end{center}
 
-\begin{verbatim}
-\begin{tikzpicture}
-\draw (0,0) to[curve through={(6,4) (4,9) (1,7)}] (3,5);
+\begin{example}
+\begin{tikzpicture}[scale=.5]
+\draw (0,0) to[curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
 \end{tikzpicture}
-\end{verbatim}
-\begin{center}
+\end{example}
+
+\begin{example}
 \begin{tikzpicture}[scale=.5]
 \draw (0,0) to[curve through={(6,4) (4,9) (1,7)}] (3,5);
 \end{tikzpicture}
-\end{center}
+\end{example}
 
 There is a corresponding key \Verb+quick curve through={<points>}+ which uses the ``quick'' algorithm.
 Again, the dots are optional.
-%%
-\begin{verbatim}
-\begin{tikzpicture}
-\draw (0,0) to[quick curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
-\end{tikzpicture}
-\end{verbatim}
-\begin{center}
+
+\begin{example}
 \begin{tikzpicture}[scale=.5]
 \draw (0,0) to[quick curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
 \end{tikzpicture}
-\end{center}
+\end{example}
 
 \subsection{The \textsf{shortcut} Method}
 \label{sec:shortcut}
@@ -174,28 +182,18 @@ Again, the dots are optional.
 There is also the facility to subvert TikZ's path processor and define curves simply using the \Verb+..+ separator between points.
 Note that this relies on something a little special in TikZ: the syntax \Verb+(0,0) .. (2,3)+ is currently detected and processed but there is no action assigned to that syntax.
 As a later version of TikZ may assign some action to that syntax, this package makes its override optional via the key \Verb+use Hobby shortcut+ (which can be set globally if so desired).
-%
-\begin{verbatim}
-\begin{tikzpicture}[use Hobby shortcut]
-\draw (-3,0) -- (0,0) .. (6,4) .. (4,9) .. (1,7) .. (3,5) -- ++(2,0);
-\end{tikzpicture}
-\end{verbatim}
-\begin{center}
+
+\begin{example}
 \begin{tikzpicture}[scale=.5,use Hobby shortcut]
 \draw (-3,0) -- (0,0) .. (6,4) .. (4,9) .. (1,7) .. (3,5) -- ++(2,0);
 \end{tikzpicture}
-\end{center}
+\end{example}
 
-\begin{verbatim}
-\begin{tikzpicture}[use quick Hobby shortcut]
-\draw (-3,0) -- (0,0) .. (6,4) .. (4,9) .. (1,7) .. (3,5) -- ++(2,0);
-\end{tikzpicture}
-\end{verbatim}
-\begin{center}
+\begin{example}
 \begin{tikzpicture}[scale=.5,use quick Hobby shortcut]
 \draw (-3,0) -- (0,0) .. (6,4) .. (4,9) .. (1,7) .. (3,5) -- ++(2,0);
 \end{tikzpicture}
-\end{center}
+\end{example}
 
 \subsection{The \textsf{Plot Handler} Method}
 
@@ -203,14 +201,7 @@ The algorithms can also be used via the \Verb+plot handler+ syntax.
 This library registers three plot handlers: \Verb+hobby+, \Verb+closed hobby+, and \Verb+quick hobby+.
 The first is an open curve through the points using the full algorithm, the second is a closed curve, and the third uses the quick algorithm (and is thus an open curve).
 
-\begin{verbatim}
-\tikz[smooth] \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
-\tikz[hobby] \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
-\tikz[closed hobby] \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
-\tikz[quick hobby] \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
-\end{verbatim}
-
-\begin{center}
+\begin{example}
 \tikz[smooth] \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
 
 \tikz[hobby] \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
@@ -218,28 +209,19 @@ The first is an open curve through the points using the full algorithm, the seco
 \tikz[closed hobby] \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
 
 \tikz[quick hobby] \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
-\end{center}
+\end{example}
 
 This has the side effect that these can be used with the \Verb+pgfplots+ package.
 However, the Hobby algorithm is designed to draw a curve in 2D-{}space and does not take into account the fact that when plotting a graph then the two dimensions are treated differently.
 
-\begin{verbatim}
+\begin{example}
 \begin{tikzpicture}
 \begin{axis}
 \addplot +[smooth] {rnd};
 \addplot +[hobby] {rnd};
 \end{axis}
 \end{tikzpicture}
-\end{verbatim}
-%
-\begin{center}
-\begin{tikzpicture}
-\begin{axis}
-\addplot +[smooth] {rnd};
-\addplot +[hobby] {rnd};
-\end{axis}
-\end{tikzpicture}
-\end{center}
+\end{example}
 
 \section{Customisation}
 
@@ -262,109 +244,64 @@ Let us start with the customisations to the algorithm.
 
 \begin{itemize}
 \item Basic curve.
-\begin{verbatim}
+\begin{example}
 \begin{tikzpicture}
 \draw[postaction=show curve controls]
 (0,0) to[curve through={(1,.5) .. (2,0) .. (3,.5)}] (4,0);
 \draw[xshift=5cm,use Hobby shortcut,postaction=show curve controls]
 (0,0) .. (1,.5) .. (2,0) .. (3,.5) .. (4,0);
 \end{tikzpicture}
-\end{verbatim}
-\begin{center}
-\begin{tikzpicture}
-\draw[postaction=show curve controls]
-(0,0) to[curve through={(1,.5) .. (2,0) .. (3,.5)}] (4,0);
-\draw[xshift=5cm,use Hobby shortcut,postaction=show curve controls]
-(0,0) .. (1,.5) .. (2,0) .. (3,.5) .. (4,0);
-\end{tikzpicture}
-\end{center}
+\end{example}
 
 \item The path can be open, as above, or closed.
 %%
-\begin{verbatim}
-\begin{tikzpicture}
+\begin{example}
+\begin{tikzpicture}[scale=.5]
 \draw[postaction=show curve controls]
 (0,0) to[closed,curve through={(1,.5) .. (2,0) .. (3,.5)}] (4,0);
 \draw[xshift=5cm,use Hobby shortcut,postaction=show curve controls]
 ([closed]0,0) .. (1,.5) .. (2,0) .. (3,.5) .. (4,0);
 \end{tikzpicture}
-\end{verbatim}
-\begin{center}
-\begin{tikzpicture}
-\draw[postaction=show curve controls]
-(0,0) to[closed,curve through={(1,.5) .. (2,0) .. (3,.5)}] (4,0);
-\draw[xshift=5cm,use Hobby shortcut,postaction=show curve controls]
-([closed]0,0) .. (1,.5) .. (2,0) .. (3,.5) .. (4,0);
-\end{tikzpicture}
-\end{center}
+\end{example}
 
 \item Specifying the angle at which the curve goes \emph{out} and at which it comes \emph{in}.
 The angles given are absolute.
-\begin{verbatim}
+\begin{example}
 \begin{tikzpicture}
 \draw[postaction=show curve controls]
 (0,0) to[out angle=0,in angle=180,curve through={(1,.5) .. (2,0) .. (3,.5)}] (4,0);
 \draw[xshift=5cm,use Hobby shortcut,postaction=show curve controls]
 ([out angle=0,in angle=180]0,0) .. (1,.5) .. (2,0) .. (3,.5) .. (4,0);
 \end{tikzpicture}
-\end{verbatim}
-\begin{center}
-\begin{tikzpicture}
-\draw[postaction=show curve controls]
-(0,0) to[out angle=0,in angle=180,curve through={(1,.5) .. (2,0) .. (3,.5)}] (4,0);
-\draw[xshift=5cm,use Hobby shortcut,postaction=show curve controls]
-([out angle=0,in angle=180]0,0) .. (1,.5) .. (2,0) .. (3,.5) .. (4,0);
-\end{tikzpicture}
-\end{center}
+\end{example}
+
 \item Applying tension as the curve comes in to a point.
-\begin{verbatim}
+\begin{example}
 \begin{tikzpicture}
 \draw[postaction=show curve controls]
 (0,0) to[curve through={(1,.5) .. ([tension in=2]2,0) .. (3,.5)}] (4,0);
 \draw[xshift=5cm,use Hobby shortcut,postaction=show curve controls]
 (0,0) .. (1,.5) .. ([tension in=2]2,0) .. (3,.5) .. (4,0);
 \end{tikzpicture}
-\end{verbatim}
-\begin{center}
-\begin{tikzpicture}
-\draw[postaction=show curve controls]
-(0,0) to[curve through={(1,.5) .. ([tension in=2]2,0) .. (3,.5)}] (4,0);
-\draw[xshift=5cm,use Hobby shortcut,postaction=show curve controls]
-(0,0) .. (1,.5) .. ([tension in=2]2,0) .. (3,.5) .. (4,0);
-\end{tikzpicture}
-\end{center}
+\end{example}
+
 \item Applying the same tension as a curve comes in and goes out of a point.
-\begin{verbatim}
+\begin{example}
 \begin{tikzpicture}
 \draw[postaction=show curve controls]
 (0,0) to[curve through={(1,.5) .. ([tension=2]2,0) .. (3,.5)}] (4,0);
 \end{tikzpicture}
-\end{verbatim}
-\begin{center}
-\begin{tikzpicture}
-\draw[postaction=show curve controls]
-(0,0) to[curve through={(1,.5) .. ([tension=2]2,0) .. (3,.5)}] (4,0);
-\draw[xshift=5cm,use Hobby shortcut,postaction=show curve controls]
-(0,0) .. (1,.5) .. ([tension=2]2,0) .. (3,.5) .. (4,0);
-\end{tikzpicture}
-\end{center}
+\end{example}
+
 \item Specifying the \emph{curl} parameters.
-\begin{verbatim}
+\begin{example}
 \begin{tikzpicture}
 \draw[postaction=show curve controls]
 (0,0) to[in curl=.1,out curl=3,curve through={(1,.5) .. (2,0) .. (3,.5)}] (4,0);
 \draw[xshift=5cm,use Hobby shortcut,postaction=show curve controls]
 (0,0) .. ([in curl=.1,out curl=3]1,.5) .. (2,0) .. (3,.5) .. (4,0);
 \end{tikzpicture}
-\end{verbatim}
-\begin{center}
-\begin{tikzpicture}[use Hobby shortcut]
-\draw[postaction=show curve controls]
-(0,0) to[in curl=.1,out curl=3,curve through={(1,.5) .. (2,0) .. (3,.5)}] (4,0);
-\draw[xshift=5cm,use Hobby shortcut,postaction=show curve controls]
-(0,0) .. ([in curl=.1,out curl=3]1,.5) .. (2,0) .. (3,.5) .. (4,0);
-\end{tikzpicture}
-\end{center}
+\end{example}
 \end{itemize}
 
 \subsection{Edge Cases}
@@ -373,55 +310,38 @@ Angles are constrained to lie in the interval \((-\pi,\pi]\).
 This can introduce edge cases as there is a point where we have to compare an angle with \(-\pi\) and if it is equal, add \(2 \pi\).
 This will occur if the path ``doubles back'' on itself as in the next example.
 By nudging the repeated point slightly, the behaviour changes drastically.
-\begin{verbatim}
+
+\begin{example}
 \begin{tikzpicture}[use Hobby shortcut]
 \draw (0,0) .. (1,0) .. (0,0) .. (0,-1);
 \draw[xshift=2cm] (0,0) .. (1,0) .. (0,0.1) .. (0,-1);
 \draw[xshift=4cm] (0,0) .. (1,0) .. (0,-0.1) .. (0,-1);
 \end{tikzpicture}
-\end{verbatim}
-\begin{center}
-\begin{tikzpicture}[use Hobby shortcut]
-\draw (0,0) .. (1,0) .. (0,0) .. (0,-1);
-\draw[xshift=2cm] (0,0) .. (1,0) .. (0,0.1) .. (0,-1);
-\draw[xshift=4cm] (0,0) .. (1,0) .. (0,-0.1) .. (0,-1);
-\end{tikzpicture}
-\end{center}
+\end{example}
+
 Due to the precision of the computations, it is not possible to always get this test correct.
 The simplest solution is to nudge the repeated point in one direction or the other.
 Experimenting shows that the ``nudge factor'' can be extremely small (note that it will be proportional to the distance between the specified points).
 It is best to nudge it in the direction most normal to the line between the specified points as the goal is to nudge the difference of the angles.
 An alternative solution is to add an additional point for the curve to go through.
-\begin{verbatim}
+\begin{example}
 \begin{tikzpicture}[use Hobby shortcut]
 \draw (0,0) .. (1,0) .. (0,0) .. (0,-1);
 \draw[xshift=2cm] (0,0) .. (1,0) .. (0,0.002) .. (0,-1);
 \draw[xshift=4cm] (0,0) .. (1,0) .. (0,-0.002) .. (0,-1);
 \end{tikzpicture}
-\end{verbatim}
-\begin{center}
-\begin{tikzpicture}[use Hobby shortcut]
-\draw (0,0) .. (1,0) .. (0,0) .. (0,-1);
-\draw[xshift=2cm] (0,0) .. (1,0) .. (0,0.002) .. (0,-1);
-\draw[xshift=4cm] (0,0) .. (1,0) .. (0,-0.002) .. (0,-1);
-\end{tikzpicture}
-\end{center}
+\end{example}
+
 Lastly, it is possible to add an \Verb+excess angle+ key to a coordinate.
 This will add the corresponding multiple of \(2\pi\) to the angle difference.
-\begin{verbatim}
+\begin{example}
 \begin{tikzpicture}[use Hobby shortcut]
 \draw (0,0) .. (1,0) .. (0,0) .. (0,-1);
 \draw[xshift=2cm] (0,0) .. ([excess angle=1]1,0) .. (0,0) .. (0,-1);
 \draw[xshift=4cm] (0,0) .. ([excess angle=-1]1,0) .. (0,0) .. (0,-1);
 \end{tikzpicture}
-\end{verbatim}
-\begin{center}
-\begin{tikzpicture}[use Hobby shortcut]
-\draw (0,0) .. (1,0) .. (0,0) .. (0,-1);
-\draw[xshift=2cm] (0,0) .. ([excess angle=1]1,0) .. (0,0) .. (0,-1);
-\draw[xshift=4cm] (0,0) .. ([excess angle=-1]1,0) .. (0,0) .. (0,-1);
-\end{tikzpicture}
-\end{center}
+\end{example}
+
 Although this is intended to be an integer, no check is done and so some quite odd curves can result from changing this parameter.
 
 \subsection{Reusing Paths}
@@ -430,38 +350,26 @@ Although the (full) algorithm has good theoretical computation time, using \TeX\
 The externalisation library of TikZ/PGF can be used to save whole pictures, but it can be useful to save a generated path within a single \Verb+tikzpicture+ for later use within that same picture.
 The implementation allows for this by separating the generation of the path from its use.
 
-\begin{verbatim}
+\begin{example}
 \begin{tikzpicture}
 \draw[line width=3mm,red,use Hobby shortcut,save Hobby path={saved}] (0,0) .. (1,1) .. (2,0);
 \draw[xshift=2cm,ultra thick,yellow] (0,0) [restore and use Hobby path={saved}{}];
 \end{tikzpicture}
-\end{verbatim}
+\end{example}
 %
-\begin{center}
-\begin{tikzpicture}
-\draw[line width=3mm,red,use Hobby shortcut,save Hobby path={saved}] (0,0) .. (1,1) .. (2,0);
-\draw[xshift=2cm,ultra thick,yellow] (0,0) [restore and use Hobby path={saved}{}];
-\end{tikzpicture}
-\end{center}
 
 Note that the key \Verb+restore and use Hobby path+ is given \emph{after} the initial \Verb+(0,0)+.
 This is because by default the path generated by the Hobby algorithm does not start with an explicit \Verb+moveto+ since that is the standard behaviour of all of PGF's path construction macros.
 So the \Verb+(0,0)+ ensures that our path is well-{}formed by issuing an initial \Verb+moveto+.
 An alternative would be to use the key \Verb+disjoint+ which does add an initial \Verb+moveto+.
 
-\begin{verbatim}
+\begin{example}
 \begin{tikzpicture}
 \draw[line width=3mm,red,use Hobby shortcut,save Hobby path={saved}] (0,0) .. (1,1) .. (2,0);
 \draw[xshift=2cm,ultra thick,yellow,restore and use Hobby path={saved}{disjoint}];
 \end{tikzpicture}
-\end{verbatim}
+\end{example}
 %
-\begin{center}
-\begin{tikzpicture}
-\draw[line width=3mm,red,use Hobby shortcut,save Hobby path={saved}] (0,0) .. (1,1) .. (2,0);
-\draw[xshift=2cm,ultra thick,yellow,restore and use Hobby path={saved}{disjoint}];
-\end{tikzpicture}
-\end{center}
 
 An example of where this is useful is in drawing knot diagrams.
 When so doing, it is sometimes convenient to draw a path (or segment of a path) twice in order to get the under/over crossings correct.
@@ -471,22 +379,15 @@ A path can then be redrawn with the blank/non-{}blank segments reversed.
 As it might be desired to have only some blank segments drawn the second time, there are two types of blank.
 Only a \Verb+soft+ blank will be reversed in these circumstances.
 
-\begin{verbatim}
+\begin{example}
 \begin{tikzpicture}[use Hobby shortcut,line width=1mm,rotate=90]
 \draw[blue,save Hobby path={left}]
  ([out angle=90,in angle=-90]1,0) .. (1,1) .. ([blank=soft]0,2) .. (1,3) .. (1,4);
 \draw[red] ([out angle=90,in angle=-90]0,0) .. (0,1) .. (1,2) .. (0,3) .. (0,4);
 \draw[blue,restore and use Hobby path={left}{disjoint,invert soft blanks}];
 \end{tikzpicture}
-\end{verbatim}
+\end{example}
 %
-\begin{center}
-\begin{tikzpicture}[use Hobby shortcut,line width=1mm,rotate=90]
-\draw[blue,save Hobby path={left}] ([out angle=90,in angle=-90]1,0) .. (1,1) .. ([blank=soft]0,2) .. (1,3) .. (1,4);
-\draw[red] ([out angle=90,in angle=-90]0,0) .. (0,1) .. (1,2) .. (0,3) .. (0,4);
-\draw[blue,restore and use Hobby path={left}{disjoint,invert soft blanks}];
-\end{tikzpicture}
-\end{center}
 
 This can be taken a step further.
 The generated data can be saved to the \Verb+aux+ file and read back in, avoiding the need to regenerate it on each run.
@@ -543,23 +444,17 @@ The effect of this is seen when the key \Verb+invert soft blanks+ is used.
 This swaps the drawing action so that non-{}blank segments are skipped and \emph{soft} blanks are drawn.
 Non-{}soft-{}blank segments are still not drawn.
 
-\begin{verbatim}
+\begin{example}
 \begin{tikzpicture}[use Hobby shortcut]
 \draw (0,0) .. (1,1) .. ([blank=soft]2,0) .. (3,1) .. ([blank]4,0) .. (5,1);
 \draw[red,use previous Hobby path={invert soft blanks,disjoint}];
 \end{tikzpicture}
-\end{verbatim}
+\end{example}
 %
-\begin{center}
-\begin{tikzpicture}[use Hobby shortcut]
-\draw (0,0) .. (1,1) .. ([blank=soft]2,0) .. (3,1) .. ([blank]4,0) .. (5,1);
-\draw[red,use previous Hobby path={invert soft blanks,disjoint}];
-\end{tikzpicture}
-\end{center}
 
 As a more practical application, consider the following rendering of a trefoil knot.
 
-\begin{verbatim}
+\begin{example}
 \begin{tikzpicture}[
   use Hobby shortcut,
   every path/.style={
@@ -573,18 +468,12 @@ As a more practical application, consider the following rendering of a trefoil k
 ([blank=soft]0,.5) .. (210:2) .. ([blank=soft]-30:.5);
 \draw[use previous Hobby path={invert soft blanks,disjoint}];
 \end{tikzpicture}
-\end{verbatim}
+\end{example}
 %
-\begin{center}
-\begin{tikzpicture}[use Hobby shortcut,every path/.style={line width=1mm,white,double=red,double distance=.5mm}]
-\draw ([closed]0,2) .. ([blank=soft]210:.5) .. (-30:2) .. ([blank=soft]0,.5) .. (210:2) .. ([blank=soft]-30:.5);
-\draw[use previous Hobby path={invert soft blanks,disjoint}];
-\end{tikzpicture}
-\end{center}
 
 This could easily be generalised using the \Verb+\foreach+ command, as demonstrated in the next code.
 
-\begin{verbatim}
+\begin{example}
 \begin{tikzpicture}[
   use Hobby shortcut,
   every path/.style={
@@ -601,18 +490,8 @@ This could easily be generalised using the \Verb+\foreach+ command, as demonstra
 };
 \draw[use previous Hobby path={invert soft blanks,disjoint}];
 \end{tikzpicture}
-\end{verbatim}
+\end{example}
 %
-\begin{center}
-\begin{tikzpicture}[use Hobby shortcut,every path/.style={line width=1mm,white,double=red,double distance=.5mm}]
-\def\nfoil{9}
-\draw ([closed]0,2)
-\foreach \k in {1,...,\nfoil} {
-  .. ([blank=soft]90+360*\k/\nfoil-180/\nfoil:-.5) .. (90+360*\k/\nfoil:2)
-};
-\draw[use previous Hobby path={invert soft blanks,disjoint}];
-\end{tikzpicture}
-\end{center}
 
 \subsection{Breaking the Path}
 
@@ -626,7 +505,7 @@ The following key implements this, the technicalities are due to the fact that t
 Note that specifying the tangent vector at every point means that the algorithm is not actually being used.
 However, Hobby's formulae for the lengths of the control points is still being used.
 
-\begin{verbatim}
+\begin{example}
 \begin{tikzpicture}[
     use Hobby shortcut,
   tangent/.style={%
@@ -641,24 +520,8 @@ However, Hobby's formulae for the lengths of the control points is still being u
 \draw[thick] (-5,2) .. ([tangent=0]-3,3) .. (-1,1) .. (0,-1.3) .. %
 ([tangent=0]1,-2) .. ([tangent=45]2,-1.5) .. ([tangent=0]3,-2) .. (5,-4);
 \end{tikzpicture}
-\end{verbatim}
+\end{example}
 %
-\begin{center}
-\begin{tikzpicture}[
-    use Hobby shortcut,
-  tangent/.style={%
-    in angle={(180+#1)},
-    Hobby finish,
-    designated Hobby path=next,
-    out angle=#1,
-  },
-]
-\draw[help lines] (-5,-5) grid (5,5);
-\draw (-5,0) -- (5,0) (0,-5) -- (0,5);
-\draw[thick] (-5,2) .. ([tangent=0]-3,3) .. (-1,1) .. (0,-1.3) .. %
-([tangent=0]1,-2) .. ([tangent=45]2,-1.5) .. ([tangent=0]3,-2) .. (5,-4);
-\end{tikzpicture}
-\end{center}
 
 
 
