@@ -1,11 +1,3 @@
-\documentclass{article}
-\usepackage{tikz}
-\usetikzlibrary{hobby}
-
-\begin{document}
-\tikz \draw[use quick Hobby shortcut] (0,0) .. (0,2) .. (2,1);
-\end{document}
-
 \immediate\write18{tex hobby.dtx}
 \documentclass{article}
 \usepackage{amsmath}
@@ -44,6 +36,32 @@
 \begin{document}
 
 %\pgfmathsetseed{2}
+\begin{tikzpicture}
+\draw[use Hobby shortcut] ([closed]0,0) .. (1,1) .. (2,0);
+\end{tikzpicture}
+
+\begin{tikzpicture}
+\draw[use Hobby shortcut] (0:rnd+2) \foreach \ang in {0,20,...,350} { .. (\ang:rnd+2) };
+\end{tikzpicture}
+
+\begin{tikzpicture}
+\draw[use Hobby shortcut] ([closed]0:rnd+2) \foreach \ang in {0,20,...,350} { .. (\ang:rnd+2) };
+\end{tikzpicture}
+
+\begin{tikzpicture}[use Hobby shortcut]
+\draw[save Hobby path={first}]
+(1,0) .. coordinate (a) ([blank=soft]2,1) .. coordinate (b) ([blank=soft]3,0) .. (4,1) .. coordinate (e) (5,0);
+\draw[ultra thick,blue,restore and use Hobby path={first}{disjoint,invert soft blanks}];
+\draw[red,<-] (a) -- +(0,3) node[above] {a};
+\draw[green,<-] (b) -- +(0,3) node[above] {b};
+\draw[blue,<-] (e) -- +(0,3) node[above] {e};
+\begin{scope}[xshift=4cm]
+\draw (1,0) -- coordinate (c) (2,1) -- coordinate (d) (3,0);
+\draw[red,<-] (c) -- +(0,3) node[above] {c};
+\draw[green,<-] (d) -- +(0,3) node[above] {d};
+\end{scope}
+\end{tikzpicture}
+
 
 \begin{tikzpicture}
 \draw[use Hobby shortcut] ([closed]0:rnd+2) \foreach \ang in {0,20,...,350} { .. (\ang:rnd+2) };
@@ -66,7 +84,6 @@
 
 \tikz[hobby] \draw[save Hobby path={plot}] plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
 
-\end{document}
 
 \begin{tikzpicture}[use Hobby shortcut]
 \draw[scale=-2,inner color=white,outer color=gray!5] ([closed]0.5,0.1) .. (0.7,0.28) .. (0.5,1) .. (0.3,0.28) .. (0.5,0.1);

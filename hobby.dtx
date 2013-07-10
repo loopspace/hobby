@@ -1370,8 +1370,14 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % The path-generation code doesn't know what to actually do with the path so the initialisation code will set some macros to do that.
 % This is an auxiliary command that sets these macros.
 %    \begin{macrocode}
+\cs_new:Npn \hobby_moveto:nnn #1#2#3 {}
+\cs_new:Npn \hobby_curveto:nnn #1#2#3 {}
+\cs_new:Npn \hobby_close:n #1 {}
+\cs_generate_variant:Nn \hobby_moveto:nnn {VVV,nnV}
+\cs_generate_variant:Nn \hobby_curveto:nnn {VVV}
+\cs_generate_variant:Nn \hobby_close:n {V}
 \cs_new:Nn \hobby_set_cmds:nnn {
-  \cs_gset_eq:NN \hobby_moveto:n #1
+  \cs_gset_eq:NN \hobby_moveto:nnn #1
   \cs_gset_eq:NN \hobby_curveto:nnn #2
   \cs_gset_eq:NN \hobby_close:n #3
 }
@@ -1498,7 +1504,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 \cs_new:Nn \hobby_use_path: {
   \bool_if:NT \l_hobby_disjoint_bool {
     \array_get:NnN \l_hobby_points_array {0} \l_tmpa_tl
-    \exp_args:No \hobby_moveto:n {\l_tmpa_tl}
+    \hobby_moveto:nnV {} {} \l_tmpa_tl
   }
   \int_step_inline:nnnn {1} {1} {\l_hobby_npoints_int} {
     \array_get:NnN \l_hobby_controla_array {##1} \l_tmpa_tl
@@ -1506,20 +1512,20 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \array_get:NnN \l_hobby_points_array {##1} \l_tmpc_tl
     \array_get:NnN \l_hobby_actions_array {##1} \l_tmpd_tl
     \int_compare:nNnTF {\tl_item:Nn \l_tmpd_tl {1}} = {\l_hobby_draw_int} {
-      \exp_args:Nooo \hobby_curveto:nnn {\l_tmpa_tl} {\l_tmpb_tl} {\l_tmpc_tl}
+      \hobby_curveto:VVV \l_tmpa_tl \l_tmpb_tl \l_tmpc_tl
     }{
       \bool_gset_false:N \l_hobby_closed_bool
-      \exp_args:No \hobby_moveto:n {\l_tmpc_tl}
+      \hobby_moveto:VVV \l_tmpa_tl \l_tmpb_tl \l_tmpc_tl
     }
     \tl_if_eq:xnTF {\tl_item:Nn \l_tmpd_tl {2}} {1} {
       \bool_gset_false:N \l_hobby_closed_bool
-      \exp_args:No \hobby_moveto:n {\l_tmpc_tl}
+      \hobby_moveto:VVV \l_tmpa_tl \l_tmpb_tl \l_tmpc_tl
     }{}
   }
   \bool_if:NT \l_hobby_closed_bool {
     \array_get:NnN \l_hobby_points_array {0} \l_tmpa_tl
-    \exp_args:No \hobby_close:n {\l_tmpa_tl}
-    }
+    \hobby_close:V \l_tmpa_tl
+  }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -1685,8 +1691,8 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % \begin{macro}{\hobby@moveto}
 % This is passed to the path-generation code to translate the path into a PGF path.
 %    \begin{macrocode}
-\def\hobby@moveto#1{%
-  \pgfpathmoveto{\hobby@topgf{#1}}%
+\def\hobby@moveto#1#2#3{%
+  \pgfpathmoveto{\hobby@topgf{#3}}%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -2141,12 +2147,14 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   },
   restore Hobby path/.code={%
     \pgfextra{%
-      \hobbyinit\hobby@moveto\hobby@curveto\hobby@close
+      \hobbyinit\hobby@tikz@moveto\hobby@tikz@curveto\hobby@tikz@close
+      \global\let\hobby@collected@onpath\pgfutil@empty
       \hobbyrestorepath{#1}}
   },
   restore and use Hobby path/.code 2 args={%
     \pgfextra{%
-      \hobbyinit\hobby@moveto\hobby@curveto\hobby@close
+      \hobbyinit\hobby@tikz@moveto\hobby@tikz@curveto\hobby@tikz@close
+      \global\let\hobby@collected@onpath\pgfutil@empty
       \hobbyrestorepath{#1}%
       \hobbyusepath{#2}%
     }
@@ -2164,12 +2172,106 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   Hobby externalize/.is if=hobby@externalise
 }
 %    \end{macrocode}
+%
+% \begin{macro}{\hobby@tikz@curveto}
+% This is passed to the path-generation code to translate the path into a PGF path.
+%    \begin{macrocode}
+\def\hobby@tikz@curveto#1#2#3{%
+  \pgfutil@ifundefined{tikz@timer@start}{%
+    \expandafter\hobby@topgf\expandafter{\hobby@initial@pt}%
+    \edef\tikz@timer@start{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+  }{}%
+  \hobby@topgf{#1}%
+  \edef\tikz@timer@cont@one{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+  \hobby@topgf{#2}%
+  \edef\tikz@timer@cont@two{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+  \hobby@topgf{#3}%
+  \let\tikz@timer=\tikz@timer@curve
+  \edef\tikz@timer@end{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+  \ifx\hobby@collected@onpath\pgfutil@empty
+  \else
+  \expandafter\hobby@nodes@onpath\hobby@collected@onpath\relax\relax
+  \fi
+  \pgfpathcurveto{\hobby@topgf{#1}}{\hobby@topgf{#2}}{\hobby@topgf{#3}}%
+  \hobby@topgf{#3}%
+  \edef\tikz@timer@start{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\hobby@tikz@moveto}
+% This is passed to the path-generation code to translate the path into a PGF path.
+%    \begin{macrocode}
+\def\hobby@tikz@moveto#1#2#3{%
+  \pgfutil@ifundefined{tikz@timer@start}{%
+    \expandafter\hobby@topgf\expandafter{\hobby@initial@pt}%
+    \edef\tikz@timer@start{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+  }{}%
+  \hobby@topgf{#3}%
+  \edef\tikz@timer@end{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+  \def\pgf@temp{#1}%
+  \ifx\pgf@temp\pgfutil@empty
+    \let\tikz@timer=\tikz@timer@line
+  \else
+    \hobby@topgf{#1}%
+    \edef\tikz@timer@cont@one{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+    \hobby@topgf{#2}%
+    \edef\tikz@timer@cont@two{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+    \let\tikz@timer=\tikz@timer@curve
+  \fi
+  \ifx\hobby@collected@onpath\pgfutil@empty
+  \else
+  \expandafter\hobby@nodes@onpath\hobby@collected@onpath\relax\relax
+  \fi
+  \pgfpathmoveto{\hobby@topgf{#3}}%
+  \hobby@topgf{#3}%
+  \edef\tikz@timer@start{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\hobby@tikz@close}
+% Closes a path.
+%    \begin{macrocode}
+\def\hobby@tikz@close#1{%
+  \hobby@topgf{#1}%
+  \edef\tikz@timer@end{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
+  \let\tikz@timer=\tikz@timer@line
+  \ifx\hobby@collected@onpath\pgfutil@empty
+  \else
+  \expandafter\hobby@nodes@onpath\hobby@collected@onpath\relax\relax
+  \fi
+  \pgfpathclose
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\hobby@nodes@onpath}
+%    \begin{macrocode}
+\def\hobby@nodes@onpath#1#2\relax{%
+  \gdef\hobby@collected@onpath{#2}%
+  \def\pgf@temp{#1}%
+  \ifx\pgf@temp\pgfutil@empty
+  \else
+  \def\@gtempa{\relax}
+  \ifx\pgf@temp\@gtempa
+  \else
+  \tikz@node@is@a@labeltrue
+  \tikz@scan@next@command#1\pgf@stop
+  \tikz@node@is@a@labelfalse
+  \fi
+  \fi
+}
+%    \end{macrocode}
+% \end{macro}
+%
 % \begin{macro}{\curvethrough}
 % This is the parent command.
 % We initialise the path-generation code, set any parameters, and then hand over control to the point processing macro.
 %    \begin{macrocode}
 \newcommand\curvethrough[2][]{%
-  \hobbyinit\hobby@moveto\hobby@curveto\hobby@close
+  \hobbyinit\hobby@tikz@moveto\hobby@tikz@curveto\hobby@tikz@close
+  \global\let\hobby@collected@onpath\pgfutil@empty
   \hobbysetparams{#1}%
   \tikzset{designated Hobby path=this}%
   \global\let\hobby@this@opts=\pgfutil@empty
@@ -2246,9 +2348,12 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % To ensure that the generation code is called, we add a lot of hooks to lots of TikZ commands.
 %    \begin{macrocode}
 \def\hobby@curveto@auto{%
-  \hobbyinit\hobby@moveto\hobby@curveto\hobby@close
+  \hobbyinit\hobby@tikz@moveto\hobby@tikz@curveto\hobby@tikz@close
+  \expandafter\gdef\expandafter\hobby@collected@onpath\expandafter{\expandafter{\tikz@collected@onpath}   }%
+  \let\tikz@collected@onpath=\pgfutil@empty
   \pgfmathsetmacro\hobby@x{\the\tikz@lastx/1cm}%
   \pgfmathsetmacro\hobby@y{\the\tikz@lasty/1cm}%
+  \xdef\hobby@initial@pt{x = \hobby@x, y = \hobby@y}%
   \expandafter\hobbysetparams\expandafter{\hobby@next@opts}%
   \expandafter\hobbyaddpoint\expandafter{\hobby@point@options,%
       x = \hobby@x, y = \hobby@y}%
@@ -2259,7 +2364,8 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \global\let\hobby@this@opts=\pgfutil@empty
   \global\let\hobby@next@opts=\pgfutil@empty
   \global\let\hobby@point@options=\pgfutil@empty
-  \tikz@scan@one@point\hobby@addfromtikz}
+  \tikz@scan@one@point\hobby@addfromtikz%
+}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -2349,6 +2455,8 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % \begin{macro}{\hobby@midcurveto@auto}
 %    \begin{macrocode}
 \def\hobby@midcurveto@auto{%
+  \expandafter\expandafter\expandafter\gdef\expandafter\expandafter\expandafter\hobby@collected@onpath\expandafter\expandafter\expandafter{\expandafter\hobby@collected@onpath\expandafter{\tikz@collected@onpath}   }%
+  \let\tikz@collected@onpath=\pgfutil@empty
   \let\tikz@scan@point@options=\pgfutil@empty
   \global\let\hobby@action=\pgfutil@empty
   \global\let\hobby@this@opts=\pgfutil@empty
