@@ -596,8 +596,27 @@ and the derived files            hobby.code.tex
 % When this is implemented in \LaTeX3 this should be replaced.
 %    \begin{macrocode}
 \cs_new:Nn \fp_atantwo:NNN {
-  \pgfmathparse{rad(atan2(\fp_use:N #2,\fp_use:N #3))}
+  \pgfmathparse{rad(hobbyatan2(\fp_use:N #2,\fp_use:N #3))}
   \exp_args:NNo \fp_set:Nn #1 {\pgfmathresult}
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{hobbyatan2}
+% The original PGF version of \Verb+atan2+ had the arguments the wrong way around.
+% This was fixed in the CVS version in July 2013, but as old versions are likely to be in use for some time, we define a wrapper function that ensures that the arguments are correct.
+%    \begin{macrocode}
+\pgfmathparse{atan2(0,1)}
+\tl_if_eq:VnTF \pgfmathresult {0.0}
+{
+  \pgfmathdeclarefunction{hobbyatan2}{2}{%
+    \pgfmathatantwo@{#1}{#2}%
+  }
+}
+{
+  \pgfmathdeclarefunction{hobbyatan2}{2}{%
+    \use:c{pgfmathatan2@}{#2}{#1}%
+  }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -1916,7 +1935,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \advance\pgf@xb by -\pgf@xa
   \advance\pgf@yb by -\pgf@ya
   \pgfmathsetmacro\hobby@done{sqrt((\pgf@xb/\hobby@sf)^2 + (\pgf@yb/\hobby@sf)^2)}%
-  \pgfmathsetmacro\hobby@omegaone{rad(atan2(\pgf@yb,\pgf@xb))}%
+  \pgfmathsetmacro\hobby@omegaone{rad(hobbyatan2(\pgf@yb,\pgf@xb))}%
 %    \end{macrocode}
 % Now we do the same with the vector from the zeroth to the first point.
 %    \begin{macrocode}
@@ -1924,7 +1943,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \advance\pgf@xa by -\pgf@x
   \advance\pgf@ya by -\pgf@y
   \pgfmathsetmacro\hobby@dzero{sqrt((\pgf@xa/\hobby@sf)^2 + (\pgf@ya/\hobby@sf)^2)}%
-  \pgfmathsetmacro\hobby@omegazero{rad(atan2(\pgf@ya,\pgf@xa))}%
+  \pgfmathsetmacro\hobby@omegazero{rad(hobbyatan2(\pgf@ya,\pgf@xa))}%
 %    \end{macrocode}
 % \Verb+\hobby@psi+ is the angle subtended at the midpoint.
 % We adjust to ensure that it is in the right range.
@@ -2040,7 +2059,6 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 }
 %    \end{macrocode}
 % \end{macro}
-%
 %
 % \iffalse
 %</pgflibrary>
