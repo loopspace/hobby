@@ -32,8 +32,34 @@
   },
   Hobby externalise
 }
+\HobbyDisableAux
 
 \begin{document}
+
+\begin{tikzpicture}[use quick Hobby shortcut]
+\draw (0,0) .. (1,1) .. (2,0);
+\end{tikzpicture}
+
+\begin{tikzpicture}[use Hobby shortcut]
+\draw[save Hobby path=temp] (0,0) .. (1,1) .. (2,0);
+\tikzset{show Hobby path=temp}
+\end{tikzpicture}
+
+\begin{tikzpicture}
+\draw (0,0) .. controls (0,.5) and (.5,1) .. (1,1) .. controls (1.5,1) and (2,.5) .. (2,0);
+\end{tikzpicture}
+
+\begin{tikzpicture}
+\draw (0,0) to[curve through={(1,1)}] (2,0);
+\end{tikzpicture}
+
+
+\begin{tikzpicture}[use Hobby shortcut,baseline=0pt]
+\filldraw[fill=yellow] ([closed]1,0.1) .. (.4,.6) .. (0.1,1) .. (-.5,.5) .. (-1,-0.1) .. (-.4,-.6) .. (-.1,-1) .. (.6,-.4) .. (1,0.1);
+\draw[->] (0,0) -- (0,.5);
+\draw[->] (0,0) -- (.5,0);
+\fill (0,0) circle[radius=2pt] node[below] {\(p\)};
+\end{tikzpicture}
 
 %\pgfmathsetseed{2}
 \begin{tikzpicture}
@@ -117,13 +143,33 @@
 \draw[use Hobby shortcut] (0,0) .. ([tangent=45]1,1) .. (2,0) .. (3,1) .. (4,0);
 \end{tikzpicture}
 
-
 \begin{tikzpicture}[use Hobby shortcut]
 \draw[blue,save Hobby path={left}] ([out angle=90,in angle=-90]1,0) .. (1,1) .. ([blank=soft]0,2) .. (1,3) .. (1,4);
 \draw[show Hobby path={left},red] ([out angle=90,in angle=-90]0,0) .. (0,1) .. (1,2) .. (0,3) .. (0,4);
 \tikzset{show Hobby path={left}}
 \draw[blue,show Hobby path={left},restore and use Hobby path={left}{disjoint,invert soft blanks}];
 \end{tikzpicture}
+
+\begin{tikzpicture}[use Hobby shortcut]
+\draw[blue,save Hobby path={upper}] ([out angle=0,in angle=-180]0,1) .. (1,1) .. ([blank=soft]2,0) .. (3,1) .. (4,1);
+\draw[show Hobby path={upper},red] ([out angle=0,in angle=-180]0,0) .. (1,0) .. (2,1) .. (3,0) .. (4,0);
+\tikzset{show Hobby path={upper}}
+\draw[blue,show Hobby path={upper},restore and use Hobby path={upper}{disjoint,invert soft blanks}];
+\end{tikzpicture}
+
+\begin{tikzpicture}[use Hobby shortcut]
+\draw ([out angle=0]0,0) .. (0,2);
+\draw ([out angle=0]0,0) .. (2,0);
+\begin{scope}[xshift=3cm]
+\draw ([out angle=90]0,0) .. (0,2);
+\draw ([out angle=90]0,0) .. (2,0);
+\begin{scope}[xshift=3cm]
+\draw ([out angle=180]0,0) .. (0,2);
+%\draw ([out angle=180]0,0) .. (2,0);
+\end{scope}
+\end{scope}
+\end{tikzpicture}
+
 
 \newpage
 \begin{tikzpicture}

@@ -195,6 +195,18 @@ and the derived files            hobby.code.tex
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\l_hobby_save_aux_bool}
+% \Verb+\l_hobby_save_aux_bool+ is \Verb+true+ if when saving paths then they should be saved to the \Verb+aux+ file.
+%    \begin{macrocode}
+\bool_new:N \l_hobby_save_aux_bool
+\bool_set_true:N \l_hobby_save_aux_bool
+\DeclareDocumentCommand \HobbyDisableAux {}
+{
+  \bool_set_false:N \l_hobby_save_aux_bool
+}
+%    \end{macrocode}
+% \end{macro}
+%
 % \begin{macro}{\l_hobby_points_array}
 % \Verb+\l_hobby_points_array+ is an array holding the specified points on the path.
 % In the \LaTeX3 code, a ``point'' is a token list of the form \Verb+x = <number>, y = <number>+.
@@ -584,7 +596,7 @@ and the derived files            hobby.code.tex
 % When this is implemented in \LaTeX3 this should be replaced.
 %    \begin{macrocode}
 \cs_new:Nn \fp_atantwo:NNN {
-  \pgfmathparse{rad(atan2(\fp_use:N #3,\fp_use:N #2))}
+  \pgfmathparse{rad(atan2(\fp_use:N #2,\fp_use:N #3))}
   \exp_args:NNo \fp_set:Nn #1 {\pgfmathresult}
 }
 %    \end{macrocode}
@@ -720,7 +732,7 @@ and the derived files            hobby.code.tex
 \fp_if_undefined:NF \l_hobby_out_angle_fp
 {
   \fp_set:Nn \l_hobby_tempa_fp { \l_hobby_out_angle_fp
-    - \array_get:Nn \l_hobby_angles_array {0} }
+    - \array_get:Nn \l_hobby_angles_array {0}}
 %    \end{macrocode}
 % We want to ensure that these angles lie in the range \((-\pi,\pi]\).
 % So if the angle is bigger than \(\pi\), we subtract \(2 \pi\).
@@ -997,7 +1009,7 @@ and the derived files            hobby.code.tex
   \array_put:Nnn \l_hobby_matrix_b_array {0} {1}
   \array_put:Nnn \l_hobby_matrix_c_array {0} {0}
   \fp_set:Nn \l_hobby_tempa_fp { \l_hobby_out_angle_fp
-    - \array_get:Nn \l_hobby_angles_array {0} }
+    - \array_get:Nn \l_hobby_angles_array {0}}
 %    \end{macrocode}
 % We want to ensure that these angles lie in the range \((-\pi,\pi]\).
 % So if the angle is bigger than \(\pi\), we subtract \(2 \pi\).
@@ -1588,6 +1600,8 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \tl_if_exist_p:c {g_hobby_#1_path}
     &&
     ! \tl_if_exist_p:c {g_hobby_#1_path_saved}
+    &&
+    \l_hobby_save_aux_bool
   }
   {
     \tl_clear:N \l_tmpa_tl
@@ -1902,7 +1916,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \advance\pgf@xb by -\pgf@xa
   \advance\pgf@yb by -\pgf@ya
   \pgfmathsetmacro\hobby@done{sqrt((\pgf@xb/\hobby@sf)^2 + (\pgf@yb/\hobby@sf)^2)}%
-  \pgfmathsetmacro\hobby@omegaone{rad(atan2(\pgf@xb,\pgf@yb))}%
+  \pgfmathsetmacro\hobby@omegaone{rad(atan2(\pgf@yb,\pgf@xb))}%
 %    \end{macrocode}
 % Now we do the same with the vector from the zeroth to the first point.
 %    \begin{macrocode}
@@ -1910,7 +1924,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \advance\pgf@xa by -\pgf@x
   \advance\pgf@ya by -\pgf@y
   \pgfmathsetmacro\hobby@dzero{sqrt((\pgf@xa/\hobby@sf)^2 + (\pgf@ya/\hobby@sf)^2)}%
-  \pgfmathsetmacro\hobby@omegazero{rad(atan2(\pgf@xa,\pgf@ya))}%
+  \pgfmathsetmacro\hobby@omegazero{rad(atan2(\pgf@ya,\pgf@xa))}%
 %    \end{macrocode}
 % \Verb+\hobby@psi+ is the angle subtended at the midpoint.
 % We adjust to ensure that it is in the right range.
