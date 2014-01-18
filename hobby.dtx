@@ -110,7 +110,7 @@ and the derived files            hobby.code.tex
 %</driver>
 % \fi
 %
-% \CheckSum{3002}
+% \CheckSum{3276}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -580,44 +580,12 @@ and the derived files            hobby.code.tex
     (\array_get:Nn \l_hobby_points_y_array {#1 + 1})
     - (\array_get:Nn \l_hobby_points_y_array {#1})}
 
-  \fp_atantwo:NNN \l_hobby_tempc_fp \l_hobby_tempb_fp   \l_hobby_tempa_fp
+  \fp_set:Nn \l_hobby_tempc_fp { atan ( \l_hobby_tempb_fp, \l_hobby_tempa_fp ) }
   \fp_veclen:NVV \l_hobby_tempd_fp \l_hobby_tempa_fp \l_hobby_tempb_fp
 
   \array_push:Nx \l_hobby_angles_array {\fp_to_tl:N \l_hobby_tempc_fp}
   \array_push:Nx \l_hobby_distances_array {\fp_to_tl:N \l_hobby_tempd_fp}
   }
-%    \end{macrocode}
-% \end{macro}
-%
-%
-% \begin{macro}{\fp_atantwo:NNN}
-% Computes the angle of the point specified by the latter two arguments, storing the answer in the first.
-% The inverse tangent function is not yet implemented in \LaTeX3 so for now we use the \Verb+pgfmath+ function.
-% When this is implemented in \LaTeX3 this should be replaced.
-%    \begin{macrocode}
-\cs_new:Nn \fp_atantwo:NNN {
-  \pgfmathparse{rad(hobbyatan2(\fp_use:N #2,\fp_use:N #3))}
-  \exp_args:NNo \fp_set:Nn #1 {\pgfmathresult}
-}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{hobbyatan2}
-% The original PGF version of \Verb+atan2+ had the arguments the wrong way around.
-% This was fixed in the CVS version in July 2013, but as old versions are likely to be in use for some time, we define a wrapper function that ensures that the arguments are correct.
-%    \begin{macrocode}
-\pgfmathparse{atan2(0,1)}
-\tl_if_eq:VnTF \pgfmathresult {0.0}
-{
-  \pgfmathdeclarefunction{hobbyatan2}{2}{%
-    \pgfmathatantwo@{#1}{#2}%
-  }
-}
-{
-  \pgfmathdeclarefunction{hobbyatan2}{2}{%
-    \use:c{pgfmathatan2@}{#2}{#1}%
-  }
-}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -850,21 +818,12 @@ and the derived files            hobby.code.tex
 %    \end{macrocode}
 % Similarly, we check to see if the angle is less than \(-\pi\).
 %    \begin{macrocode}
-    \fp_compare:nTF {\l_hobby_tempa_fp < -\c_pi_fp }
+    \fp_compare:nTF {\l_hobby_tempa_fp <= -\c_pi_fp }
     {
       \fp_add:Nn \l_hobby_tempa_fp {2 * \c_pi_fp}
     }
     {}
 %    \end{macrocode}
-% At the moment, the mixing of \Verb+pgfmath+ and \LaTeX3 that goes into computing the differences means that we can never get \Verb+\c_pi_fp+ so testing for equality is meaningless.
-% However, when \Verb+atan2+ is implemented in \LaTeX3 then this might make sense again.
-%
-%^^A    \fp_compare:nTF {\l_hobby_tempa_fp = -\c_pi_fp }
-%^^A    {
-%^^A      \fp_add:Nn \l_hobby_tempa_fp {2 * \c_pi_fp}
-%^^A    }
-%^^A    {}
-%
 % The wrapping routine might not get it right at the edges so we add in the override.  
 %    \begin{macrocode}
 \array_get:NnNTF \l_hobby_excess_angle_array {##1} \l_tmpa_tl {
@@ -1712,6 +1671,24 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 }
 %    \end{macrocode}
 %
+% \begin{macro}{hobbyatan2}
+% The original PGF version of \Verb+atan2+ had the arguments the wrong way around.
+% This was fixed in the CVS version in July 2013, but as old versions are likely to be in use for some time, we define a wrapper function that ensures that the arguments are correct.
+%    \begin{macrocode}
+\pgfmathparse{atan2(0,1)}
+\def\hobby@temp{0.0}
+\ifx\pgfmathresult\hobby@temp
+  \pgfmathdeclarefunction{hobbyatan2}{2}{%
+    \pgfmathatantwo@{#1}{#2}%
+  }
+\else
+  \pgfmathdeclarefunction{hobbyatan2}{2}{%
+    \pgfmathatantwo@{#2}{#1}%
+  }
+\fi
+%    \end{macrocode}
+% \end{macro}
+%
 % \begin{macro}{\hobby@curveto}
 % This is passed to the path-generation code to translate the path into a PGF path.
 %    \begin{macrocode}
@@ -2304,6 +2281,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 \newcommand\curvethrough[2][]{%
   \hobbyinit\hobby@tikz@moveto\hobby@tikz@curveto\hobby@tikz@close
   \global\let\hobby@collected@onpath\pgfutil@empty
+  \let\hobby@initial@pt\pgfutil@empty
   \hobbysetparams{#1}%
   \tikzset{designated Hobby path=this}%
   \global\let\hobby@this@opts=\pgfutil@empty
@@ -2325,6 +2303,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   #1%
   \pgfmathsetmacro\hobby@x{\the\pgf@x/1cm}%
   \pgfmathsetmacro\hobby@y{\the\pgf@y/1cm}%
+  \ifx\hobby@initial@pt\pgfutil@empty
+    \xdef\hobby@initial@pt{x = \hobby@x, y = \hobby@y}%
+  \fi
   \expandafter\hobbyaddpoint\expandafter{\hobby@point@options,%
     x = \hobby@x, y = \hobby@y}%
   \def\hobby@point@options{}%
@@ -2811,6 +2792,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \hobby@qinit@tikz@modcmd\tikz@to
   \hobby@qinit@tikz@modcmd\pgf@stop
   \hobby@qinit@tikz@modcmd\tikz@decoration
+  \hobby@qinit@tikz@modcmd\tikz@@close
   \global\let\hobby@curveto@delegate=\hobby@qmidcurveto@auto
 }
 %    \end{macrocode}

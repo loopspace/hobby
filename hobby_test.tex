@@ -41,13 +41,24 @@
 \HobbyDisableAux
 
 \begin{document}
-
-
-
-
-\begin{tikzpicture}[use quick Hobby shortcut]
-\draw (0,0) .. (1,1) .. (2,0);
+\begin{tikzpicture}[scale=.5]
+\draw[red,line width=5pt] (0,0) to[curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
+\draw[ultra thick,blue] plot[smooth] coordinates {(0,0) (6,4) (4,9) (1,7) (3,5)};
+\draw[green,line width=2pt] (0,0) to[quick curve through={(6,4) (4,9)  (1,7)}] (3,5);
 \end{tikzpicture}
+
+\begin{tikzpicture}%[use quick Hobby shortcut]
+\draw[use Hobby shortcut] (0,0) .. (1,1) .. (2,0);
+\draw[use quick Hobby shortcut] (0,0) .. (1,1) .. (2,0);
+\end{tikzpicture}
+
+\begin{tikzpicture}
+\begin{axis}
+\addplot +[smooth] {rnd};
+\addplot +[hobby] {rnd};
+\end{axis}
+\end{tikzpicture}
+
 
 \begin{tikzpicture}[use Hobby shortcut]
 \draw[save Hobby path=temp] (0,0) .. (1,1) .. (2,0);
@@ -61,7 +72,6 @@
 \begin{tikzpicture}
 \draw (0,0) to[curve through={(1,1)}] (2,0);
 \end{tikzpicture}
-
 
 \begin{tikzpicture}[use Hobby shortcut,baseline=0pt]
 \filldraw[fill=yellow] ([closed]1,0.1) .. (.4,.6) .. (0.1,1) .. (-.5,.5) .. (-1,-0.1) .. (-.4,-.6) .. (-.1,-1) .. (.6,-.4) .. (1,0.1);
@@ -183,8 +193,8 @@
 \newpage
 \begin{tikzpicture}
 \begin{axis}
-\addplot +[smooth] {rnd};
-\addplot +[hobby] {rnd};
+%\addplot +[smooth] {rnd};
+%\addplot +[hobby] {rnd};
 \end{axis}
 \end{tikzpicture}
 

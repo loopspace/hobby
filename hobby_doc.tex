@@ -9,6 +9,7 @@
 \usepackage{fancyvrb}
 \usetikzlibrary{hobby,decorations.pathreplacing}
 \usepackage{listings}
+\pgfplotsset{compat=1.9}
 \lstloadlanguages{[LaTeX]TeX}
 \lstset{breakatwhitespace=true,breaklines=true,language=TeX}
 
@@ -82,7 +83,7 @@ The resulting path produced with this ``quick'' version is not as ideal as that 
 As this is intended as a simpler method, it does not (at present) admit the same level of customisation as the full implementation.
 The ``quick'' algorithm is described in full in Section~\ref{sec:quick}.
 
-The full algorithm is implemented in \LaTeX3 with (almost\footnote{At the moment, \LaTeX3 lacks a \Verb+atan2+ function so \Verb+PGFMath+ is used to remedy that.}) no reference to TikZ or PGF.
+The full algorithm is implemented in \LaTeX3 with no reference to TikZ or PGF.
 It makes extensive use of the \Verb+fp+ and \Verb+prop+ libraries for the computation steps.
 The TikZ library is simply a wrapper that takes the user's input, converts it into the right format for the \LaTeX3 code, and then calls that code to generate the path.
 The ``quick'' version does not use \LaTeX3 and relies instead on the \Verb+PGFMath+ library for the computation.
@@ -420,7 +421,7 @@ This restores the named path and uses it with \Verb+<options>+ applied.
 This puts in place the code for saving the generated data to the \Verb+aux+ file.
 On subsequent runs, it uses the saved data rather than the current data.
 For a curve to make use of this, it has to be named via the \Verb+save Hobby path+ key.
-So to regenerate the data, either delete the \Verb+aux+ file or remove the \Verb+save Hobby path+ key for one compilation run.
+So to regenerate the data, either delete the \Verb+aux+ file, remove the \Verb+save Hobby path+ key for one compilation run, or issue the command \Verb+\HobbyDisableAux+ which disables writing paths to the \Verb+aux+ file (note that the paths will be regenerated on the run \emph{after} the first run with this command issued).
 \end{itemize}
 
 The options that can be applied are those that affect the rendering of the curve but not its generation.
