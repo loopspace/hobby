@@ -110,7 +110,7 @@ and the derived files            hobby.code.tex
 %</driver>
 % \fi
 %
-% \CheckSum{3276}
+% \CheckSum{3304}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -135,6 +135,7 @@ and the derived files            hobby.code.tex
 % \providecommand*{\url}{\texttt}
 % \title{The \textsf{Hobby} package: code}
 % \author{Andrew Stacey \\ \url{stacey@math.ntnu.no}}
+% \date{\hobbyVersion\ from\ \hobbyDate}
 % \maketitle
 %
 %
@@ -165,17 +166,42 @@ and the derived files            hobby.code.tex
 %
 % We declare all our variables.
 %
+% Start with version and date, together with a check to see if we've been loaded twice (fail gracefully if so). 
+%
+%    \begin{macrocode}
+\tl_clear:N \l_tmpa_tl
+\tl_if_exist:NT \g__hobby_version
+{
+  \tl_set:Nn \l_tmpa_tl {
+    \ExplSyntaxOff
+    \tl_clear:N \l_tmpa_tl
+    \endinput
+  }
+}
+\tl_use:N \l_tmpa_tl
+
+\tl_new:N \g__hobby_version
+\tl_new:N \g__hobby_date
+\tl_set:Nn \g__hobby_version {1.4}
+\tl_set:Nn \g__hobby_date {2014-01-21}
+\DeclareDocumentCommand \hobbyVersion {}
+{
+  \tl_use:N \g__hobby_version
+}
+\DeclareDocumentCommand \hobbyDate {}
+{
+  \tl_use:N \g__hobby_date
+}
+%    \end{macrocode}
+%
 % The function for computing the lengths of the control points depends on three parameters.
 % These are set to \(a = \sqrt{2}\), \(b = 1/16\), and \(c = \frac{3 - \sqrt{5}}{2}\).
 %    \begin{macrocode}
 \fp_new:N \g_hobby_parama_fp
 \fp_new:N \g_hobby_paramb_fp
 \fp_new:N \g_hobby_paramc_fp
-
 \fp_gset:Nn \g_hobby_parama_fp {2^.5}
-
 \fp_gset:Nn \g_hobby_paramb_fp {1/16}
-
 \fp_gset:Nn \g_hobby_paramc_fp {(3-5^.5)/2}
 %    \end{macrocode}
 %

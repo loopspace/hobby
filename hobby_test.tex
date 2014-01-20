@@ -3,6 +3,7 @@
 \usepackage{amsmath}
 \usepackage{pgfplots}
 \usetikzlibrary{hobby,decorations.pathreplacing}
+\input{hobby.code.tex}
 \usepackage[silent]{trace-pgfkeys}
 
 \newif\ifhobbyinpath
@@ -41,6 +42,7 @@
 \HobbyDisableAux
 
 \begin{document}
+
 \begin{tikzpicture}[scale=.5]
 \draw[red,line width=5pt] (0,0) to[curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
 \draw[ultra thick,blue] plot[smooth] coordinates {(0,0) (6,4) (4,9) (1,7) (3,5)};
