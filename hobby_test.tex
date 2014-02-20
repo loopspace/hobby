@@ -43,6 +43,20 @@
 
 \begin{document}
 
+
+\begin{tikzpicture}
+\pgfpathmoveto{\pgfpoint{0}{0}}
+\pgfpathlineto{\pgfpoint{1cm}{0}}
+\pgfpathhobby{\pgfpoint{1cm}{2cm}\pgfpoint{2cm}{1cm}\pgfpoint{3cm}{0cm}}
+\pgfusepath{stroke}
+\end{tikzpicture}
+
+\begin{tikzpicture}[use Hobby shortcut]
+\draw (0,0) -- (1,0) .. (1,2) .. (2,1) .. (3,0);
+\end{tikzpicture}
+
+\end{document}
+
 \begin{tikzpicture}[scale=.5]
 \draw[red,line width=5pt] (0,0) to[curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
 \draw[ultra thick,blue] plot[smooth] coordinates {(0,0) (6,4) (4,9) (1,7) (3,5)};

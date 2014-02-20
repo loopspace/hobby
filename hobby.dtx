@@ -1751,6 +1751,45 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\pgfpathhobby}
+% Low-level interface to the hobby construction.
+% This sets up the commands and starts the iterator.
+%    \begin{macrocode}
+\def\pgfpathhobby#1{%
+  \hobbyinit\hobby@moveto\hobby@curveto\hobby@close
+  \pgfmathsetmacro\hobby@x{\the\pgf@x/1cm}%
+  \pgfmathsetmacro\hobby@y{\the\pgf@y/1cm}%
+  \hobbyaddpoint{x = \hobby@x, y = \hobby@y}%
+  \hobby@pgfpoint#1\pgf@stop%
+  \hobbygenusepath
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\hobby@pgfpoint}
+% This is the start of the iterator which decides whether to continue or not.
+%    \begin{macrocode}
+\def\hobby@pgfpoint#1{%
+  \ifx#1\pgf@stop
+  \else
+  \expandafter\hobby@addpgfpoint
+  \fi}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\hobby@addpgfpoint}
+% This adds a point to the current list and returns control to the iterator.
+%    \begin{macrocode}
+\def\hobby@addpgfpoint#1#2{%
+  \pgfpoint{#1}{#2}%
+  \pgfmathsetmacro\hobby@x{\the\pgf@x/1cm}%
+  \pgfmathsetmacro\hobby@y{\the\pgf@y/1cm}%
+  \hobbyaddpoint{x = \hobby@x, y = \hobby@y}%
+  \hobby@pgfpoint}
+%    \end{macrocode}
+% \end{macro}
+%    
+%
 % Plot handlers
 %
 % \begin{macro}{\pgfplothanderhobby}
