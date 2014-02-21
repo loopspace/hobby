@@ -47,7 +47,11 @@
 \begin{tikzpicture}
 \pgfpathmoveto{\pgfpoint{0}{0}}
 \pgfpathlineto{\pgfpoint{1cm}{0}}
-\pgfpathhobby{\pgfpoint{1cm}{2cm}\pgfpoint{2cm}{1cm}\pgfpoint{3cm}{0cm}}
+\pgfpathhobby{closed=true}
+\pgfpathhobbypt{\pgfpoint{1cm}{2cm}}{tension in=2}
+\pgfpathhobbypt{\pgfpoint{2cm}{1cm}}
+\pgfpathhobbypt{\pgfpoint{3cm}{0cm}}
+\pgfpathhobbyend
 \pgfusepath{stroke}
 \end{tikzpicture}
 

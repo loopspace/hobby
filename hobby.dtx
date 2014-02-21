@@ -1755,13 +1755,55 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % Low-level interface to the hobby construction.
 % This sets up the commands and starts the iterator.
 %    \begin{macrocode}
-\def\pgfpathhobby#1{%
+\def\pgfpathhobby{%
+  \pgfutil@ifnextchar\bgroup{\pgfpath@hobby}{\pgfpath@hobby{}}}
+\def\pgfpath@hobby#1{%
   \hobbyinit\hobby@moveto\hobby@curveto\hobby@close
+  \hobbysetparams{#1}%
   \pgfmathsetmacro\hobby@x{\the\pgf@x/1cm}%
   \pgfmathsetmacro\hobby@y{\the\pgf@y/1cm}%
   \hobbyaddpoint{x = \hobby@x, y = \hobby@y}%
-  \hobby@pgfpoint#1\pgf@stop%
-  \hobbygenusepath
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\pgfpathhobbypt}
+% Adds a point to the construction
+%    \begin{macrocode}
+\def\pgfpathhobbypt#1{%
+  #1%
+  \pgfmathsetmacro\hobby@x{\the\pgf@x/1cm}%
+  \pgfmathsetmacro\hobby@y{\the\pgf@y/1cm}%
+  \pgfutil@ifnextchar\bgroup{\pgfpathhobbyptparams}{\pgfpathhobbyptparams{}}%
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\pgfpathhobbyptparams}
+%    \begin{macrocode}
+\def\pgfpathhobbyptparams#1{%
+  \hobbyaddpoint{#1,x = \hobby@x, y = \hobby@y}%
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\pgfpathhobbyend}
+%    \begin{macrocode}
+\def\pgfpathhobbyend{%
+  \ifhobby@externalise
+    \ifx\hobby@path@name\pgfutil@empty
+      \hobbygenusepath
+    \else
+      \hobbygenuseifnecpath{\hobby@path@name}%
+    \fi
+  \else
+    \hobbygenusepath
+  \fi
+  \ifx\hobby@path@name\pgfutil@empty
+  \else
+    \hobbysavepath{\hobby@path@name}%
+  \fi
+  \global\let\hobby@path@name=\pgfutil@empty
 }
 %    \end{macrocode}
 % \end{macro}
