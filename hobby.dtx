@@ -1760,8 +1760,8 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 \def\pgfpath@hobby#1{%
   \hobbyinit\hobby@moveto\hobby@curveto\hobby@close
   \hobbysetparams{#1}%
-  \pgfmathsetmacro\hobby@x{\the\pgf@x/1cm}%
-  \pgfmathsetmacro\hobby@y{\the\pgf@y/1cm}%
+  \pgfmathsetmacro\hobby@x{\the\pgf@path@lastx/1cm}%
+  \pgfmathsetmacro\hobby@y{\the\pgf@path@lasty/1cm}%
   \hobbyaddpoint{x = \hobby@x, y = \hobby@y}%
 }
 %    \end{macrocode}
