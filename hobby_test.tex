@@ -42,7 +42,16 @@
 \HobbyDisableAux
 
 \begin{document}
-
+\begin{tikzpicture}[use Hobby shortcut]
+% filled points
+\fill (0,0) circle (1pt);
+\fill (2,0) circle (1pt);
+% middle crossing loop
+\draw[save Hobby path=fish,thick, red] (3,-1) .. ([blank=soft]2,0) .. (0,0.93) .. (-0.93,0) .. (0,-0.93) .. (2,0) .. ([blank=soft]3,1);
+\tikzset{show Hobby path=fish}
+\draw[restore and use Hobby path={fish}{invert soft blanks,disjoint=true},thick, blue];
+\end{tikzpicture}
+\end{document}
 
 \begin{tikzpicture}
 \pgfpathmoveto{\pgfpoint{0}{0}}
