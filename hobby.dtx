@@ -480,20 +480,20 @@ and the derived files            hobby.code.tex
 % \begin{macro}{\l_hobby_in_angle_fp}
 % \Verb+\l_hobby_in_angle_fp+ is the angle at the end of an open path.
 % If this is not specified, it will be computed automatically.
-% It is set to \Verb+\c_undefined_fp+ to allow easy detection of when it has been specified.
+% It is set to \Verb+\c_inf_fp+ to allow easy detection of when it has been specified.
 %    \begin{macrocode}
 \fp_new:N \l_hobby_in_angle_fp
-\fp_set_eq:NN \l_hobby_in_angle_fp \c_undefined_fp
+\fp_set_eq:NN \l_hobby_in_angle_fp \c_inf_fp
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\l_hobby_out_angle_fp}
 % \Verb+\l_hobby_out_angle_fp+ is the angle at the start of an open path.
 % If this is not specified, it will be computed automatically.
-% It is set to \Verb+\c_undefined_fp+ to allow easy detection of when it has been specified.
+% It is set to \Verb+\c_inf_fp+ to allow easy detection of when it has been specified.
 %    \begin{macrocode}
 \fp_new:N \l_hobby_out_angle_fp
-\fp_set_eq:NN \l_hobby_out_angle_fp \c_undefined_fp
+\fp_set_eq:NN \l_hobby_out_angle_fp \c_inf_fp
 %    \end{macrocode}
 % \end{macro}
 %
@@ -742,7 +742,7 @@ and the derived files            hobby.code.tex
 % Just need to set the incoming and outgoing angles
 %    \begin{macrocode}
 \hobby_distangle:n {0}
-\fp_if_undefined:NF \l_hobby_out_angle_fp
+\fp_compare:nF { \l_hobby_out_angle_fp == \c_inf_fp }
 {
   \fp_set:Nn \l_hobby_tempa_fp { \l_hobby_out_angle_fp
     - \array_get:Nn \l_hobby_angles_array {0}}
@@ -763,15 +763,15 @@ and the derived files            hobby.code.tex
       \fp_add:Nn \l_hobby_tempa_fp {2 * \c_pi_fp}
     }
   \array_put:Nnx \l_hobby_theta_array {0} {\fp_to_tl:N \l_hobby_tempa_fp}
-    \fp_if_undefined:NT \l_hobby_in_angle_fp
+    \fp_compare:nT { \l_hobby_in_angle_fp == \c_inf_fp }
     {
 %^^A      \fp_mul:Nn \l_hobby_tempa_fp {-1}
       \array_put:Nnx \l_hobby_phi_array {1}{ \fp_to_tl:N \l_hobby_tempa_fp}
     }
    }
-\fp_if_undefined:NTF \l_hobby_in_angle_fp
+\fp_compare:nTF { \l_hobby_in_angle_fp == \c_inf_fp }
 {
-  \fp_if_undefined:NT \l_hobby_out_angle_fp
+  \fp_compare:nT { \l_hobby_out_angle_fp == \c_inf_fp }
   {
     \array_put:Nnx \l_hobby_phi_array {1} {0}
     \array_put:Nnx \l_hobby_theta_array {0} {0}
@@ -791,7 +791,7 @@ and the derived files            hobby.code.tex
 
   \array_put:Nnx \l_hobby_phi_array {1}
   {\fp_to_tl:N \l_hobby_tempa_fp}
-  \fp_if_undefined:NT \l_hobby_out_angle_fp
+  \fp_compare:nT { \l_hobby_out_angle_fp == \c_inf_fp }
     {
 %^^A      \fp_mul:Nn \l_hobby_tempa_fp {-1}
       \array_put:Nnx \l_hobby_theta_array {0}{ \fp_to_tl:N \l_hobby_tempa_fp}
@@ -981,7 +981,7 @@ and the derived files            hobby.code.tex
 % Open path.
 % First, we test to see if \(\theta_0\) has been specified.
 %    \begin{macrocode}
-\fp_if_undefined:NTF \l_hobby_out_angle_fp
+\fp_compare:nTF { \l_hobby_out_angle_fp == \c_inf_fp }
 {
   \array_put:Nnx \l_hobby_matrix_b_array {0}  {\fp_to_tl:n {
   (\array_get:Nn \l_hobby_tension_in_array {1})^3
@@ -1036,7 +1036,7 @@ and the derived files            hobby.code.tex
 %
 % Next, if \(\phi_n\) has been given.
 %    \begin{macrocode}
-\fp_if_undefined:NTF \l_hobby_in_angle_fp
+\fp_compare:nTF { \l_hobby_in_angle_fp == \c_inf_fp }
 {
 
  \array_put:Nnx \l_hobby_matrix_b_array {\l_hobby_npoints_int - 1} {\fp_to_tl:n {
@@ -1234,7 +1234,7 @@ and the derived files            hobby.code.tex
 %    \end{macrocode}
 % If \(\phi_n\) was not given, we compute it from \(\theta_{n-1}\).
 %    \begin{macrocode}
-\fp_if_undefined:NT \l_hobby_in_angle_fp
+\fp_compare:nT { \l_hobby_in_angle_fp == \c_inf_fp }
 {
  \array_put:Nnx \l_hobby_phi_array {\l_hobby_npoints_int} {\fp_to_tl:n {
 ((3 * (\array_get:Nn \l_hobby_tension_in_array {\l_hobby_npoints_int}) - 1)
@@ -1661,8 +1661,8 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 
   \int_gset:Nn \l_hobby_npoints_int {-1}
   \int_gset:Nn \l_hobby_draw_int {1}
-  \fp_gset_eq:NN \l_hobby_in_angle_fp \c_undefined_fp
-  \fp_gset_eq:NN \l_hobby_out_angle_fp \c_undefined_fp
+  \fp_gset_eq:NN \l_hobby_in_angle_fp \c_inf_fp
+  \fp_gset_eq:NN \l_hobby_out_angle_fp \c_inf_fp
   \fp_gset_eq:NN \l_hobby_in_curl_fp \c_one_fp
   \fp_gset_eq:NN \l_hobby_out_curl_fp \c_one_fp
 }
