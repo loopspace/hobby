@@ -58,6 +58,14 @@
 \begin{document}
 
 \begin{tikzpicture}[use Hobby shortcut]
+%\draw[ultra thick,red] (-0.6,-1) .. (0,-0.9) .. (2,0.6);
+\node (star) at (-0.6,-1) {};
+\draw (star.center) .. (0,-0.9) .. (2,0.6);
+\draw (0,0) -- (star) -- (2,0);
+\end{tikzpicture}
+\end{document}
+
+\begin{tikzpicture}[use Hobby shortcut]
 % filled points
 \fill (0,0) circle (1pt);
 \fill (2,0) circle (1pt);

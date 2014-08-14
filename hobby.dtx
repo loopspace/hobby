@@ -6,7 +6,7 @@
 ----------------------------------------------------------------
 hobby --- a TikZ/PGF library for drawing smooth(ish) curves using
           Hobby's algorithm (implemented in LaTeX3)
-E-mail: stacey@math.ntnu.no
+E-mail: loopspace@mathforge.org
 Released under the LaTeX Project Public License v1.3c or later
 See http://www.latex-project.org/lppl.txt
 ----------------------------------------------------------------
@@ -33,7 +33,7 @@ The implementation is in LaTeX3.  It can be used as as a TikZ
 ----------------------------------------------------------------
 hobby --- a TikZ/PGF library for drawing smooth(ish) curves using
           Hobby's algorithm (implemented in LaTeX3)
-E-mail: stacey@math.ntnu.no
+E-mail: loopspace@mathforge.org
 Released under the LaTeX Project Public License v1.3c or later
 See http://www.latex-project.org/lppl.txt
 ----------------------------------------------------------------
@@ -41,7 +41,7 @@ See http://www.latex-project.org/lppl.txt
 \endpreamble
 \postamble
 
-Copyright (C) 2012 by Andrew Stacey <stacey@math.ntnu.no>
+Copyright (C) 2012 by Andrew Stacey <loopspace@mathforge.org>
 
 This file may be distributed and/or modified under the conditions
 of the LaTeX Project Public License, either version 1.3 of this
@@ -110,7 +110,7 @@ and the derived files            hobby.code.tex
 %</driver>
 % \fi
 %
-% \CheckSum{3304}
+% \CheckSum{3380}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -134,7 +134,7 @@ and the derived files            hobby.code.tex
 %
 % \providecommand*{\url}{\texttt}
 % \title{The \textsf{Hobby} package: code}
-% \author{Andrew Stacey \\ \url{stacey@math.ntnu.no}}
+% \author{Andrew Stacey \\ \url{loopspace@mathforge.org}}
 % \date{\hobbyVersion\ from\ \hobbyDate}
 % \maketitle
 %
@@ -182,8 +182,8 @@ and the derived files            hobby.code.tex
 
 \tl_new:N \g__hobby_version
 \tl_new:N \g__hobby_date
-\tl_set:Nn \g__hobby_version {1.4}
-\tl_set:Nn \g__hobby_date {2014-01-21}
+\tl_set:Nn \g__hobby_version {1.6}
+\tl_set:Nn \g__hobby_date {2014-08-11}
 \DeclareDocumentCommand \hobbyVersion {}
 {
   \tl_use:N \g__hobby_version
@@ -1808,32 +1808,6 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\hobby@pgfpoint}
-% This is the start of the iterator which decides whether to continue or not.
-%    \begin{macrocode}
-\def\hobby@pgfpoint#1{%
-  \ifx#1\pgf@stop
-  \let\@next=\pgfutil@gobble
-  \else
-  \let\@next=\hobby@addpgfpoint
-  \fi
-  \@next#1
-}
-%    \end{macrocode}
-% \end{macro}
-%
-% \begin{macro}{\hobby@addpgfpoint}
-% This adds a point to the current list and returns control to the iterator.
-%    \begin{macrocode}
-\def\hobby@addpgfpoint#1#2#3{%
-  #1{#2}{#3}%
-  \pgfmathsetmacro\hobby@x{\the\pgf@x/1cm}%
-  \pgfmathsetmacro\hobby@y{\the\pgf@y/1cm}%
-  \hobbyaddpoint{x = \hobby@x, y = \hobby@y}%
-  \hobby@pgfpoint}
-%    \end{macrocode}
-% \end{macro}
-%    
 %
 % Plot handlers
 %

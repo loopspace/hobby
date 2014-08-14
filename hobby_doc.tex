@@ -9,6 +9,7 @@
 \usepackage{fancyvrb}
 \usetikzlibrary{hobby,decorations.pathreplacing}
 \usepackage{listings}
+\usepackage{hyperref}
 \pgfplotsset{compat=1.9}
 \lstloadlanguages{[LaTeX]TeX}
 \lstset{breakatwhitespace=true,breaklines=true,language=TeX}
@@ -58,7 +59,7 @@
 
 \providecommand*{\url}{\texttt}
 \title{The \textsf{Hobby} package}
-\author{Andrew Stacey \\ \url{stacey@math.ntnu.no}}
+\author{Andrew Stacey \\ \url{loopspace@mathforge.org}}
 \date{\hobbyVersion\ from\ \hobbyDate}
 \begin{document}
 \maketitle
@@ -146,7 +147,14 @@ It can be loaded with
 \begin{verbatim}
 \usetikzlibrary{hobby}
 \end{verbatim}
-%%
+
+\textbf{Warning}: This package makes extensive use of \LaTeX3.
+On occasion, updates to \LaTeX3 packages have resulted in this package behaving oddly or not working at all.
+The most up to date version of this package can be obtained from the \href{http://bazaar.launchpad.net/~tex-sx/tex-sx/development/files}{TeX-SX Launchpad page} (download \Verb+hobby.dtx+ and run \Verb+tex hobby.dtx+ to generate the files).
+Often, such issues are reported on the \href{http://tex.stackexchange.com}{TeX-SX} site and workarounds quickly found so it is worth checking there as well.
+
+\bigskip
+
 There are a variety of ways of specifying the data to the algorithm to generate the curve.
 
 \subsection{As a \textsf{to path}.}
@@ -221,6 +229,38 @@ However, the Hobby algorithm is designed to draw a curve in 2D-{}space and does 
 \addplot +[smooth] {rnd};
 \addplot +[hobby] {rnd};
 \end{axis}
+\end{tikzpicture}
+\end{example}
+
+\subsection{Basic Level PGF Commands}
+
+(Suggested by the question \href{http://tex.stackexchange.com/q/159896/86}{How to combine Hobby paths with PGF Basic Layer commands?} on TeX-SX.)
+
+In some circumstances, it is convenient to bypass TikZ and use more basic PGF commands for building a path.
+It is possible to add a path built using Hobby's algorithm in this fashion.
+The commands are:
+
+\begin{itemize}
+\item \Verb+\pgfpathhobby+ to initialise the path.
+If this is followed by a braced group then the contents of that are taken as options to the algorithm.
+
+\item \Verb+\pgfpathhobbypt{<pgf point specification>}+ to add a point to the path.
+If this is followed by a braced group then the contents of that are taken as options for that point.
+
+\item \Verb+\pgfpathhobbyend+ finalises the path.
+This applies the algorithm to the set of specified points and adds it to the current path.
+\end{itemize}
+
+\begin{example}
+\begin{tikzpicture}
+\pgfpathmoveto{\pgfpoint{0}{0}}
+\pgfpathlineto{\pgfpoint{1cm}{0}}
+\pgfpathhobby{closed=true}
+\pgfpathhobbypt{\pgfpoint{1cm}{2cm}}{tension in=2}
+\pgfpathhobbypt{\pgfpoint{2cm}{1cm}}
+\pgfpathhobbypt{\pgfpoint{3cm}{0cm}}
+\pgfpathhobbyend
+\pgfusepath{stroke}
 \end{tikzpicture}
 \end{example}
 
@@ -864,6 +904,13 @@ Then we store \(\theta_1\) for the next iteration.
 The actual curves are then produced from the angles using the same formulae for the lengths of the control points as in the main algorithm.
 
 At the last stage, we render both segments of the generated curve.
+
+\section{Acknowledgements}
+
+This package began life as an answer to the question \href{http://tex.stackexchange.com/q/54771/86}{Curve through a sequence of points with Metapost and TikZ}.
+Once released upon the unsuspecting world, various questions on the \href{http://tex.stackexchange.com}{TeX-SX} site have prompted new features (and bug-fixes).
+Most of these can be found by looking at the \href{http://tex.stackexchange.com/questions/tagged/hobby}{list of questions tagged ``hobby''} on that site.
+
 
 \begin{thebibliography}{1} \bibitem{MR834054} John~D. Hobby. \newblock Smooth, easy to compute interpolating splines. \newblock {\em Discrete Comput. Geom.}, 1:123--140, 1986. \end{thebibliography}
 
