@@ -3077,6 +3077,12 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\array_if_exist:NTF}
+%    \begin{macrocode}
+\prg_new_eq_conditional:NNn \array_if_exist:N \cs_if_exist:N { p, T, F, TF }
+%    \end{macrocode}
+% \end{macro}
+%
 % \begin{macro}{\array_new:N}
 %    \begin{macrocode}
 \cs_new_eq:NN \array_new:N \prop_new:N
@@ -3193,7 +3199,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %
 % For displaying arrays, we need some messages.
 %    \begin{macrocode}
-\__msg_kernel_new:nnn { kernel } { show-array }
+\msg_new:nnn { kernel } { show-array }
   {
     The~array~\token_to_str:N #1~
     \array_if_empty:NTF #1
@@ -3207,22 +3213,13 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_show:N #1
   {
-    \tl_clear:N \l_array_show_tl
-    \array_map_function:NN #1 \array_show_aux:nn
-    \__msg_show_variable:Nno
-      #1
+    \__msg_show_variable:NNNnn
+    #1
+    \array_if_exist:NTF
+    \array_if_empty:NTF
       { array }
-    { \l_array_show_tl }
+    { \array_map_function:NN #1 \__msg_show_item:nn }
   }
-\cs_generate_variant:Nn \__msg_show_variable:Nnn { Nno }
-
-\cs_new_protected:Npn \array_show_aux:nn #1#2
-{
-  \tl_if_eq:nnTF {#2} {\q_no_value} {}
-  {
-  \tl_put_right:No \l_array_show_tl {\__msg_show_item:nn {#1}{#2}}
-  }
-}
 \cs_generate_variant:Nn \array_show:N { c }
 %    \end{macrocode}
 % \end{macro}
