@@ -3051,7 +3051,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % \begin{macro}[EXP]{\array_get:Nn}
 %    \begin{macrocode}
 \cs_new:Npn \array_get:Nn #1#2 {
-  \exp_args:NNf \prop_get:Nn #1 { \int_eval:n {#2} }
+  \exp_args:NNf \prop_item:Nn #1 { \int_eval:n {#2} }
 }
 %    \end{macrocode}
 % \end{macro}
@@ -3364,7 +3364,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \begin{macrocode}
 \cs_new:Npn \array_top:N #1
 {
-  \array_get:Nn #1 {\prop_get:Nn #1 {top}}
+  \array_get:Nn #1 {\prop_item:Nn #1 {top}}
 }
 %    \end{macrocode}
 % \end{macro}
@@ -3373,7 +3373,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \begin{macrocode}
 \cs_new:Npn \array_base:N #1
 {
-  \array_get:Nn #1 {\prop_get:Nn #1 {base}}
+  \array_get:Nn #1 {\prop_item:Nn #1 {base}}
 }
 %    \end{macrocode}
 % \end{macro}
@@ -3482,7 +3482,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_length:N #1
 {
-  \int_eval:n {\prop_get:Nn #1 {top} - \prop_get:Nn #1 {base}}
+  \int_eval:n {\prop_item:Nn #1 {top} - \prop_item:Nn #1 {base}}
 }
 %    \end{macrocode}
 % \end{macro}
