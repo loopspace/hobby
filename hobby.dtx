@@ -2209,12 +2209,12 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   break/.default = true,
   invert blank/.default = true,
   in angle/.code = {%
-    \pgfmathparse{#1*pi/180}%
+    \pgfmathparse{(#1)*pi/180}%
     \edef\@temp{in angle=\pgfmathresult,}%
     \pgfkeysalso{add option to Hobby path/.expand once=\@temp}%
   },
   out angle/.code = {%
-    \pgfmathparse{#1*pi/180}%
+    \pgfmathparse{(#1)*pi/180}%
     \edef\@temp{out angle=\pgfmathresult,}%
     \pgfkeysalso{add option to Hobby path/.expand once=\@temp}%
   },
@@ -2581,6 +2581,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \hobbysavepath{\hobby@path@name}%
   \fi
   \global\let\hobby@path@name=\pgfutil@empty
+  \tikzset{designated Hobby path=next}%
   \hobby@restore@tikz@commands
 }
 %    \end{macrocode}
