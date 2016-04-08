@@ -1,0 +1,11 @@
+*.pdf
+*.ins
+*.log
+*.aux
+*.idx
+*.glo
+*.out
+*.hd
+*.code.tex
+*.sty
+*.txt
