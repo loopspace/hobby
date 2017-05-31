@@ -2306,6 +2306,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \def\pgf@temp{#1}%
   \ifx\pgf@temp\pgfutil@empty
     \let\tikz@timer=\tikz@timer@line
+  \expandafter\def\expandafter\hobby@collected@onpath\expandafter{\expandafter{\expandafter}\hobby@collected@onpath}
   \else
     \hobby@topgf{#1}%
     \edef\tikz@timer@cont@one{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}%
@@ -2567,6 +2568,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % \begin{macro}{\hobby@finish}
 %    \begin{macrocode}
 \def\hobby@finish{%
+  \hobby@restore@tikz@commands
   \ifhobby@externalise
     \ifx\hobby@path@name\pgfutil@empty
       \hobbygenusepath
@@ -2582,7 +2584,6 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \fi
   \global\let\hobby@path@name=\pgfutil@empty
   \tikzset{designated Hobby path=next}%
-  \hobby@restore@tikz@commands
 }
 %    \end{macrocode}
 % \end{macro}
