@@ -1,0 +1,33 @@
+\documentclass{article}
+
+\usepackage{tikz}
+\usetikzlibrary{hobby}
+
+\usepackage{l3hobby}
+
+\begin{document}
+
+\begin{tikzpicture}
+\draw[use Hobby shortcut] (0,0) .. (1,1) .. (2,0) .. (3,1) .. (4,0);
+\end{tikzpicture}
+
+\ExplSyntaxOn
+\draw_begin:
+\hobby_lthree_init:
+\draw_path_moveto:n {0cm, 0cm}
+%\keys_set:nn {hobby/read in all} {disjoint=true}
+\hobby_lthree_addpoint:n {0cm, 0cm}
+\hobby_lthree_addpoint:n {1cm, 1cm}
+\hobby_lthree_addpoint:n {2cm, 0cm}
+\hobby_lthree_addpoint:n {3cm, 1cm}
+\hobby_lthree_addpoint:n {4cm, 0cm}
+\hobby_gen_path:
+\hobby_save_path:n {a}
+\hobby_use_path:
+\draw_path_use:n {stroke}
+\draw_end:
+\ExplSyntaxOff
+
+
+
+\end{document}

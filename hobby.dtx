@@ -62,6 +62,7 @@ and the derived files            hobby.code.tex
                                  pgflibraryhobby.code.tex
                                  tikzlibraryhobby.code.tex
                                  pml3array.sty
+                                 l3hobby.sty
                                  hobby.ins
                                  hobby.pdf
                                  hobby_code.pdf
@@ -71,10 +72,9 @@ and the derived files            hobby.code.tex
 \usedir{tex/latex/hobby}
 \generate{\file{tikzlibraryhobby.code.tex} {\from{hobby.dtx}{tikzlibrary}}}
 \generate{\file{pgflibraryhobby.code.tex} {\from{hobby.dtx}{pgflibrary}}}
-\generate{\file{hobby.code.tex}
-{\from{hobby.dtx}{hobby}}}
-\generate{\file{pml3array.sty}
-{\from{hobby.dtx}{array}}}
+\generate{\file{hobby.code.tex} {\from{hobby.dtx}{hobby}}}
+\generate{\file{pml3array.sty} {\from{hobby.dtx}{array}}}
+\generate{\file{l3hobby.sty} {\from{hobby.dtx}{l3hobby}}}                                 
 %</install>
 %<install>\endbatchfile
 %<*internal>
@@ -111,7 +111,7 @@ and the derived files            hobby.code.tex
 %</driver>
 % \fi
 %
-% \CheckSum{3373}
+% \CheckSum{3382}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -183,8 +183,8 @@ and the derived files            hobby.code.tex
 
 \tl_new:N \g__hobby_version
 \tl_new:N \g__hobby_date
-\tl_set:Nn \g__hobby_version {1.7}
-\tl_set:Nn \g__hobby_date {2016-02-19}
+\tl_set:Nn \g__hobby_version {1.8}
+\tl_set:Nn \g__hobby_date {2017-06-01}
 \DeclareDocumentCommand \hobbyVersion {}
 {
   \tl_use:N \g__hobby_version
@@ -1329,7 +1329,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % Initialise the settings for Hobby's algorithm
 %    \begin{macrocode}
 \NewDocumentCommand \hobbyinit {m m m} {
-  \hobby_set_cmds:nnn#1#2#3
+  \hobby_set_cmds:NNN #1#2#3
   \hobby_clear_path:
 }
 %    \end{macrocode}
@@ -1339,6 +1339,15 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % This adds a point, possibly with tensions, to the current stack.
 %    \begin{macrocode}
 \NewDocumentCommand \hobbyaddpoint { m } {
+  \hobby_add_point:n {#1}
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\hobby_add_point:n}
+%    \begin{macrocode}
+\cs_new_nopar:Npn \hobby_add_point:n #1
+{
     \keys_set:nn { hobby/read in all }
     {
       tension~out,
@@ -1383,7 +1392,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\hobby_set_cmds:nnn}
+% \begin{macro}{\hobby_set_cmds:NNN}
 % The path-generation code doesn't know what to actually do with the path so the initialisation code will set some macros to do that.
 % This is an auxiliary command that sets these macros.
 %    \begin{macrocode}
@@ -1393,7 +1402,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 \cs_generate_variant:Nn \hobby_moveto:nnn {VVV,nnV}
 \cs_generate_variant:Nn \hobby_curveto:nnn {VVV}
 \cs_generate_variant:Nn \hobby_close:n {V}
-\cs_new:Nn \hobby_set_cmds:nnn {
+\cs_new:Nn \hobby_set_cmds:NNN {
   \cs_gset_eq:NN \hobby_moveto:nnn #1
   \cs_gset_eq:NN \hobby_curveto:nnn #2
   \cs_gset_eq:NN \hobby_close:n #3
@@ -3496,5 +3505,123 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % \iffalse
 %</array>
 % \fi
-% 
+%
+% \iffalse
+%<*l3hobby>
+% \fi
+%
+%    \begin{macrocode}
+\RequirePackage{expl3}
+%    \end{macrocode}
+%
+% Load the hobby core
+%    \begin{macrocode}
+\input{hobby.code.tex}
+%    \end{macrocode}
+%
+% Register as an expl3 package
+%    \begin{macrocode}
+\ProvidesExplPackage {l3hobby} {2018/02/20} {1.0} {Interface for l3draw and hobyy}
+%    \end{macrocode}
+%
+% Load the l3draw package
+%    \begin{macrocode}
+\RequirePackage{l3draw}
+%    \end{macrocode}
+%
+%
+% We need a token list to build our drawing commands
+%    \begin{macrocode}
+\tl_new:N \l__hobby_lthree_tmpa_tl
+%    \end{macrocode}
+%
+%
+% \begin{macro}{\hobby_lthree_moveto:nnn}
+% This provides our interface between hobby's moveto and l3draw's moveto
+%    \begin{macrocode}
+\cs_new_protected:Npn \hobby_lthree_moveto:nnn #1#2#3
+{
+  \tl_set:Nn \l__hobby_lthree_tmpa_tl {\__draw_path_moveto:nn}
+  \keys_set:nn { hobby/read in all }
+  {
+    #3
+  }
+  \tl_put_right:Nx \l__hobby_lthree_tmpa_tl {{ \fp_use:N \l_hobby_tempa_fp pt }{ \fp_use:N \l_hobby_tempb_fp pt }}
+  \tl_use:N \l__hobby_lthree_tmpa_tl
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\hobby_lthree_curveto:nnn}
+% This provides our interface between hobby's curveto and l3draw's curveto
+%    \begin{macrocode}
+\cs_new_protected:Npn \hobby_lthree_curveto:nnn #1#2#3
+{
+  \tl_set:Nn \l__hobby_lthree_tmpa_tl { \__draw_path_curveto:nnnnnn}
+  \keys_set:nn { hobby/read in all }
+  {
+    #1
+  }
+  \tl_put_right:Nx \l__hobby_lthree_tmpa_tl {{ \fp_use:N \l_hobby_tempa_fp pt }{ \fp_use:N \l_hobby_tempb_fp pt }}
+  \keys_set:nn { hobby/read in all }
+  {
+    #2
+  }
+  \tl_put_right:Nx \l__hobby_lthree_tmpa_tl {{ \fp_use:N \l_hobby_tempa_fp pt }{ \fp_use:N \l_hobby_tempb_fp pt }}
+  \keys_set:nn { hobby/read in all }
+  {
+    #3
+  }
+  \tl_put_right:Nx \l__hobby_lthree_tmpa_tl {{ \fp_use:N \l_hobby_tempa_fp pt }{ \fp_use:N \l_hobby_tempb_fp pt }}
+  \tl_use:N \l__hobby_lthree_tmpa_tl
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\hobby_lthree_close:n}
+% This provides our interface between hobby's close and l3draw's close
+%    \begin{macrocode}
+\cs_new_protected:Npn \hobby_lthree_close:n #1
+{
+  \draw_path_close:
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\hobby_lthree_addpoint:n}
+% This processes a point and passes it one more step towards the hobby algorithm
+%    \begin{macrocode}
+\cs_new_protected:Npn \hobby_lthree_addpoint:n #1
+{
+  \__draw_point_process:nn
+  { \__hobby_lthree_addpoint:nn }
+  { \draw_point_transform:n {#1} }
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\__hobby_lthree_curveto:nn}
+% This provides our interface between l3draw's points and hobby's syntax
+%    \begin{macrocode}
+\cs_new_protected:Npn \__hobby_lthree_addpoint:nn #1#2
+{
+  \hobby_add_point:n {x = #1, y = #2}
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\hobby_lthree_init:}
+% This initialises hobby's algorithm with the l3draw commands
+%    \begin{macrocode}
+\cs_new_protected:Npn \hobby_lthree_init:
+{
+  \hobby_set_cmds:NNN \hobby_lthree_moveto:nnn \hobby_lthree_curveto:nnn \hobby_lthree_close:n
+  \hobby_clear_path:
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \iffalse
+%</l3hobby>
+% \fi
 %\Finale
