@@ -236,7 +236,7 @@ and the derived files            hobby.code.tex
 %
 % \begin{macro}{\l_hobby_points_array}
 % \Verb+\l_hobby_points_array+ is an array holding the specified points on the path.
-% In the \LaTeX3 code, a ``point'' is a token list of the form \Verb+x = <number>, y = <number>+.
+% In the \LaTeX3 code, a ``point'' is a token list of the form \Verb+<number>, <number>+.
 % This gives us the greatest flexibility in passing points back and forth between the \LaTeX3 code and any calling code.
 % The array is indexed by integers beginning with \(0\).
 % In the documentation, we will use the notation \(z_k\) to refer to the \(k\)th point.
@@ -425,6 +425,20 @@ and the derived files            hobby.code.tex
 %    \end{macrocode}
 % \end{macro}
 %
+% \begin{macro}{\l_hobby_tempa_tl}
+% \Verb+\l_hobby_tempa_tl+ is a temporary variable of type \Verb+tl+.
+%    \begin{macrocode}
+\fp_new:N \l_hobby_tempa_tl
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\l_hobby_tempb_tl}
+% \Verb+\l_hobby_tempb_tl+ is a temporary variable of type \Verb+tl+.
+%    \begin{macrocode}
+\fp_new:N \l_hobby_tempb_tl
+%    \end{macrocode}
+% \end{macro}
+%
 % \begin{macro}{\l_hobby_tempa_fp}
 % \Verb+\l_hobby_tempa_fp+ is a temporary variable of type \Verb+fp+.
 %    \begin{macrocode}
@@ -517,8 +531,10 @@ and the derived files            hobby.code.tex
 % Using keys makes it easier to pass points from the algorithm code to the calling code and vice versa without either knowing too much about the other.
 %    \begin{macrocode}
 \keys_define:nn {hobby / read in all} {
-  x .fp_set:N = \l_hobby_tempa_fp,
-  y .fp_set:N = \l_hobby_tempb_fp,
+  point .code:n = {
+    \fp_set:Nn \l_hobby_tempa_fp {\clist_item:nn {#1} {1}}
+    \fp_set:Nn \l_hobby_tempb_fp {\clist_item:nn {#1} {2}}
+  },
   tension~out .fp_set:N = \l_hobby_tempc_fp,
   tension~in .fp_set:N = \l_hobby_tempd_fp,
   excess~angle .fp_set:N = \l_hobby_temps_fp,
@@ -1286,7 +1302,7 @@ and the derived files            hobby.code.tex
 % Lastly, we generate the coordinates of the control points.
 %    \begin{macrocode}
 \int_step_inline:nnnn {0} {1} {\l_hobby_npoints_int - 1} {
-\array_gput:Nnx \l_hobby_controla_array  {##1 + 1} {x = \fp_eval:n  {
+\array_gput:Nnx \l_hobby_controla_array  {##1 + 1} {\fp_eval:n  {
 (\array_get:Nn \l_hobby_points_x_array {##1})
 +
   (\array_get:Nn \l_hobby_distances_array {##1}) *
@@ -1295,7 +1311,7 @@ cos ( (\array_get:Nn \l_hobby_angles_array {##1})
 +
   (\array_get:Nn \l_hobby_theta_array {##1}))
 /3
-}, y = \fp_eval:n {
+}, \fp_eval:n {
 ( \array_get:Nn \l_hobby_points_y_array {##1}) +
   (\array_get:Nn \l_hobby_distances_array {##1}) *
   (\array_get:Nn \l_hobby_rho_array {##1}) *
@@ -1308,12 +1324,12 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 }
 \int_step_inline:nnnn {1} {1} {\l_hobby_npoints_int} {
   \array_gput:Nnx \l_hobby_controlb_array {##1} {
-    x = \fp_eval:n {\array_get:Nn \l_hobby_points_x_array {##1}
+    \fp_eval:n {\array_get:Nn \l_hobby_points_x_array {##1}
 - (\array_get:Nn \l_hobby_distances_array  {##1 - 1})
 * (\array_get:Nn \l_hobby_sigma_array {##1})
 * cos((\array_get:Nn \l_hobby_angles_array  {##1 - 1})
 - (\array_get:Nn \l_hobby_phi_array {##1}))/3
-}, y = \fp_eval:n {
+}, \fp_eval:n {
   (\array_get:Nn \l_hobby_points_y_array {##1})
 - (\array_get:Nn \l_hobby_distances_array  {##1 - 1})
 * (\array_get:Nn \l_hobby_sigma_array {##1})
@@ -1339,44 +1355,45 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % This adds a point, possibly with tensions, to the current stack.
 %    \begin{macrocode}
 \NewDocumentCommand \hobbyaddpoint { m } {
-  \hobby_add_point:n {#1}
+  \keys_set:nn { hobby/read in all }
+  {
+    tension~out,
+    tension~in,
+    excess~angle,
+    blank,
+    break,
+    #1
+  }
+  \tl_if_eq:VnTF \l_tmpa_tl {true}
+  {\tl_set:Nn \l_tmpa_tl {2}}
+  {
+    \tl_if_eq:VnTF \l_tmpa_tl {soft}
+    {\tl_set:Nn \l_tmpa_tl {0}}
+    {\tl_set:Nn \l_tmpa_tl {1}}
+  }
+  \tl_if_eq:VnTF \l_tmpb_tl {true}
+    {\tl_put_right:Nn \l_tmpa_tl {1}}
+    {\tl_put_right:Nn \l_tmpa_tl {0}}
+  \tl_set:Nx \l_hobby_tempa_tl {\fp_use:N \l_hobby_tempa_fp}
+  \tl_set:Nx \l_hobby_tempb_tl {\fp_use:N \l_hobby_tempb_fp}
+  \hobby_add_point:VVVVVV \l_hobby_tempa_tl \l_hobby_tempb_tl \l_hobby_tempc_fp \l_hobby_tempd_fp \l_hobby_temps_fp \l_tmpa_tl
 }
 %    \end{macrocode}
 % \end{macro}
 %
 % \begin{macro}{\hobby_add_point:n}
 %    \begin{macrocode}
-\cs_new_nopar:Npn \hobby_add_point:n #1
+\cs_new_nopar:Npn \hobby_add_point:nnnnnn #1#2#3#4#5#6
 {
-    \keys_set:nn { hobby/read in all }
-    {
-      tension~out,
-      tension~in,
-      excess~angle,
-      blank,
-      break,
-      #1
-    }
-    \tl_if_eq:VnTF {\l_tmpa_tl} {true}
-     {\tl_set:Nn \l_tmpa_tl {2}}
-     {
-       \tl_if_eq:VnTF {\l_tmpa_tl} {soft}
-       {\tl_set:Nn \l_tmpa_tl {0}}
-       {\tl_set:Nn \l_tmpa_tl {1}}
-     }
-    \tl_if_eq:VnTF {\l_tmpb_tl} {true}
-     {\tl_put_right:Nn \l_tmpa_tl {1}}
-     {\tl_put_right:Nn \l_tmpa_tl {0}}
-    \array_gpush:Nx \l_hobby_actions_array {\l_tmpa_tl}
-    \array_gpush:Nx \l_hobby_tension_out_array {\fp_to_tl:N \l_hobby_tempc_fp}
-    \array_gpush:Nx \l_hobby_tension_in_array {\fp_to_tl:N \l_hobby_tempd_fp}
-    \array_gpush:Nx \l_hobby_excess_angle_array {\fp_to_tl:N \l_hobby_temps_fp}
-    \array_gpush:Nx \l_hobby_points_array {
-      x = \fp_use:N \l_hobby_tempa_fp,
-      y = \fp_use:N \l_hobby_tempb_fp }
-    \array_gpush:Nx \l_hobby_points_x_array {\fp_to_tl:N \l_hobby_tempa_fp}
-    \array_gpush:Nx \l_hobby_points_y_array {\fp_to_tl:N \l_hobby_tempb_fp}
+    \array_gpush:Nn \l_hobby_actions_array { #6 }
+    \array_gpush:Nn \l_hobby_tension_out_array { #3 }
+    \array_gpush:Nn \l_hobby_tension_in_array { #4 }
+    \array_gpush:Nn \l_hobby_excess_angle_array { #5 }
+    \array_gpush:Nn \l_hobby_points_array { #1, #2 }
+    \array_gpush:Nn \l_hobby_points_x_array { #1 }
+    \array_gpush:Nn \l_hobby_points_y_array { #2 }
 }
+\cs_generate_variant:Nn \hobby_add_point:nnnnnn {VVVVVV}
 %    \end{macrocode}
 % \end{macro}
 %
@@ -1702,9 +1719,13 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 \pgfkeys{
   /pgf/hobby/.is family,
   /pgf/hobby/.cd,
-  x/.code={\pgf@x=#1cm},
-  y/.code={\pgf@y=#1cm}
+  point/.code={%
+    \hobby@parse@pt#1\relax}
 }
+\def\hobby@parse@pt#1,#2\relax{%
+  \pgf@x=#1cm\relax
+  \pgf@y=#2cm\relax
+}  
 %    \end{macrocode}
 %
 % \begin{macro}{hobbyatan2}
@@ -1747,7 +1768,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % Translates a \LaTeX3 point to a PGF point.
 %    \begin{macrocode}
 \def\hobby@topgf#1{%
-    \pgfqkeys{/pgf/hobby}{#1}%
+    \pgfqkeys{/pgf/hobby}{point={#1}}%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -1772,7 +1793,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \hobbysetparams{#1}%
   \pgfmathsetmacro\hobby@x{\the\pgf@path@lastx/1cm}%
   \pgfmathsetmacro\hobby@y{\the\pgf@path@lasty/1cm}%
-  \hobbyaddpoint{x = \hobby@x, y = \hobby@y}%
+  \hobbyaddpoint{point={\hobby@x, \hobby@y}}%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -1792,7 +1813,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % \begin{macro}{\pgfpathhobbyptparams}
 %    \begin{macrocode}
 \def\pgfpathhobbyptparams#1{%
-  \hobbyaddpoint{#1,x = \hobby@x, y = \hobby@y}%
+  \hobbyaddpoint{#1,point={\hobby@x, \hobby@y}}%
 }
 %    \end{macrocode}
 % \end{macro}
@@ -1899,7 +1920,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     #1%
     \pgfmathsetmacro\hobby@x{\the\pgf@x/1cm}%
     \pgfmathsetmacro\hobby@y{\the\pgf@y/1cm}%
-    \hobbyaddpoint{x = \hobby@x, y = \hobby@y}%
+    \hobbyaddpoint{point={\hobby@x, \hobby@y}}%
   }
 %    \end{macrocode}
 % \end{macro}
@@ -2399,10 +2420,10 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \pgfmathsetmacro\hobby@x{\the\pgf@x/1cm}%
   \pgfmathsetmacro\hobby@y{\the\pgf@y/1cm}%
   \ifx\hobby@initial@pt\pgfutil@empty
-    \xdef\hobby@initial@pt{x = \hobby@x, y = \hobby@y}%
+    \xdef\hobby@initial@pt{\hobby@x, \hobby@y}%
   \fi
   \expandafter\hobbyaddpoint\expandafter{\hobby@point@options,%
-    x = \hobby@x, y = \hobby@y}%
+    point={\hobby@x, \hobby@y}}%
   \def\hobby@point@options{}%
   \let\tikz@scan@point@options=\pgfutil@empty
   \pgfutil@ifnextchar\relax{%
@@ -2461,10 +2482,10 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \let\tikz@collected@onpath=\pgfutil@empty
   \pgfmathsetmacro\hobby@x{\the\tikz@lastx/1cm}%
   \pgfmathsetmacro\hobby@y{\the\tikz@lasty/1cm}%
-  \xdef\hobby@initial@pt{x = \hobby@x, y = \hobby@y}%
+  \xdef\hobby@initial@pt{\hobby@x, \hobby@y}%
   \expandafter\hobbysetparams\expandafter{\hobby@next@opts}%
   \expandafter\hobbyaddpoint\expandafter{\hobby@point@options,%
-      x = \hobby@x, y = \hobby@y}%
+      point={\hobby@x, \hobby@y} }%
   \hobby@init@tikz@commands
   \tikzset{designated Hobby path=this}%
   \let\tikz@scan@point@options=\pgfutil@empty
@@ -2487,7 +2508,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
   \pgfmathsetmacro\hobby@y{\the\pgf@y/1cm}%
   \expandafter\hobbysetparams\expandafter{\hobby@this@opts}%
   \expandafter\hobbyaddpoint\expandafter{\hobby@point@options,%
-    x = \hobby@x, y = \hobby@y}%
+    point={\hobby@x, \hobby@y}}%
   \hobby@action
   \global\let\hobby@this@opts=\pgfutil@empty
   \global\let\hobby@action=\pgfutil@empty
@@ -3521,7 +3542,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %
 % Register as an expl3 package
 %    \begin{macrocode}
-\ProvidesExplPackage {l3hobby} {2018/02/20} {1.0} {Interface for l3draw and hobyy}
+\ProvidesExplPackage {l3hobby} {2018/02/20} {1.0} {Interface for l3draw and hobby}
 %    \end{macrocode}
 %
 % Load the l3draw package
@@ -3532,90 +3553,65 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %
 % We need a token list to build our drawing commands
 %    \begin{macrocode}
-\tl_new:N \l__hobby_lthree_tmpa_tl
+\tl_new:N \l__hobby_draw_tmpa_tl
 %    \end{macrocode}
 %
 %
-% \begin{macro}{\hobby_lthree_moveto:nnn}
+% \begin{macro}{\hobby_draw_moveto:nnn}
 % This provides our interface between hobby's moveto and l3draw's moveto
 %    \begin{macrocode}
-\cs_new_protected:Npn \hobby_lthree_moveto:nnn #1#2#3
+\cs_new_protected:Npn \hobby_draw_moveto:nnn #1#2#3
 {
-  \tl_set:Nn \l__hobby_lthree_tmpa_tl {\__draw_path_moveto:nn}
-  \keys_set:nn { hobby/read in all }
-  {
-    #3
-  }
-  \tl_put_right:Nx \l__hobby_lthree_tmpa_tl {{ \fp_use:N \l_hobby_tempa_fp pt }{ \fp_use:N \l_hobby_tempb_fp pt }}
-  \tl_use:N \l__hobby_lthree_tmpa_tl
+  \draw_path_canvas_moveto:n {#3}
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\hobby_lthree_curveto:nnn}
+% \begin{macro}{\hobby_draw_curveto:nnn}
 % This provides our interface between hobby's curveto and l3draw's curveto
 %    \begin{macrocode}
-\cs_new_protected:Npn \hobby_lthree_curveto:nnn #1#2#3
-{
-  \tl_set:Nn \l__hobby_lthree_tmpa_tl { \__draw_path_curveto:nnnnnn}
-  \keys_set:nn { hobby/read in all }
-  {
-    #1
-  }
-  \tl_put_right:Nx \l__hobby_lthree_tmpa_tl {{ \fp_use:N \l_hobby_tempa_fp pt }{ \fp_use:N \l_hobby_tempb_fp pt }}
-  \keys_set:nn { hobby/read in all }
-  {
-    #2
-  }
-  \tl_put_right:Nx \l__hobby_lthree_tmpa_tl {{ \fp_use:N \l_hobby_tempa_fp pt }{ \fp_use:N \l_hobby_tempb_fp pt }}
-  \keys_set:nn { hobby/read in all }
-  {
-    #3
-  }
-  \tl_put_right:Nx \l__hobby_lthree_tmpa_tl {{ \fp_use:N \l_hobby_tempa_fp pt }{ \fp_use:N \l_hobby_tempb_fp pt }}
-  \tl_use:N \l__hobby_lthree_tmpa_tl
-}
+\cs_set_eq:NN \hobby_draw_curveto:nnn \draw_path_canvas_curveto:nnn
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\hobby_lthree_close:n}
+% \begin{macro}{\hobby_draw_close:n}
 % This provides our interface between hobby's close and l3draw's close
 %    \begin{macrocode}
-\cs_new_protected:Npn \hobby_lthree_close:n #1
+\cs_new_protected:Npn \hobby_draw_close:n #1
 {
   \draw_path_close:
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\hobby_lthree_addpoint:n}
+% \begin{macro}{\hobby_draw_addpoint:n}
 % This processes a point and passes it one more step towards the hobby algorithm
 %    \begin{macrocode}
-\cs_new_protected:Npn \hobby_lthree_addpoint:n #1
+\cs_new_protected:Npn \hobby_draw_addpoint:n #1
 {
   \__draw_point_process:nn
-  { \__hobby_lthree_addpoint:nn }
+  { \__hobby_draw_addpoint:nn }
   { \draw_point_transform:n {#1} }
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\__hobby_lthree_curveto:nn}
+% \begin{macro}{\__hobby_draw_curveto:nn}
 % This provides our interface between l3draw's points and hobby's syntax
 %    \begin{macrocode}
-\cs_new_protected:Npn \__hobby_lthree_addpoint:nn #1#2
+\cs_new_protected:Npn \__hobby_draw_addpoint:nn #1#2
 {
-  \hobby_add_point:n {x = #1, y = #2}
+  \hobby_add_point:nnnnnn {#1} {#2} {1} {1} {0} {10}
 }
 %    \end{macrocode}
 % \end{macro}
 %
-% \begin{macro}{\hobby_lthree_init:}
+% \begin{macro}{\hobby_draw_init:}
 % This initialises hobby's algorithm with the l3draw commands
 %    \begin{macrocode}
-\cs_new_protected:Npn \hobby_lthree_init:
+\cs_new_protected:Npn \hobby_draw_init:
 {
-  \hobby_set_cmds:NNN \hobby_lthree_moveto:nnn \hobby_lthree_curveto:nnn \hobby_lthree_close:n
+  \hobby_set_cmds:NNN \hobby_draw_moveto:nnn \hobby_draw_curveto:nnn \hobby_draw_close:n
   \hobby_clear_path:
 }
 %    \end{macrocode}
