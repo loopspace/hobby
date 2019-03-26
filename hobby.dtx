@@ -2983,6 +2983,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 \int_new:N \l_array_base_int
 \int_new:N \l_array_top_int
 \int_new:N \l_array_tmp_int
+\int_new:N \g_array_map_int
 %    \end{macrocode}
 % The global variable \Verb+\g_array_base_int+ says what index a blank array should start with when pushed or unshifted.
 %    \begin{macrocode}
@@ -3194,12 +3195,12 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_map_inline:Nn #1#2
   {
-    \int_gincr:N \g__prg_map_int
-    \cs_gset:cpn { array_map_inline_ \int_use:N \g__prg_map_int :nn }
+    \int_gincr:N \g_array_map_int
+    \cs_gset:cpn { array_map_inline_ \int_use:N \g_array_map_int :nn }
       ##1##2 {#2}
     \exp_args:NNc \array_map_function:NN #1
-      { array_map_inline_ \int_use:N \g__prg_map_int :nn }
-    \__prg_break_point:Nn \array_map_break: { \int_gdecr:N \g__prg_map_int }
+      { array_map_inline_ \int_use:N \g_array_map_int :nn }
+    \__prg_break_point:Nn \array_map_break: { \int_gdecr:N \g_array_map_int }
   }
 \cs_generate_variant:Nn \array_map_inline:Nn { c }
 %    \end{macrocode}
@@ -3210,12 +3211,12 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_reverse_map_inline:Nn #1#2
   {
-    \int_gincr:N \g__prg_map_int
-    \cs_gset:cpn { array_map_inline_ \int_use:N \g__prg_map_int :nn }
+    \int_gincr:N \g_array_map_int
+    \cs_gset:cpn { array_map_inline_ \int_use:N \g_array_map_int :nn }
       ##1##2 {#2}
     \exp_args:NNc \array_reverse_map_function:NN #1
-      { array_map_inline_ \int_use:N \g__prg_map_int :nn }
-    \__prg_break_point:Nn \array_map_break: { \int_gdecr:N \g__prg_map_int }
+      { array_map_inline_ \int_use:N \g_array_map_int :nn }
+    \__prg_break_point:Nn \array_map_break: { \int_gdecr:N \g_array_map_int }
   }
 \cs_generate_variant:Nn \array_reverse_map_inline:Nn { c }
 %    \end{macrocode}
