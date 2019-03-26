@@ -12,7 +12,60 @@
 \usepackage{hyperref}
 \pgfplotsset{compat=1.9}
 \lstloadlanguages{[LaTeX]TeX}
-\lstset{breakatwhitespace=true,breaklines=true,language=TeX}
+
+\lstset{
+  breakatwhitespace=true,
+  breaklines=true,
+  language=[LaTeX]TeX,
+  basicstyle=\small\ttfamily,
+  keepspaces=true,
+  columns=fullflexible
+}
+
+\lstset{
+  emphstyle={\color{red}},
+  emph={
+    angle,
+    closed,
+    controls,
+    curl,
+    curve,
+    designated,
+    finish,
+    Hobby,
+    hobby,
+    in,
+    next,
+    out,
+    path,
+    quick,
+    shortcut,
+    show,
+    tension,
+    through,
+    use
+  } 
+}
+
+\lstset{
+  emphstyle={[2]\color{blue!70!black}},
+  emph={[2]
+    addplot,
+    axis,
+    coordinates,
+    draw,
+    grid,
+    help,
+    lines,
+    plot,
+    postaction,
+    scale
+    smooth,
+    tikzpicture,
+    to,
+    xshift,
+  }
+}
 
 \EnableCrossrefs
 \CodelineIndex
@@ -150,7 +203,7 @@ It can be loaded with
 
 \textbf{Warning}: This package makes extensive use of \LaTeX3.
 On occasion, updates to \LaTeX3 packages have resulted in this package behaving oddly or not working at all.
-The most up to date version of this package can be obtained from the \href{http://bazaar.launchpad.net/~tex-sx/tex-sx/development/files}{TeX-SX Launchpad page} (download \Verb+hobby.dtx+ and run \Verb+tex hobby.dtx+ to generate the files).
+The most up to date version of this package can be obtained from my \href{https://github.org/loopspace/hobby}{github page} (download \Verb+hobby.dtx+ and run \Verb+tex hobby.dtx+ to generate the files).
 Often, such issues are reported on the \href{http://tex.stackexchange.com}{TeX-SX} site and workarounds quickly found so it is worth checking there as well.
 
 \bigskip
