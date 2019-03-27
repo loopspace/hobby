@@ -11,7 +11,6 @@
 \usepackage{listings}
 \usepackage{hyperref}
 \pgfplotsset{compat=1.9}
-\lstloadlanguages{[LaTeX]TeX}
 
 \lstset{
   breakatwhitespace=true,
@@ -21,50 +20,15 @@
   keepspaces=true,
   columns=fullflexible
 }
-
+% hobby specific keywords (we can't put keywords with spaces :()
 \lstset{
   emphstyle={\color{red}},
-  emph={
-    angle,
-    closed,
-    controls,
-    curl,
-    curve,
-    designated,
-    finish,
-    Hobby,
-    hobby,
-    in,
-    next,
-    out,
-    path,
-    quick,
-    shortcut,
-    show,
-    tension,
-    through,
-    use
-  } 
+  emph={and,angle,blank,blanks,closed,controls,curl,curve,designated,disjoint,excess,finish,Hobby,hobby,in,invert,next,out,path,previous,quick,restore,save,shortcut,show,soft,tension,through,use}
 }
-
+% tikz keywords used in this documentation
 \lstset{
   emphstyle={[2]\color{blue!70!black}},
-  emph={[2]
-    addplot,
-    axis,
-    coordinates,
-    draw,
-    grid,
-    help,
-    lines,
-    plot,
-    postaction,
-    scale
-    smooth,
-    tikzpicture,
-    to,
-    xshift,
-  }
+  emph={[2]addplot,axis,blue,coordinates,distance,double,draw,every,foreach,grid,help,line,lines,plot,postaction,red,rotate,scale smooth,scale,smooth,style,thick,tikz,tikzpicture,to,ultra,white,width,xshift,yellow}
 }
 
 \EnableCrossrefs
@@ -78,7 +42,6 @@
    \begin{center}
    \setlength{\parindent}{0pt}
    \fbox{\begin{minipage}{.9\linewidth}
-     \lstset{breakatwhitespace=true,breaklines=true,language=TeX,basicstyle=\small}
      \lstinputlisting[]{example.out}
    \end{minipage}}
    \fbox{\begin{minipage}{.9\linewidth}
@@ -95,10 +58,10 @@
     decoration={
       show path construction,
       curveto code={
-        \draw [blue, dashed]
+  \draw [blue, dashed]
         (\tikzinputsegmentfirst)    -- (\tikzinputsegmentsupporta)
         node [at end, draw, solid, red, inner sep=2pt]{};
-        \draw [blue, dashed]
+  \draw [blue, dashed]
         (\tikzinputsegmentsupportb) -- (\tikzinputsegmentlast)
         node [at start, draw, solid, red, inner sep=2pt]{};
       }
@@ -164,31 +127,31 @@ Figure~\ref{fig:metapost} compares the implementation with that given by MetaPos
 \begin{figure}
 \centering
 \begin{tikzpicture}[scale=.5]
-\draw[scale=.1,postaction=show curve controls,line width=1mm,red] (0,0)
-.. controls (26.76463,-1.84543) and (51.4094,14.58441) .. (60,40)
-.. controls (67.09875,61.00188) and (59.76253,84.57518) .. (40,90)
-.. controls (25.35715,94.01947) and (10.48064,84.5022) .. (10,70)
-.. controls (9.62895,58.80421) and (18.80421,49.62895) .. (30,50);
-\fill[green] (0,0) circle[radius=2pt]
-(6,4) circle[radius=2pt]
-(4,9) circle[radius=2pt]
-(1,7) circle[radius=2pt]
-(3,5) circle[radius=2pt];
-\draw[postaction=show curve controls,thick] (0,0) to[curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
-\begin{scope}[xshift=10cm]
-\draw[scale=.1,postaction=show curve controls,line width=1mm,red] (0,0)
-.. controls (5.18756,-26.8353) and (60.36073,-18.40036) .. (60,40)
-.. controls (59.87714,59.889) and (57.33896,81.64203) .. (40,90)
-.. controls (22.39987,98.48387) and (4.72404,84.46368) .. (10,70)
-.. controls (13.38637,60.7165) and (26.35591,59.1351) .. (30,50)
-.. controls (39.19409,26.95198) and (-4.10555,21.23804) .. (0,0); % 
-\fill[green] (0,0) circle[radius=2pt]
-(6,4) circle[radius=2pt]
-(4,9) circle[radius=2pt]
-(1,7) circle[radius=2pt]
-(3,5) circle[radius=2pt];
-\draw[postaction=show curve controls,thick] (0,0) to[closed,curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
-\end{scope}
+  \draw[scale=.1,postaction=show curve controls,line width=1mm,red] (0,0)
+    .. controls (26.76463,-1.84543) and (51.4094,14.58441) .. (60,40)
+    .. controls (67.09875,61.00188) and (59.76253,84.57518) .. (40,90)
+    .. controls (25.35715,94.01947) and (10.48064,84.5022) .. (10,70)
+    .. controls (9.62895,58.80421) and (18.80421,49.62895) .. (30,50);
+  \fill[green] (0,0) circle[radius=2pt]
+    (6,4) circle[radius=2pt]
+    (4,9) circle[radius=2pt]
+    (1,7) circle[radius=2pt]
+    (3,5) circle[radius=2pt];
+  \draw[postaction=show curve controls,thick] (0,0) to[curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
+  \begin{scope}[xshift=10cm]
+    \draw[scale=.1,postaction=show curve controls,line width=1mm,red] (0,0)
+      .. controls (5.18756,-26.8353) and (60.36073,-18.40036) .. (60,40)
+      .. controls (59.87714,59.889) and (57.33896,81.64203) .. (40,90)
+      .. controls (22.39987,98.48387) and (4.72404,84.46368) .. (10,70)
+      .. controls (13.38637,60.7165) and (26.35591,59.1351) .. (30,50)
+      .. controls (39.19409,26.95198) and (-4.10555,21.23804) .. (0,0); %
+    \fill[green] (0,0) circle[radius=2pt]
+      (6,4) circle[radius=2pt]
+      (4,9) circle[radius=2pt]
+      (1,7) circle[radius=2pt]
+      (3,5) circle[radius=2pt];
+    \draw[postaction=show curve controls,thick] (0,0) to[closed,curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
+  \end{scope}
 \end{tikzpicture}
 \caption{Hobby's algorithm in TikZ overlaying the output of MetaPost}
 \label{fig:metapost}
@@ -219,13 +182,13 @@ However, note that the two methods are not completely synonymous due to how one 
 
 \begin{example}
 \begin{tikzpicture}[scale=.5]
-\draw (0,0) to[curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
+  \draw (0,0) to[curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
 \end{tikzpicture}
 \end{example}
 
 \begin{example}
 \begin{tikzpicture}[scale=.5]
-\draw (0,0) to[curve through={(6,4) (4,9) (1,7)}] (3,5);
+  \draw (0,0) to[curve through={(6,4) (4,9) (1,7)}] (3,5);
 \end{tikzpicture}
 \end{example}
 
@@ -234,7 +197,7 @@ Again, the dots are optional.
 
 \begin{example}
 \begin{tikzpicture}[scale=.5]
-\draw (0,0) to[quick curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
+  \draw (0,0) to[quick curve through={(6,4) .. (4,9) .. (1,7)}] (3,5);
 \end{tikzpicture}
 \end{example}
 
@@ -247,13 +210,13 @@ As a later version of TikZ may assign some action to that syntax, this package m
 
 \begin{example}
 \begin{tikzpicture}[scale=.5,use Hobby shortcut]
-\draw (-3,0) -- (0,0) .. (6,4) .. (4,9) .. (1,7) .. (3,5) -- ++(2,0);
+  \draw (-3,0) -- (0,0) .. (6,4) .. (4,9) .. (1,7) .. (3,5) -- ++(2,0);
 \end{tikzpicture}
 \end{example}
 
 \begin{example}
 \begin{tikzpicture}[scale=.5,use quick Hobby shortcut]
-\draw (-3,0) -- (0,0) .. (6,4) .. (4,9) .. (1,7) .. (3,5) -- ++(2,0);
+  \draw (-3,0) -- (0,0) .. (6,4) .. (4,9) .. (1,7) .. (3,5) -- ++(2,0);
 \end{tikzpicture}
 \end{example}
 
@@ -264,13 +227,13 @@ This library registers three plot handlers: \Verb+hobby+, \Verb+closed hobby+, a
 The first is an open curve through the points using the full algorithm, the second is a closed curve, and the third uses the quick algorithm (and is thus an open curve).
 
 \begin{example}
-\tikz[smooth] \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
+  \tikz[smooth] \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
 
-\tikz[hobby] \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
+  \tikz[hobby] \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
 
-\tikz[closed hobby] \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
+  \tikz[closed hobby] \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
 
-\tikz[quick hobby] \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
+  \tikz[quick hobby] \draw plot coordinates {(0,0) (1,1) (2,0) (3,1) (2,1) (10:2cm)};
 \end{example}
 
 This has the side effect that these can be used with the \Verb+pgfplots+ package.
@@ -278,10 +241,10 @@ However, the Hobby algorithm is designed to draw a curve in 2D-{}space and does 
 
 \begin{example}
 \begin{tikzpicture}
-\begin{axis}
-\addplot +[smooth] {rnd};
-\addplot +[hobby] {rnd};
-\end{axis}
+  \begin{axis}
+    \addplot +[smooth] {rnd};
+    \addplot +[hobby] {rnd};
+  \end{axis}
 \end{tikzpicture}
 \end{example}
 
@@ -306,14 +269,14 @@ This applies the algorithm to the set of specified points and adds it to the cur
 
 \begin{example}
 \begin{tikzpicture}
-\pgfpathmoveto{\pgfpoint{0}{0}}
-\pgfpathlineto{\pgfpoint{1cm}{0}}
-\pgfpathhobby{closed=true}
-\pgfpathhobbypt{\pgfpoint{1cm}{2cm}}{tension in=2}
-\pgfpathhobbypt{\pgfpoint{2cm}{1cm}}
-\pgfpathhobbypt{\pgfpoint{3cm}{0cm}}
-\pgfpathhobbyend
-\pgfusepath{stroke}
+  \pgfpathmoveto{\pgfpoint{0}{0}}
+  \pgfpathlineto{\pgfpoint{1cm}{0}}
+  \pgfpathhobby{closed=true}
+  \pgfpathhobbypt{\pgfpoint{1cm}{2cm}}{tension in=2}
+  \pgfpathhobbypt{\pgfpoint{2cm}{1cm}}
+  \pgfpathhobbypt{\pgfpoint{3cm}{0cm}}
+  \pgfpathhobbyend
+  \pgfusepath{stroke}
 \end{tikzpicture}
 \end{example}
 
@@ -340,10 +303,8 @@ Let us start with the customisations to the algorithm.
 \item Basic curve.
 \begin{example}
 \begin{tikzpicture}
-\draw[postaction=show curve controls]
-(0,0) to[curve through={(1,.5) .. (2,0) .. (3,.5)}] (4,0);
-\draw[xshift=5cm,use Hobby shortcut,postaction=show curve controls]
-(0,0) .. (1,.5) .. (2,0) .. (3,.5) .. (4,0);
+  \draw[postaction=show curve controls] (0,0) to[curve through={(1,.5) .. (2,0) .. (3,.5)}] (4,0);
+  \draw[xshift=5cm,use Hobby shortcut,postaction=show curve controls] (0,0) .. (1,.5) .. (2,0) .. (3,.5) .. (4,0);
 \end{tikzpicture}
 \end{example}
 
@@ -351,10 +312,8 @@ Let us start with the customisations to the algorithm.
 %%
 \begin{example}
 \begin{tikzpicture}[scale=.5]
-\draw[postaction=show curve controls]
-(0,0) to[closed,curve through={(1,.5) .. (2,0) .. (3,.5)}] (4,0);
-\draw[xshift=5cm,use Hobby shortcut,postaction=show curve controls]
-([closed]0,0) .. (1,.5) .. (2,0) .. (3,.5) .. (4,0);
+  \draw[postaction=show curve controls] (0,0) to[closed,curve through={(1,.5) .. (2,0) .. (3,.5)}] (4,0);
+  \draw[xshift=5cm,use Hobby shortcut,postaction=show curve controls] ([closed]0,0) .. (1,.5) .. (2,0) .. (3,.5) .. (4,0);
 \end{tikzpicture}
 \end{example}
 
@@ -362,38 +321,31 @@ Let us start with the customisations to the algorithm.
 The angles given are absolute.
 \begin{example}
 \begin{tikzpicture}
-\draw[postaction=show curve controls]
-(0,0) to[out angle=0,in angle=180,curve through={(1,.5) .. (2,0) .. (3,.5)}] (4,0);
-\draw[xshift=5cm,use Hobby shortcut,postaction=show curve controls]
-([out angle=0,in angle=180]0,0) .. (1,.5) .. (2,0) .. (3,.5) .. (4,0);
+  \draw[postaction=show curve controls] (0,0) to[out angle=0,in angle=180,curve through={(1,.5) .. (2,0) .. (3,.5)}] (4,0);
+  \draw[xshift=5cm,use Hobby shortcut,postaction=show curve controls] ([out angle=0,in angle=180]0,0) .. (1,.5) .. (2,0) .. (3,.5) .. (4,0);
 \end{tikzpicture}
 \end{example}
 
 \item Applying tension as the curve comes in to a point.
 \begin{example}
 \begin{tikzpicture}
-\draw[postaction=show curve controls]
-(0,0) to[curve through={(1,.5) .. ([tension in=2]2,0) .. (3,.5)}] (4,0);
-\draw[xshift=5cm,use Hobby shortcut,postaction=show curve controls]
-(0,0) .. (1,.5) .. ([tension in=2]2,0) .. (3,.5) .. (4,0);
+  \draw[postaction=show curve controls] (0,0) to[curve through={(1,.5) .. ([tension in=2]2,0) .. (3,.5)}] (4,0);
+  \draw[xshift=5cm,use Hobby shortcut,postaction=show curve controls] (0,0) .. (1,.5) .. ([tension in=2]2,0) .. (3,.5) .. (4,0);
 \end{tikzpicture}
 \end{example}
 
 \item Applying the same tension as a curve comes in and goes out of a point.
 \begin{example}
 \begin{tikzpicture}
-\draw[postaction=show curve controls]
-(0,0) to[curve through={(1,.5) .. ([tension=2]2,0) .. (3,.5)}] (4,0);
+  \draw[postaction=show curve controls] (0,0) to[curve through={(1,.5) .. ([tension=2]2,0) .. (3,.5)}] (4,0);
 \end{tikzpicture}
 \end{example}
 
 \item Specifying the \emph{curl} parameters.
 \begin{example}
 \begin{tikzpicture}
-\draw[postaction=show curve controls]
-(0,0) to[in curl=.1,out curl=3,curve through={(1,.5) .. (2,0) .. (3,.5)}] (4,0);
-\draw[xshift=5cm,use Hobby shortcut,postaction=show curve controls]
-(0,0) .. ([in curl=.1,out curl=3]1,.5) .. (2,0) .. (3,.5) .. (4,0);
+  \draw[postaction=show curve controls] (0,0) to[in curl=.1,out curl=3,curve through={(1,.5) .. (2,0) .. (3,.5)}] (4,0);
+  \draw[xshift=5cm,use Hobby shortcut,postaction=show curve controls] (0,0) .. ([in curl=.1,out curl=3]1,.5) .. (2,0) .. (3,.5) .. (4,0);
 \end{tikzpicture}
 \end{example}
 \end{itemize}
@@ -407,9 +359,9 @@ By nudging the repeated point slightly, the behaviour changes drastically.
 
 \begin{example}
 \begin{tikzpicture}[use Hobby shortcut]
-\draw (0,0) .. (1,0) .. (0,0) .. (0,-1);
-\draw[xshift=2cm] (0,0) .. (1,0) .. (0,0.1) .. (0,-1);
-\draw[xshift=4cm] (0,0) .. (1,0) .. (0,-0.1) .. (0,-1);
+  \draw (0,0) .. (1,0) .. (0,0) .. (0,-1);
+  \draw[xshift=2cm] (0,0) .. (1,0) .. (0,0.1) .. (0,-1);
+  \draw[xshift=4cm] (0,0) .. (1,0) .. (0,-0.1) .. (0,-1);
 \end{tikzpicture}
 \end{example}
 
@@ -420,9 +372,9 @@ It is best to nudge it in the direction most normal to the line between the spec
 An alternative solution is to add an additional point for the curve to go through.
 \begin{example}
 \begin{tikzpicture}[use Hobby shortcut]
-\draw (0,0) .. (1,0) .. (0,0) .. (0,-1);
-\draw[xshift=2cm] (0,0) .. (1,0) .. (0,0.002) .. (0,-1);
-\draw[xshift=4cm] (0,0) .. (1,0) .. (0,-0.002) .. (0,-1);
+  \draw (0,0) .. (1,0) .. (0,0) .. (0,-1);
+  \draw[xshift=2cm] (0,0) .. (1,0) .. (0,0.002) .. (0,-1);
+  \draw[xshift=4cm] (0,0) .. (1,0) .. (0,-0.002) .. (0,-1);
 \end{tikzpicture}
 \end{example}
 
@@ -430,9 +382,9 @@ Lastly, it is possible to add an \Verb+excess angle+ key to a coordinate.
 This will add the corresponding multiple of \(2\pi\) to the angle difference.
 \begin{example}
 \begin{tikzpicture}[use Hobby shortcut]
-\draw (0,0) .. (1,0) .. (0,0) .. (0,-1);
-\draw[xshift=2cm] (0,0) .. ([excess angle=1]1,0) .. (0,0) .. (0,-1);
-\draw[xshift=4cm] (0,0) .. ([excess angle=-1]1,0) .. (0,0) .. (0,-1);
+  \draw (0,0) .. (1,0) .. (0,0) .. (0,-1);
+  \draw[xshift=2cm] (0,0) .. ([excess angle=1]1,0) .. (0,0) .. (0,-1);
+  \draw[xshift=4cm] (0,0) .. ([excess angle=-1]1,0) .. (0,0) .. (0,-1);
 \end{tikzpicture}
 \end{example}
 
@@ -446,8 +398,8 @@ The implementation allows for this by separating the generation of the path from
 
 \begin{example}
 \begin{tikzpicture}
-\draw[line width=3mm,red,use Hobby shortcut,save Hobby path={saved}] (0,0) .. (1,1) .. (2,0);
-\draw[xshift=2cm,ultra thick,yellow] (0,0) [restore and use Hobby path={saved}{}];
+  \draw[line width=3mm,red,use Hobby shortcut,save Hobby path={saved}] (0,0) .. (1,1) .. (2,0);
+  \draw[xshift=2cm,ultra thick,yellow] (0,0) [restore and use Hobby path={saved}{}];
 \end{tikzpicture}
 \end{example}
 %
@@ -459,8 +411,8 @@ An alternative would be to use the key \Verb+disjoint+ which does add an initial
 
 \begin{example}
 \begin{tikzpicture}
-\draw[line width=3mm,red,use Hobby shortcut,save Hobby path={saved}] (0,0) .. (1,1) .. (2,0);
-\draw[xshift=2cm,ultra thick,yellow,restore and use Hobby path={saved}{disjoint}];
+  \draw[line width=3mm,red,use Hobby shortcut,save Hobby path={saved}] (0,0) .. (1,1) .. (2,0);
+  \draw[xshift=2cm,ultra thick,yellow,restore and use Hobby path={saved}{disjoint}];
 \end{tikzpicture}
 \end{example}
 %
@@ -475,10 +427,9 @@ Only a \Verb+soft+ blank will be reversed in these circumstances.
 
 \begin{example}
 \begin{tikzpicture}[use Hobby shortcut,line width=1mm,rotate=90]
-\draw[blue,save Hobby path={left}]
- ([out angle=90,in angle=-90]1,0) .. (1,1) .. ([blank=soft]0,2) .. (1,3) .. (1,4);
-\draw[red] ([out angle=90,in angle=-90]0,0) .. (0,1) .. (1,2) .. (0,3) .. (0,4);
-\draw[blue,restore and use Hobby path={left}{disjoint,invert soft blanks}];
+  \draw[blue,save Hobby path={left}] ([out angle=90,in angle=-90]1,0) .. (1,1) .. ([blank=soft]0,2) .. (1,3) .. (1,4);
+  \draw[red] ([out angle=90,in angle=-90]0,0) .. (0,1) .. (1,2) .. (0,3) .. (0,4);
+  \draw[blue,restore and use Hobby path={left}{disjoint,invert soft blanks}];
 \end{tikzpicture}
 \end{example}
 %
@@ -540,8 +491,8 @@ Non-{}soft-{}blank segments are still not drawn.
 
 \begin{example}
 \begin{tikzpicture}[use Hobby shortcut]
-\draw (0,0) .. (1,1) .. ([blank=soft]2,0) .. (3,1) .. ([blank]4,0) .. (5,1);
-\draw[red,use previous Hobby path={invert soft blanks,disjoint}];
+  \draw (0,0) .. (1,1) .. ([blank=soft]2,0) .. (3,1) .. ([blank]4,0) .. (5,1);
+  \draw[red,use previous Hobby path={invert soft blanks,disjoint}];
 \end{tikzpicture}
 \end{example}
 %
@@ -558,9 +509,8 @@ As a more practical application, consider the following rendering of a trefoil k
     double distance=.5mm
   }
 ]
-\draw ([closed]0,2) .. ([blank=soft]210:.5) .. (-30:2) ..
-([blank=soft]0,.5) .. (210:2) .. ([blank=soft]-30:.5);
-\draw[use previous Hobby path={invert soft blanks,disjoint}];
+  \draw ([closed]0,2) .. ([blank=soft]210:.5) .. (-30:2) .. ([blank=soft]0,.5) .. (210:2) .. ([blank=soft]-30:.5);
+  \draw[use previous Hobby path={invert soft blanks,disjoint}];
 \end{tikzpicture}
 \end{example}
 %
@@ -578,11 +528,11 @@ This could easily be generalised using the \Verb+\foreach+ command, as demonstra
   }
 ]
 \def\nfoil{9}
-\draw ([closed]0,2)
-\foreach \k in {1,...,\nfoil} {
-  .. ([blank=soft]90+360*\k/\nfoil-180/\nfoil:-.5) .. (90+360*\k/\nfoil:2)
-};
-\draw[use previous Hobby path={invert soft blanks,disjoint}];
+  \draw ([closed]0,2)
+    foreach \k in {1,...,\nfoil}{
+      .. ([blank=soft]90+360*\k/\nfoil-180/\nfoil:-.5) .. (90+360*\k/\nfoil:2)
+    };
+  \draw[use previous Hobby path={invert soft blanks,disjoint}];
 \end{tikzpicture}
 \end{example}
 %
@@ -601,7 +551,7 @@ However, Hobby's formulae for the lengths of the control points is still being u
 
 \begin{example}
 \begin{tikzpicture}[
-    use Hobby shortcut,
+  use Hobby shortcut,
   tangent/.style={%
     in angle={(180+#1)},
     Hobby finish,
@@ -609,10 +559,9 @@ However, Hobby's formulae for the lengths of the control points is still being u
     out angle=#1,
   },
 ]
-\draw[help lines] (-5,-5) grid (5,5);
-\draw (-5,0) -- (5,0) (0,-5) -- (0,5);
-\draw[thick] (-5,2) .. ([tangent=0]-3,3) .. (-1,1) .. (0,-1.3) .. %
-([tangent=0]1,-2) .. ([tangent=45]2,-1.5) .. ([tangent=0]3,-2) .. (5,-4);
+  \draw[help lines] (-5,-5) grid (5,5);
+  \draw (-5,0) -- (5,0) (0,-5) -- (0,5);
+  \draw[thick] (-5,2) .. ([tangent=0]-3,3) .. (-1,1) .. (0,-1.3) .. ([tangent=0]1,-2) .. ([tangent=45]2,-1.5) .. ([tangent=0]3,-2) .. (5,-4);
 \end{tikzpicture}
 \end{example}
 %
@@ -725,7 +674,7 @@ Using \(\phi_1 = - \psi_1 - \theta_1\), the first rearranges to:
 %%
 The second should be substituted in to the general equation with \(i = n-1\).
 This yields:
-%%  
+%%
 \begin{align*}
 d_{n-1} \overline{\tau}_{n} \overline{\tau}_{n-1}^2 &\theta_{n-2} \\
 {}+
@@ -914,7 +863,7 @@ which we can row reduce to:
 \[
 \begin{bmatrix}
 1 & 1 \\
-0 & d_1 + d_0 
+0 & d_1 + d_0
 \end{bmatrix}
 \Theta = -\psi_1 \begin{bmatrix}
 1 \\ d_1
