@@ -74,7 +74,7 @@ and the derived files            hobby.code.tex
 \generate{\file{pgflibraryhobby.code.tex} {\from{hobby.dtx}{pgflibrary}}}
 \generate{\file{hobby.code.tex} {\from{hobby.dtx}{hobby}}}
 \generate{\file{pml3array.sty} {\from{hobby.dtx}{array}}}
-\generate{\file{l3hobby.sty} {\from{hobby.dtx}{l3hobby}}}                                 
+\generate{\file{l3hobby.sty} {\from{hobby.dtx}{l3hobby}}}
 %</install>
 %<install>\endbatchfile
 %<*internal>
@@ -167,7 +167,7 @@ and the derived files            hobby.code.tex
 %
 % We declare all our variables.
 %
-% Start with version and date, together with a check to see if we've been loaded twice (fail gracefully if so). 
+% Start with version and date, together with a check to see if we've been loaded twice (fail gracefully if so).
 %
 %    \begin{macrocode}
 \tl_clear:N \l_tmpa_tl
@@ -341,7 +341,7 @@ and the derived files            hobby.code.tex
 % The coefficient matrix for an \emph{open} path is tridiagonal and that means that Gaussian elimination runs faster than expected (\(O(n)\) instead of \(O(n^3)\)).
 % The matrix for a closed path is not tridiagonal but is not far off.
 % It can be solved by perturbing it to a tridiagonal matrix and then modifying the result.
-% This array represents a utility vector in that perturbation. 
+% This array represents a utility vector in that perturbation.
 % In the following, the vector will be denoted by \(u\).
 % The first index is \(1\).
 %    \begin{macrocode}
@@ -515,7 +515,7 @@ and the derived files            hobby.code.tex
 % \begin{macro}{\l_hobby_npoints_int}
 % \Verb+\l_hobby_npoints_int+ is one less than the number of points on the curve.
 % As our list of points starts at \(0\), this is the index of the last point.
-% In the algorithm for a closed curve, some points are repeated whereupon this is incremented so that it is always the index of the last point. 
+% In the algorithm for a closed curve, some points are repeated whereupon this is incremented so that it is always the index of the last point.
 %    \begin{macrocode}
 \int_new:N \l_hobby_npoints_int
 %    \end{macrocode}
@@ -563,13 +563,13 @@ and the derived files            hobby.code.tex
   disjoint .bool_gset:N = \l_hobby_disjoint_bool,
   disjoint .default:n = true,
   break~default .code:n = {
-    \keys_define:nn { hobby / read in all } 
+    \keys_define:nn { hobby / read in all }
     {
       break .default:n = #1
     }
   },
   blank~default .code:n = {
-    \keys_define:nn { hobby / read in all } 
+    \keys_define:nn { hobby / read in all }
     {
       blank .default:n = #1
     }
@@ -588,13 +588,13 @@ and the derived files            hobby.code.tex
   disjoint .bool_gset:N = \l_hobby_disjoint_bool,
   disjoint .default:n = true,
   break~default .code:n = {
-    \keys_define:nn { hobby / read in all } 
+    \keys_define:nn { hobby / read in all }
     {
       break .default:n = #1
     }
   },
   blank~default .code:n = {
-    \keys_define:nn { hobby / read in all } 
+    \keys_define:nn { hobby / read in all }
     {
       blank .default:n = #1
     }
@@ -827,7 +827,7 @@ and the derived files            hobby.code.tex
 }
 %    \end{macrocode}
 % \end{macro}
-% 
+%
 %
 % \begin{macro}{\hobby_compute_path:}
 % This is the path builder where we have enough points to run the algorithm.
@@ -867,7 +867,7 @@ and the derived files            hobby.code.tex
     }
     {}
 %    \end{macrocode}
-% The wrapping routine might not get it right at the edges so we add in the override.  
+% The wrapping routine might not get it right at the edges so we add in the override.
 %    \begin{macrocode}
 \array_get:NnNTF \l_hobby_excess_angle_array {##1} \l_tmpa_tl {
   \fp_add:Nn \l_hobby_tempa_fp {2 * \c_pi_fp * \l_tmpa_tl}
@@ -897,8 +897,8 @@ and the derived files            hobby.code.tex
   \int_step_inline:nnnn {1} {1} {\l_hobby_npoints_int - 1} {
 
   \array_put:Nnx \l_hobby_matrix_b_array {##1} {\fp_to_tl:n
-{(3 * (\array_get:Nn \l_hobby_tension_in_array {##1 + 1}) - 1) * 
- (\array_get:Nn \l_hobby_tension_out_array {##1})^2 * 
+{(3 * (\array_get:Nn \l_hobby_tension_in_array {##1 + 1}) - 1) *
+ (\array_get:Nn \l_hobby_tension_out_array {##1})^2 *
 (\array_get:Nn \l_hobby_tension_out_array {##1 - 1})
 * ( \array_get:Nn \l_hobby_distances_array {##1 - 1})
 +
@@ -961,7 +961,7 @@ and the derived files            hobby.code.tex
 
 \array_put:Nnx \l_hobby_matrix_b_array {\l_hobby_npoints_int - 1} {\fp_to_tl:n {
 (\array_get:Nn \l_hobby_matrix_b_array {\l_hobby_npoints_int - 1})
-+ 1 
++ 1
 }}
 
  \array_put:Nnx \l_hobby_matrix_d_array {\l_hobby_npoints_int - 1} {\fp_to_tl:n {
@@ -1024,7 +1024,7 @@ and the derived files            hobby.code.tex
 * \l_hobby_in_curl_fp)
 * (\array_get:Nn \l_hobby_psi_array {1})
 }}
-  
+
 }
 {
   \array_put:Nnn \l_hobby_matrix_b_array {0} {1}
@@ -1707,7 +1707,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % \iffalse
 %<*pgflibrary>
 % \fi
-% 
+%
 % The PGF level is very simple.
 % All we do is set up the path-construction commands that get passed to the path-generation function.
 %    \begin{macrocode}
@@ -1725,7 +1725,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 \def\hobby@parse@pt#1,#2\relax{%
   \pgf@x=#1cm\relax
   \pgf@y=#2cm\relax
-}  
+}
 %    \end{macrocode}
 %
 % \begin{macro}{hobbyatan2}
@@ -2076,7 +2076,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \begin{macrocode}
   \hobby@quick@ctrlpts{\hobby@thetazero}{\hobby@phione}{\hobby@qpoints}{\hobby@qpointa}{\hobby@dzero}{\hobby@omegazero}%
 %    \end{macrocode}
-% Now call the call-back function 
+% Now call the call-back function
 %    \begin{macrocode}
   \edef\hobby@temp{\noexpand\hobby@quick@curveto{\noexpand\pgfqpoint{\the\pgf@xa}{\the\pgf@ya}}{\noexpand\pgfqpoint{\the\pgf@xb}{\the\pgf@yb}}{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}}%
 \hobby@temp
@@ -2107,7 +2107,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 %    \begin{macrocode}
   \hobby@quick@ctrlpts{\hobby@thetaone}{\hobby@phitwo}{\hobby@qpoints}{\hobby@qpointa}{\hobby@done}{\hobby@omegaone}%
 %    \end{macrocode}
-% Now call the call-back function 
+% Now call the call-back function
 %    \begin{macrocode}
   \edef\hobby@temp{\noexpand\hobby@quick@curveto{\noexpand\pgfqpoint{\the\pgf@xa}{\the\pgf@ya}}{\noexpand\pgfqpoint{\the\pgf@xb}{\the\pgf@yb}}{\noexpand\pgfqpoint{\the\pgf@x}{\the\pgf@y}}}%
 \hobby@temp
@@ -2161,7 +2161,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % \iffalse
 %<*tikzlibrary>
 % \fi
-% 
+%
 %    \begin{macrocode}
 \usepgflibrary{hobby}
 \let\hobby@this@opts=\pgfutil@empty
@@ -2193,7 +2193,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
     \expandafter\gdef\expandafter\hobby@point@options\expandafter%
     {\hobby@point@options,tension out=#1}%
   },
-  tension/.code = {%
+  tension/.append code = {%
     \expandafter\gdef\expandafter\hobby@point@options\expandafter%
     {\hobby@point@options,tension=#1}%
   },
@@ -2966,7 +2966,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % \iffalse
 %<*array>
 % \fi
-% 
+%
 %
 % A lot of our data structures are really arrays.
 % These are implemented as \LaTeX3 ``property lists''.
