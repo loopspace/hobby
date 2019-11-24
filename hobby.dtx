@@ -2988,7 +2988,7 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % The global variable \Verb+\g_array_base_int+ says what index a blank array should start with when pushed or unshifted.
 %    \begin{macrocode}
 \int_new:N \g_array_base_int
-\int_set:Nn \g_array_base_int {0}
+\int_gset:Nn \g_array_base_int {0}
 %    \end{macrocode}
 % \begin{macro}{\array_adjust_ends:Nn}
 % This ensures that the ``base'' and ``top'' are big enough to include the given index.
@@ -3225,9 +3225,9 @@ sin ( (\array_get:Nn \l_hobby_angles_array {##1})
 % \begin{macro}{\array_map_break:}
 %    \begin{macrocode}
 \cs_new_nopar:Npn \array_map_break:
-  { \__prg_map_break:Nn \array_map_break: { } }
+  { \prg_map_break:Nn \array_map_break: { } }
 \cs_new_nopar:Npn \array_map_break:n
-  { \__prg_map_break:Nn \array_map_break: }
+  { \prg_map_break:Nn \array_map_break: }
 %    \end{macrocode}
 % \end{macro}
 %
