@@ -1,0 +1,13 @@
+\documentclass{article}
+\RequirePackage[enable-debug]{expl3}
+\ExplSyntaxOn
+\debug_on:n { check-declarations , deprecation }
+\ExplSyntaxOff
+\usepackage{tikz}
+\usetikzlibrary{hobby}
+\begin{document}
+% example from doc
+\begin{tikzpicture}[scale=.5,use Hobby shortcut]
+  \draw (-3,0) -- (0,0) .. (6,4) .. (4,9) .. (1,7) .. (3,5) -- ++(2,0);
+\end{tikzpicture}
+\end{document}
