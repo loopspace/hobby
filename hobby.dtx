@@ -41,7 +41,7 @@ See http://www.latex-project.org/lppl.txt
 \endpreamble
 \postamble
 
-Copyright (C) 2012 by Andrew Stacey <loopspace@mathforge.org>
+Copyright (C) 2012-2021 by Andrew Stacey <loopspace@mathforge.org>
 
 This file may be distributed and/or modified under the conditions
 of the LaTeX Project Public License, either version 1.3 of this
@@ -62,7 +62,7 @@ and the derived files            hobby.code.tex
                                  pgflibraryhobby.code.tex
                                  tikzlibraryhobby.code.tex
                                  pml3array.sty
-                                 l3hobby.sty
+                                 hobby-l3draw.sty
                                  hobby.ins
                                  hobby.pdf
                                  hobby_code.pdf
@@ -74,7 +74,7 @@ and the derived files            hobby.code.tex
 \generate{\file{pgflibraryhobby.code.tex} {\from{hobby.dtx}{pgflibrary}}}
 \generate{\file{hobby.code.tex} {\from{hobby.dtx}{hobby}}}
 \generate{\file{pml3array.sty} {\from{hobby.dtx}{array}}}
-\generate{\file{l3hobby.sty} {\from{hobby.dtx}{l3hobby}}}
+\generate{\file{hobby-l3draw.sty} {\from{hobby.dtx}{l3hobby}}}
 %</install>
 %<install>\endbatchfile
 %<*internal>
@@ -111,7 +111,7 @@ and the derived files            hobby.code.tex
 %</driver>
 % \fi
 %
-% \CheckSum{3382}
+% \CheckSum{3431}
 %
 % \CharacterTable
 %  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
@@ -151,8 +151,6 @@ and the derived files            hobby.code.tex
 %
 % We use \LaTeX3 syntax so need to load the requisite packages
 %    \begin{macrocode}
-\RequirePackage{expl3}
-\RequirePackage{xparse}
 \RequirePackage{pml3array}
 \ExplSyntaxOn
 %    \end{macrocode}
@@ -183,8 +181,8 @@ and the derived files            hobby.code.tex
 
 \tl_new:N \g__hobby_version
 \tl_new:N \g__hobby_date
-\tl_gset:Nn \g__hobby_version {1.8}
-\tl_gset:Nn \g__hobby_date {2017-06-01}
+\tl_gset:Nn \g__hobby_version {1.10}
+\tl_gset:Nn \g__hobby_date {2023-08-30}
 \DeclareDocumentCommand \hobbyVersion {}
 {
   \tl_use:N \g__hobby_version
@@ -2252,7 +2250,7 @@ sin ( (\array_get:Nn \g__hobby_angles_array {##1})
   in curl/.style = {%
     add option to Hobby path={in curl=#1}%
   },
-  out curl/.code = {%
+  out curl/.style = {%
     add option to Hobby path={out curl=#1}%
   },
   use Hobby shortcut/.code={%
@@ -2264,28 +2262,25 @@ sin ( (\array_get:Nn \g__hobby_angles_array {##1})
     \global\let\hobby@curveto@delegate=\hobby@qcurveto@auto
   },
   use previous Hobby path/.code={%
-    \pgfextra{\hobbyusepath{#1}}
+    \hobbyusepath{#1}%
   },
   use previous Hobby path/.default={},%
   save Hobby path/.code={%
     \xdef\hobby@path@name{#1}%
   },
   restore Hobby path/.code={%
-    \pgfextra{%
-      \hobbyinit\hobby@tikz@moveto\hobby@tikz@curveto\hobby@tikz@close
-      \global\let\hobby@collected@onpath\pgfutil@empty
-      \hobbyrestorepath{#1}}
+    \hobbyinit\hobby@tikz@moveto\hobby@tikz@curveto\hobby@tikz@close
+    \global\let\hobby@collected@onpath\pgfutil@empty
+    \hobbyrestorepath{#1}%
   },
   restore and use Hobby path/.code 2 args={%
-    \pgfextra{%
-      \hobbyinit\hobby@tikz@moveto\hobby@tikz@curveto\hobby@tikz@close
-      \global\let\hobby@collected@onpath\pgfutil@empty
-      \hobbyrestorepath{#1}%
-      \hobbyusepath{#2}%
-    }
+    \hobbyinit\hobby@tikz@moveto\hobby@tikz@curveto\hobby@tikz@close
+    \global\let\hobby@collected@onpath\pgfutil@empty
+    \hobbyrestorepath{#1}%
+    \hobbyusepath{#2}%
   },
   show Hobby path/.code={%
-    \pgfextra{\hobbyshowpath{#1}}
+    \hobbyshowpath{#1}%
   },
   Hobby action/.code={%
     \expandafter\gdef\expandafter\hobby@action\expandafter{\hobby@action#1}%
@@ -3467,7 +3462,7 @@ sin ( (\array_get:Nn \g__hobby_angles_array {##1})
 %    \begin{macrocode}
 \cs_new_protected:Npn \array_gdel:Nn #1#2
 {
-  \exp_args:NNx \prop_gpop:Nn #1 {\int_eval:n {#2}}
+  \exp_args:NNx \prop_gremove:Nn #1 {\int_eval:n {#2}}
   \int_set:Nn \l_array_tmp_int {0}
   \array_map_inline:Nn #1 {
     \tl_if_eq:NNTF {##2} {\q_no_value} {}
@@ -3544,18 +3539,12 @@ sin ( (\array_get:Nn \g__hobby_angles_array {##1})
 %
 % Register as an expl3 package
 %    \begin{macrocode}
-\ProvidesExplPackage {l3hobby} {2018/02/20} {1.0} {Interface for l3draw and hobby}
+\ProvidesExplPackage {hobby-l3draw} {2018/02/20} {1.0} {Interface for l3draw and hobby}
 %    \end{macrocode}
 %
 % Load the l3draw package
 %    \begin{macrocode}
 \RequirePackage{l3draw}
-%    \end{macrocode}
-%
-%
-% We need a token list to build our drawing commands
-%    \begin{macrocode}
-\tl_new:N \l__hobby_draw_tmpa_tl
 %    \end{macrocode}
 %
 %
