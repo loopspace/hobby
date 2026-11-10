@@ -181,8 +181,8 @@ and the derived files            hobby.code.tex
 
 \tl_new:N \g__hobby_version
 \tl_new:N \g__hobby_date
-\tl_gset:Nn \g__hobby_version {1.12}
-\tl_gset:Nn \g__hobby_date {2023-09-01}
+\tl_gset:Nn \g__hobby_version {1.14}
+\tl_gset:Nn \g__hobby_date {2026-11-10}
 \DeclareDocumentCommand \hobbyVersion {}
 {
   \tl_use:N \g__hobby_version
@@ -941,8 +941,8 @@ and the derived files            hobby.code.tex
   \int_step_inline:nnnn {1} {1} {\g__hobby_npoints_int - 2} {
 
   \array_gput:Nnx \g__hobby_matrix_c_array {##1} {\fp_to_tl:n
-{(\array_get:Nn \g__hobby_tension_in_array {##1})^2
-* (\array_get:Nn \g__hobby_tension_in_array {##1 - 1})
+{(\array_get:Nn \g__hobby_tension_out_array {##1})^2
+* (\array_get:Nn \g__hobby_tension_out_array {##1 - 1})
 * (\array_get:Nn \g__hobby_distances_array {##1 - 1})
 }}
 
@@ -1089,12 +1089,12 @@ and the derived files            hobby.code.tex
 * (\array_get:Nn \g__hobby_distances_array {\g__hobby_npoints_int - 2})
 *
 ((3 * (\array_get:Nn \g__hobby_tension_in_array {\g__hobby_npoints_int} ) - 1)
-* (\array_get:Nn \g__hobby_tension_out_array {\g__hobby_npoints_int - 1})^3 \l_tmpa_tl
+* (\array_get:Nn \g__hobby_tension_out_array {\g__hobby_npoints_int - 1})^3
 * \g__hobby_out_curl_fp
 +
 (\array_get:Nn \g__hobby_tension_in_array {\g__hobby_npoints_int })^3)
 /
-((3 * (\array_get:Nn \g__hobby_tension_out_array {\g__hobby_npoints_int -2}) - 1)
+((3 * (\array_get:Nn \g__hobby_tension_out_array {\g__hobby_npoints_int -1}) - 1)
 * (\array_get:Nn \g__hobby_tension_in_array {\g__hobby_npoints_int})^3
 +
 ( \array_get:Nn \g__hobby_tension_out_array {\g__hobby_npoints_int - 1})^3
@@ -1332,7 +1332,7 @@ and the derived files            hobby.code.tex
 (\array_get:Nn \g__hobby_points_x_array {##1})
 +
   (\array_get:Nn \g__hobby_distances_array {##1}) *
-  (\array_get:Nn \g__hobby_rho_array {##1}) *
+  (\array_get:Nn \g__hobby_rho_array {##1}) / (\array_get:Nn \g__hobby_tension_out_array {##1}) *
 cos ( (\array_get:Nn \g__hobby_angles_array {##1})
 +
   (\array_get:Nn \g__hobby_theta_array {##1}))
@@ -1340,7 +1340,7 @@ cos ( (\array_get:Nn \g__hobby_angles_array {##1})
 }, \fp_eval:n {
 ( \array_get:Nn \g__hobby_points_y_array {##1}) +
   (\array_get:Nn \g__hobby_distances_array {##1}) *
-  (\array_get:Nn \g__hobby_rho_array {##1}) *
+  (\array_get:Nn \g__hobby_rho_array {##1}) / (\array_get:Nn \g__hobby_tension_out_array {##1}) *
 sin ( (\array_get:Nn \g__hobby_angles_array {##1})
 +
   (\array_get:Nn \g__hobby_theta_array {##1}))
@@ -1352,13 +1352,13 @@ sin ( (\array_get:Nn \g__hobby_angles_array {##1})
   \array_gput:Nnx \g__hobby_controlb_array {##1} {
     \fp_eval:n {\array_get:Nn \g__hobby_points_x_array {##1}
 - (\array_get:Nn \g__hobby_distances_array  {##1 - 1})
-* (\array_get:Nn \g__hobby_sigma_array {##1})
+* (\array_get:Nn \g__hobby_sigma_array {##1}) / (\array_get:Nn \g__hobby_tension_in_array {##1})
 * cos((\array_get:Nn \g__hobby_angles_array  {##1 - 1})
 - (\array_get:Nn \g__hobby_phi_array {##1}))/3
 }, \fp_eval:n {
   (\array_get:Nn \g__hobby_points_y_array {##1})
 - (\array_get:Nn \g__hobby_distances_array  {##1 - 1})
-* (\array_get:Nn \g__hobby_sigma_array {##1})
+* (\array_get:Nn \g__hobby_sigma_array {##1}) / (\array_get:Nn \g__hobby_tension_in_array {##1})
 * sin((\array_get:Nn \g__hobby_angles_array  {##1 - 1})
 - (\array_get:Nn \g__hobby_phi_array {##1}))/3
 } }

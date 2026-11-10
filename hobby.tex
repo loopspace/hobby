@@ -787,14 +787,14 @@ We now substitute these into Hobby's formulae for the lengths:
 \end{align*}
 %%
 and \(a = \sqrt{2}\), \(b = 1/16\), and \(c = (3 - \sqrt{5})/2\).
-These are actually the \emph{relative} lengths so need to be adjusted by a factor of \(d_i/3\).
+These are actually the \emph{relative} lengths so need to be adjusted by a factor of \(d_i/(3 \tau_i)\) or \(d_i/(3 \overline{\tau}_i)\) -- depending on whether we are calculating the outgoing or incoming control point.
 Now \(\theta_i\) is the angle relative to the line from \(z_i\) to \(z_{i+1}\), so to get the true angle we need to add back that angle.
 Fortunately, we stored those angles at the start.
 So the control points are:
 %%
 \begin{gather*}
-d_i \rho_i (\cos (\theta_i + \omega_i), \sin (\theta_i + \omega_i))/3 + z_i \\
-- d_i \sigma_{i+1} (\cos(\omega_i - \phi_{i+1}), \sin(\omega_i - \phi_{i+1}))/3 + z_{i+1}
+d_i \rho_i (\cos (\theta_i + \omega_i), \sin (\theta_i + \omega_i))/(3 \overline{\tau}_i) + z_i \\
+- d_i \sigma_{i+1} (\cos(\omega_i - \phi_{i+1}), \sin(\omega_i - \phi_{i+1}))/(3 \tau_{i+1}) + z_{i+1}
 \end{gather*}
 
 \section{A Piecewise Version of Hobby's Algorithm}
